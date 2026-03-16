@@ -86,7 +86,7 @@ export default function Home() {
       excerpt: "Predict renovation noise surges 3 weeks ahead during CNY prep season. Pre-position officers in high-density HDB areas with historical renovation patterns. Impact: 18% reduction in noise complaints",
       tag: "Festive Season",
       date: "March 12, 2026",
-      image: "/blog-assets/blog-1.png"
+      image: "/blog-assets/blog-1.jpg"
     },
     {
       id: 2,
@@ -94,7 +94,7 @@ export default function Home() {
       excerpt: "Correlate NEA weather forecasts with flooding complaint hotspots. Deploy inspection teams to drainage-prone areas before heavy rainfall events. Impact: 22% faster response times",
       tag: "Weather-Driven",
       date: "March 08, 2026",
-      image: "/blog-assets/blog-2.png"
+      image: "/blog-assets/blog-4.jpg"
     },
     {
       id: 3,
@@ -102,7 +102,7 @@ export default function Home() {
       excerpt: "Sync with BCA permit start dates and LTA road works schedules. Coordinate proactive site inspections during high-activity construction phases. Impact: Officer utilization +22%",
       tag: "Construction",
       date: "March 05, 2026",
-      image: "/blog-assets/blog-3.png"
+      image: "/blog-assets/blog-5.jpg"
     }
   ];
 
@@ -633,10 +633,10 @@ export default function Home() {
           </div>
         </div>
       </footer>
-      
-      <RequestAccessModal 
-        isOpen={isAccessModalOpen} 
-        onClose={() => setIsAccessModalOpen(false)} 
+
+      <RequestAccessModal
+        isOpen={isAccessModalOpen}
+        onClose={() => setIsAccessModalOpen(false)}
       />
     </div>
   );

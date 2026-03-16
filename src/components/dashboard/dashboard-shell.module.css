@@ -341,7 +341,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 8px 14px;
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #212121;
@@ -364,10 +364,11 @@
 }
 
 .searchInput {
-  padding: 8px 16px;
+  padding: 10px 16px;
   border-radius: 999px;
   border: 1px solid #e2e8f0;
   background: #f1f5f9;
+  font-family: 'Poppins', sans-serif !important;
   font-size: 0.875rem;
   outline: none;
   transition: all 0.2s;
