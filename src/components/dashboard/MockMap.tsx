@@ -11,7 +11,7 @@ export function MockMap({ title }: { title: string }) {
       <div className={styles.mapHeader}>
         <div className={styles.mapStatus}>
           <span className={styles.statusPulse}></span>
-          LIVE SPATIAL INTEL
+          Live Spatial Intel
         </div>
         <h3>{title}</h3>
       </div>

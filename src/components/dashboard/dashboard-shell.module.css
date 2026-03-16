@@ -68,31 +68,33 @@
   gap: 4px;
   flex: 1;
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
 }
 
 .nav::-webkit-scrollbar {
-  width: 4px;
-}
-
-.nav::-webkit-scrollbar-thumb {
-  background-color: #e2e8f0;
-  border-radius: 4px;
+  display: none; /* Chrome, Safari, Edge */
 }
 
 .navItem {
   color: #a1a1aa;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 4px;
   align-items: center;
   gap: .5rem;
-  padding: .58rem 1.3rem;
-  font-size: 15px;
-  font-weight: 400;
+  padding: 0.9rem 1.3rem;
+  font-size: 16px;
+  font-weight: 300;
   text-decoration: none;
   transition: all .2s;
-  display: flex;
-}
+  display: flex;  height: 2.5rem;
+  line-height: 1.25;}
 
+
+.navItem svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
 .navItem:not(.navItemActive):hover {
   background-color: rgba(255, 255, 255, 0.05);
   color: #ffffff;
@@ -104,12 +106,6 @@
   font-weight: 500;
 }
 
-.sidebarBottom {
-  margin-top: auto;
-  padding: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
 .sidebarPanel {
   padding: 20px;
   background: rgba(17, 94, 89, 0.1);
@@ -118,7 +114,7 @@
 }
 
 .sidebarPanel p {
-  font-size: 0.7rem;
+  font-size: 0.rem;
   font-weight: 700;
   color: #2dd4bf;
   text-transform: uppercase;
@@ -318,7 +314,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 32px;
+  padding: 7px 32px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -440,7 +436,7 @@
 .avatar {
   width: 32px;
   height: 32px;
-  background-color: #115e59;
+  background-color: #5925dc;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -487,20 +483,19 @@
   padding: 20px;
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .ribbonCard p {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 400;
   color: #212121;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: -0.05em;
   margin-bottom: 8px;
 }
 
 .ribbonCard strong {
-  font-size: 0.9375rem;
+  font-size: 19px;
   color: #0f172a;
 }
 
@@ -597,7 +592,7 @@
   right: 24px;
   width: 320px;
   background-color: #ffffff;
-  border-radius: 16px;
+  border-radius: 6px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
   padding: 20px;
