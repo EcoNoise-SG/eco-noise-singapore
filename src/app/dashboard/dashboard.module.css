@@ -1,0 +1,361 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.gridThree {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.metricCard,
+.listCard,
+.chartCard,
+.tableCard {
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.metricCard p,
+.listCard p,
+.chartLabel,
+.metaLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.metricCard strong {
+  display: block;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1a1a1b;
+  letter-spacing: -0.02em;
+}
+
+.metricCard strong.positive {
+  color: #22c55e;
+}
+
+
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 140px 1fr 60px;
+  gap: 16px;
+  align-items: center;
+}
+
+.barRow span:first-child {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.barTrack {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: #115e59;
+  border-radius: 4px;
+  width: var(--width, 0%);
+}
+
+
+.barRow span:last-child {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table td {
+  padding: 16px;
+  font-size: 0.875rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.timelineItem {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.timelineItem strong {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1a1a1b;
+  margin-bottom: 4px;
+}
+
+.timelineItem span {
+  display: block;
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.chipRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+@media (max-width: 1024px) {
+
+  .gridThree,
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .barRow {
+    grid-template-columns: 100px 1fr 50px;
+    gap: 8px;
+  }
+}
+
+
+.chartMeta {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chartMeta p {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.chartMeta p span {
+  color: #1a1a1b;
+  font-weight: 700;
+}
+
+.anomalyBadge {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.timelineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.riskBadge {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #fee2e2;
+}
+
+.timeLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #115e59;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.actionDetail {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+.logicNode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.statusSynced {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.statusRealtime {
+  color: #0d9488;
+  font-weight: 700;
+}
+
+.statusIcon {
+  margin-right: 6px;
+}
+
+
+.metaText {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+
+.positive {
+  color: #22c55e !important;
+}
+
+.metricValue {
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.simulatorCard {
+  padding: 24px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.simControl {
+  margin-bottom: 24px;
+}
+
+.simToggle {
+  display: flex;
+  background: #e2e8f0;
+  padding: 4px;
+  border-radius: 8px;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.simToggle button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.simToggle button.active {
+  background: #ffffff;
+  color: #1a1a1b;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.simResult {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.simMetric p {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.simMetric strong {
+  font-size: 1.5rem;
+  color: #1a1a1b;
+  font-weight: 700;
+}
