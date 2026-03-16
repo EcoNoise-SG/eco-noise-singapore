@@ -1,0 +1,93 @@
+.filterRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterBtn:hover {
+  border-color: #008094;
+  color: #008094;
+}
+
+.filterActive {
+  background: #008094;
+  color: white;
+  border-color: #008094;
+}
+
+.badgeCritical {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border: 1px solid #fee2e2;
+}
+
+.badgeHigh {
+  background: #fffbeb;
+  color: #b45309;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border: 1px solid #fde68a;
+}
+
+.badgeMedium {
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border: 1px solid #bfdbfe;
+}
+
+.badgeLow {
+  background: #f8fafc;
+  color: #64748b;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+}
+
+.statusOpen {
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusActioned {
+  color: #d97706;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusScheduled {
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusResolved {
+  color: #22c55e;
+  font-size: 0.75rem;
+  font-weight: 700;
+}

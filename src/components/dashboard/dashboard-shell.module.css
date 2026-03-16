@@ -14,6 +14,12 @@
   height: 100vh;
   flex-shrink: 0;
   z-index: 50;
+  overflow: hidden;
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebarCollapsed {
+  width: 0 !important;
 }
 
 .govMasthead {
@@ -68,11 +74,13 @@
   gap: 4px;
   flex: 1;
   overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .nav::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
+  display: none;
+  /* Chrome, Safari, Edge */
 }
 
 .navItem {
@@ -86,8 +94,10 @@
   font-weight: 300;
   text-decoration: none;
   transition: all .2s;
-  display: flex;  height: 2.5rem;
-  line-height: 1.25;}
+  display: flex;
+  height: 2.5rem;
+  line-height: 1.25;
+}
 
 
 .navItem svg {
@@ -95,6 +105,7 @@
   height: 19px;
   flex-shrink: 0;
 }
+
 .navItem:not(.navItemActive):hover {
   background-color: rgba(255, 255, 255, 0.05);
   color: #ffffff;
@@ -320,6 +331,28 @@
   z-index: 40;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.15);
 }
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menuToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #212121;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
 
 .headerTitle {
   font-size: 1.25rem;
