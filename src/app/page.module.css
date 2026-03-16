@@ -127,7 +127,7 @@
 .signupBtn {
   background: #5925DC;
   color: white;
-  border: none;
+  border: 1px solid transparent;
   padding: 0.5rem 1.25rem;
   border-radius: 4px;
   font-weight: 600;
@@ -136,6 +136,11 @@
   box-shadow: none;
   text-decoration: none;
   font-size: 0.9rem;
+  font-family: inherit;
+  line-height: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
@@ -523,14 +528,13 @@
   background: #ffffff;
   border: 1px solid #e2e8f0;
   padding: 2.5rem;
-  border-radius: 24px;
+  border-radius: 6px;
   transition: all 0.3s;
   box-shadow: none;
 }
 
 .featureCard:hover {
   transform: translateY(-5px);
-  border-color: #ccfbf1;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
@@ -1438,7 +1442,7 @@
 }
 
 .impactSection {
-  background: #f8fafc;
+  background: white;
 }
 
 .impactGrid {
@@ -1452,18 +1456,11 @@
 .impactCard {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 18px;
+  border-radius: 6px;
   padding: 2rem;
   transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
 }
 
-.impactCard:hover,
-.integrationCard:hover,
-.accessCard:hover {
-  transform: translateY(-4px);
-  border-color: #99f6e4;
-  box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.12);
-}
 
 .impactTitle {
   font-size: 1.2rem;
@@ -1599,6 +1596,8 @@
   color: white;
   text-decoration: none;
   font-weight: 600;
+  cursor: pointer;
+  border: none;
 }
 
 @keyframes fadeInUp {

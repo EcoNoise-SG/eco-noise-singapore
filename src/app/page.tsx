@@ -3,11 +3,18 @@ import React, { useRef } from "react";
 import Link from "next/link";
 import { TFTForecastChart, SpatialPersistenceChart, AnomalyDetectionChart, MultiOutputRadarChart } from "@/components/dashboard/AnalyticsCharts";
 import ProjectBoard from "@/components/feedback-loop/ProjectBoard";
+import RequestAccessModal from "@/components/auth/RequestAccessModal";
 import styles from "./page.module.css";
 
 export default function Home() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showAllFaqs, setShowAllFaqs] = React.useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = React.useState(false);
+
+  const openAccessModal = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setIsAccessModalOpen(true);
+  };
 
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
@@ -181,7 +188,7 @@ export default function Home() {
         </nav>
         <div className={styles.authBtns}>
           <Link href="/login" className={styles.loginBtn}>Sign In</Link>
-          <Link href="/login" className={styles.signupBtn}>Request Access</Link>
+          <button onClick={openAccessModal} className={styles.signupBtn}>Request Access</button>
           <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.navbarGithubLink}>
             <img
               src="/navbar-assets/icons8-github.gif"
@@ -466,7 +473,11 @@ export default function Home() {
               <article key={path.title} className={styles.accessCard}>
                 <h3 className={styles.accessTitle}>{path.title}</h3>
                 <p className={styles.accessDescription}>{path.description}</p>
-                <Link href="/login" className={styles.accessLink}>{path.cta}</Link>
+                {path.cta === "Request Sandbox Access" ? (
+                  <button onClick={openAccessModal} className={styles.accessLink}>{path.cta}</button>
+                ) : (
+                  <Link href="/login" className={styles.accessLink}>{path.cta}</Link>
+                )}
               </article>
             ))}
           </div>
@@ -622,6 +633,11 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      
+      <RequestAccessModal 
+        isOpen={isAccessModalOpen} 
+        onClose={() => setIsAccessModalOpen(false)} 
+      />
     </div>
   );
 }
