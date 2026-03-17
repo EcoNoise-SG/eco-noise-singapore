@@ -83,8 +83,8 @@ export const TFTForecastChart = ({ height = 300 }: { height?: number | string })
       <AreaChart data={tftData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#0d9488" stopOpacity={0.1} />
-            <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1} />
+            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#cbd5e1" />
@@ -93,8 +93,8 @@ export const TFTForecastChart = ({ height = 300 }: { height?: number | string })
         <Tooltip
           contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
         />
-        <Area type="monotone" dataKey="predicted" stroke="#0d9488" strokeWidth={3} fillOpacity={1} fill="url(#colorPredicted)" />
-        <Line type="monotone" dataKey="actual" stroke="#1a1a1b" strokeWidth={2} dot={{ r: 4, fill: '#1a1a1b' }} />
+        <Area type="monotone" dataKey="predicted" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorPredicted)" />
+        <Line type="monotone" dataKey="actual" stroke="#334155" strokeWidth={2} dot={{ r: 4, fill: '#334155' }} />
       </AreaChart>
     </ResponsiveContainer>
   </div>
@@ -123,9 +123,9 @@ export const SpatialPersistenceChart = ({ height = 300 }: { height?: number | st
         <ZAxis type="number" dataKey="count" range={[100, 1000]} name="Complaint Volume" />
         <Tooltip cursor={{ strokeDasharray: '3 3' }} />
         <Legend />
-        <Scatter name="Planning Areas" data={clusterData} fill="#0f766e">
+        <Scatter name="Planning Areas" data={clusterData} fill="#3b82f6">
           {clusterData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.persistence > 60 ? '#115e59' : '#0d9488'} />
+            <Cell key={`cell-${index}`} fill={entry.persistence > 60 ? '#2563eb' : '#60a5fa'} />
           ))}
         </Scatter>
       </ScatterChart>
@@ -144,16 +144,16 @@ export const AnomalyDetectionChart = ({ height = 300 }: { height?: number | stri
         <Line
           type="monotone"
           dataKey="value"
-          stroke="#94a3b8"
+          stroke="#8b5cf6"
           strokeWidth={2}
           dot={(props) => {
             const { cx, cy, payload } = props;
             if (payload.isAnomaly) {
               return (
-                <circle cx={cx} cy={cy} r={6} fill="#ef4444" stroke="none" />
+                <circle cx={cx} cy={cy} r={6} fill="#f43f5e" stroke="none" />
               );
             }
-            return <circle cx={cx} cy={cy} r={3} fill="#94a3b8" stroke="none" />;
+            return <circle cx={cx} cy={cy} r={3} fill="#8b5cf6" stroke="none" />;
           }}
         />
       </LineChart>
@@ -168,9 +168,9 @@ export const MultiOutputRadarChart = ({ height = 350 }: { height?: number | stri
         <PolarGrid stroke="#94a3b8" />
         <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: '#64748b' }} />
         <PolarRadiusAxis angle={30} domain={[0, 100]} axisLine={false} tick={false} />
-        <Radar name="Noise" dataKey="noise" stroke="#0d9488" fill="#0d9488" fillOpacity={0.6} />
+        <Radar name="Noise" dataKey="noise" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} />
         <Radar name="Dumping" dataKey="dumping" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.6} />
-        <Radar name="Pest" dataKey="pest" stroke="#ef4444" fill="#ef4444" fillOpacity={0.6} />
+        <Radar name="Pest" dataKey="pest" stroke="#d946ef" fill="#d946ef" fillOpacity={0.6} />
         <Legend />
         <Tooltip />
       </RadarChart>

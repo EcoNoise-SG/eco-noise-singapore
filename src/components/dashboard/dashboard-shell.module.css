@@ -213,15 +213,14 @@
 
 /* Banner */
 .banner {
-  background-color: #f0fdfa;
-  color: #115e59;
+  background-color: #ebe9fe;
+  color: #5925dc;
   padding: 8px 32px;
   font-size: 0.8125rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #ccfbf1;
   height: 36px;
 }
 

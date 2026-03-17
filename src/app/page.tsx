@@ -116,19 +116,41 @@ export default function Home() {
   const impactMetrics = [
     {
       title: "15-25% complaint reduction",
-      description: "Projected through proactive deterrence before nuisance activity escalates into resident reports."
+      description: "Projected through proactive deterrence before nuisance activity escalates into resident reports.",
+      image: "/agencies-assets/udone.svg"
     },
     {
       title: "Faster travel-to-incident planning",
-      description: "Pre-positioned teams shorten dispatch routing and reduce time lost moving officers between estates."
+      description: "Pre-positioned teams shorten dispatch routing and reduce time lost moving officers between estates.",
+      image: "/agencies-assets/udtwo.svg"
     },
     {
       title: "Higher resident satisfaction",
-      description: "Visible preventive action supports better service perception across recurring hotspot communities."
+      description: "Visible preventive action supports better service perception across recurring hotspot communities.",
+      image: "/agencies-assets/udthree.svg"
     },
     {
       title: "Low-cost, high-visibility operations",
-      description: "Uses public datasets and existing agency workflows to improve estate quality without heavy new infrastructure."
+      description: "Uses public datasets and existing agency workflows to improve estate quality without heavy new infrastructure.",
+      image: "/agencies-assets/undrawfive.svg"
+    }
+  ];
+
+  const precisionTools = [
+    {
+      title: "Complaint Hotspots",
+      description: "Identify clusters of frequent reports across 55 planning areas with historical pattern matching.",
+      image: "/tools-assets/hotspots.svg"
+    },
+    {
+      title: "Predictive Forecasts",
+      description: "Anticipate surges in noise, dumping, and pest reports 2-4 weeks in advance using ensemble AI models.",
+      image: "/tools-assets/ai.svg"
+    },
+    {
+      title: "Staging Operations",
+      description: "Coordinate officer pre-positioning based on high-risk time blocks to deter violations before they happen.",
+      image: "/tools-assets/officers.svg"
     }
   ];
 
@@ -262,27 +284,15 @@ export default function Home() {
         <section id="features" className={styles.featuresSection}>
           <h2 className={styles.sectionTitle}>Precision Tools for Enforcement</h2>
           <div className={styles.grid}>
-            <div className={styles.featureCard}>
-              <div className={styles.iconWrapper}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M8 10h.01" /><path d="M12 10h.01" /><path d="M16 10h.01" /></svg>
+            {precisionTools.map((tool) => (
+              <div key={tool.title} className={styles.featureCard}>
+                <div className={styles.featureImageWrapper}>
+                  <img src={tool.image} alt={tool.title} className={styles.featureImage} />
+                </div>
+                <h3 className={styles.featureTitle}>{tool.title}</h3>
+                <p className={styles.featureDesc}>{tool.description}</p>
               </div>
-              <h3 className={styles.featureTitle}>Complaint Hotspots</h3>
-              <p className={styles.featureDesc}>Identify clusters of frequent reports across 55 planning areas with historical pattern matching.</p>
-            </div>
-            <div className={styles.featureCard}>
-              <div className={styles.iconWrapper}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
-              </div>
-              <h3 className={styles.featureTitle}>Predictive Forecasts</h3>
-              <p className={styles.featureDesc}>Anticipate surges in noise, dumping, and pest reports 2-4 weeks in advance using ensemble AI models.</p>
-            </div>
-            <div className={styles.featureCard}>
-              <div className={styles.iconWrapper}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-              </div>
-              <h3 className={styles.featureTitle}>Staging Operations</h3>
-              <p className={styles.featureDesc}>Coordinate officer pre-positioning based on high-risk time blocks to deter violations before they happen.</p>
-            </div>
+            ))}
           </div>
         </section>
 
@@ -425,6 +435,9 @@ export default function Home() {
           <div className={styles.impactGrid}>
             {impactMetrics.map((item) => (
               <article key={item.title} className={styles.impactCard}>
+                <div className={styles.impactImageWrapper}>
+                  <img src={item.image} alt={item.title} className={styles.impactImage} />
+                </div>
                 <h3 className={styles.impactTitle}>{item.title}</h3>
                 <p className={styles.impactDescription}>{item.description}</p>
               </article>
