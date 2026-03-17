@@ -257,6 +257,8 @@ export default function Home() {
                 style={{ border: 0 }}
                 allowFullScreen
                 title="Singapore OneMap"
+                referrerPolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-forms"
               ></iframe>
             </div>
             <div className={styles.problemContent}>

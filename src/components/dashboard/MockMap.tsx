@@ -22,6 +22,8 @@ export function MockMap({ title }: { title: string }) {
           className={styles.mapFrame}
           title={`${title} OneMap view`}
           allowFullScreen
+          referrerPolicy="no-referrer"
+          sandbox="allow-scripts allow-same-origin allow-forms"
         />
 
         <div className={styles.mapOverlay}>
