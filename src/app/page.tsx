@@ -223,7 +223,7 @@ export default function Home() {
         <div className={styles.authBtns}>
           <Link href="/login" className={styles.loginBtn}>Sign In</Link>
           <button onClick={openAccessModal} className={styles.signupBtn}>Request Access</button>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.navbarGithubLink}>
+          <a href="https://github.com/EcoNoise-SG/eco-noise-singapore.git" target="_blank" rel="noopener noreferrer" className={styles.navbarGithubLink}>
             <img
               src="/navbar-assets/icons8-github.gif"
               alt="GitHub"
@@ -643,7 +643,7 @@ export default function Home() {
             alt="Open Government Products"
             className={`${styles.footerLogo} ${styles.whiteLogo}`}
           />
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.footerGithubLink}>
+          <a href="https://github.com/EcoNoise-SG/eco-noise-singapore.git" target="_blank" rel="noopener noreferrer" className={styles.footerGithubLink}>
             <img
               src="/navbar-assets/icons8-github.gif"
               alt="GitHub"

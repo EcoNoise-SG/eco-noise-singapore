@@ -1,7 +1,7 @@
 # EcoNoise SG
 
-[![Build Status](https://github.com/chinmay1182/eco-noise-singapore/actions/workflows/build.yml/badge.svg)](https://github.com/chinmay1182/eco-noise-singapore)
-[![Codecov](https://codecov.io/gh/chinmay1182/eco-noise-singapore/branch/main/graph/badge.svg)](https://codecov.io/gh/chinmay1182/eco-noise-singapore)
+[![Build Status](https://github.com/EcoNoise-SG/eco-noise-singapore/actions/workflows/build.yml/badge.svg)](https://github.com/EcoNoise-SG/eco-noise-singapore)
+[![Codecov](https://codecov.io/gh/EcoNoise-SG/eco-noise-singapore/branch/main/graph/badge.svg)](https://codecov.io/gh/EcoNoise-SG/eco-noise-singapore)
 
 The official Singapore government predictive environmental enforcement platform.
 
@@ -55,7 +55,7 @@ Start by cloning the repository and installing dependencies.
 
 ```bash
 # Clone the repository
-git clone git@github.com:chinmay1182/eco-noise-singapore.git eco-noise-singapore
+git clone https://github.com/EcoNoise-SG/eco-noise-singapore.git eco-noise-singapore
 
 # Go inside the directory
 cd eco-noise-singapore
@@ -101,7 +101,7 @@ After these have been set up, set the environment variables according to the tab
 |              NODE_ENV              |   Yes    | `production`                                                                                                                                                                                   |
 |               DB_URI               |   Yes    | The postgres connection string, e.g. `postgres://postgres:postgres@postgres:5432/postgres`                                                                                                     |
 |               OG_URL               |   Yes    | The origin url, used for both google analytics and circular-redirect prevention. E.g. `https://go.gov.sg`                                                                                      |
-|           AWS_S3_BUCKET            |   Yes    | The bucket name used for storing file uploads.                                                                                                                                                 |
+|           SUPABASE_STORAGE_BUCKET            |   Yes    | The bucket name used for storing file uploads.                                                                                                                                                 |
 |           REDIS_OTP_URI            |   Yes    | Redis connection string, e.g. `redis://redis:6379/0`                                                                                                                                           |
 |         REDIS_SESSION_URI          |   Yes    | Redis connection string, e.g. `redis://redis:6379/1`                                                                                                                                           |
 |         REDIS_REDIRECT_URI         |   Yes    | Redis connection string, e.g. `redis://redis:6379/2`                                                                                                                                           |
@@ -139,7 +139,7 @@ After these have been set up, set the environment variables according to the tab
 |            REPLICA_URI             |   Yes    | The postgres connection string, e.g. `postgres://postgres:postgres@postgres:5432/postgres`                                                                                                     |
 | SQS_BULK_QRCODE_GENERATE_START_URL |    No    | The SQS queue for starting QR code bulk generation Lambda                                                                                                                                      |
 |            SQS_TIMEOUT             |    No    | Duration of time in ms for sending to SQS queue before timeout. Defaults to 10000ms (10s)                                                                                                      |
-|             SQS_REGION             |    No    | AWS Region of SQS queue for starting QR code bulk generation Lambda                                                                                                                            |
+|             SQS_REGION             |    No    | Supabase Region of SQS queue for starting QR code bulk generation Lambda                                                                                                                            |
 |         JOB_POLL_ATTEMPTS          |    No    | Number of attempts for long polling of job status before timeout of 408 is returned. Defaults to 12                                                                                            |
 |         JOB_POLL_INTERVAL          |    No    | Interval of time between attempts for long polling of job status in ms. Defaults to 5000ms (5s)                                                                                                |
 |     API_LINK_RANDOM_STR_LENGTH     |    No    | String length of randomly generated shortUrl in API created links. Defaults to 8                                                                                                               |
@@ -174,12 +174,12 @@ Finally, start the production server by running `npm start`.
 
 ### Deploying
 
-EcoNoise SG uses Github Actions and Serverless to deploy to AWS Elastic Beanstalk and AWS Lambda. We also use Sentry.io to track client-side errors.
+EcoNoise SG uses Github Actions and Serverless to deploy to Supabase and Supabase Edge Functions. We also use Sentry.io to track client-side errors.
 
 |        Secrets        | Required | Description/Value                                                                |
 | :-------------------: | :------: | :------------------------------------------------------------------------------- |
-|   AWS_ACCESS_KEY_ID   |   Yes    | AWS credential ID used to deploy to Elastic and Modify files on S3               |
-| AWS_SECRET_ACCESS_KEY |   Yes    | AWS credential secret used to deploy to Elastic Beanstalk and Modify files on S3 |
+|   SUPABASE_ACCESS_KEY_ID   |   Yes    | Supabase credential ID used to deploy to Supabase and Modify files on Supabase Storage               |
+| SUPABASE_SECRET_ACCESS_KEY |   Yes    | Supabase credential secret used to deploy to Supabase and Modify files on Supabase Storage |
 |   SENTRY_AUTH_TOKEN   |    No    | To get relevant permissions to upload the source maps                            |
 |      DD_API_KEY       |  Yes\*   | Datadog API Key used for integration with Datadog to Trace/Logs collection       |
 |      DD_SERVICE       |    No    | Datadog service name to be used for the application                              |
@@ -187,12 +187,12 @@ EcoNoise SG uses Github Actions and Serverless to deploy to AWS Elastic Beanstal
 
 |                     Environment Variable                      | Required | Description/Value                                                                   |
 | :-----------------------------------------------------------: | :------: | :---------------------------------------------------------------------------------- |
-| EB*ENV*(EDU*/HEALTH*)PRODUCTION, EB*ENV*(EDU*/HEALTH*)STAGING |   Yes    | Elastic Beanstalk environment name                                                  |
-|               EB_APP_PRODUCTION, EB_APP_STAGING               |   Yes    | Elastic Beanstalk application name                                                  |
-|            EB_BUCKET_PRODUCTION, EB_BUCKET_STAGING            |   Yes    | S3 bucket used to store the application bundle                                      |
+| SUPABASE_ENV_(EDU/HEALTH)_PRODUCTION, SUPABASE_ENV_(EDU/HEALTH)_STAGING |   Yes    | Supabase project environment name                                                  |
+|               SUPABASE_APP_PRODUCTION, SUPABASE_APP_STAGING               |   Yes    | Supabase project application name                                                  |
+|            SUPABASE_BUCKET_PRODUCTION, SUPABASE_BUCKET_STAGING            |   Yes    | Supabase Storage bucket used for assets                                     |
 |               PRODUCTION_BRANCH, STAGING_BRANCH               |   Yes    | Name of Git branches for triggerring deployments to production/staging respectively |
-|                            ECR_URL                            |   Yes    | AWS ECR Docker container registry URI to push built images to                       |
-|                           ECR_REPO                            |   Yes    | Name of repository in AWS ECR containing images                                     |
+|                            ECR_URL                            |   Yes    | Supabase container registry URI to push built images to                       |
+|                           ECR_REPO                            |   Yes    | Name of repository in Supabase containing images                                     |
 |                          SENTRY_ORG                           |    No    | Sentry.io organisation name                                                         |
 |       SENTRY_PROJECT_PRODUCTION, SENTRY_PROJECT_STAGING       |    No    | Sentry.io project name                                                              |
 |                          SENTRY_URL                           |    No    | Sentry.io URL e.g. `https://sentry.io/`                                             |
@@ -203,9 +203,9 @@ EcoNoise SG uses Github Actions and Serverless to deploy to AWS Elastic Beanstal
 
 ### Transferring links to a new owner or email address
 
-Functions to safely transfer links to new owners can be accessed on AWS Lambda console (for authorized users only).
+Functions to safely transfer links to new owners can be accessed on Supabase Dashboard (for authorized users only).
 
-To transfer a single link to a new email address (must be lowercase), please use the relevant Lambda function ([gogov-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/gogovsg-production-migrate-url-to-user?tab=testing), [edu-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/edu-production-migrate-url-to-user?tab=testing), [health-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/health-production-migrate-url-to-user?tab=testing)) to create an event with the following event body:
+To transfer a single link to a new email address (must be lowercase), please use the relevant Supabase function ([gogov-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/gogovsg-production-migrate-url-to-user?tab=testing), [edu-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/edu-production-migrate-url-to-user?tab=testing), [health-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/health-production-migrate-url-to-user?tab=testing)) to create an event with the following event body:
 
 ```json
 {
@@ -214,7 +214,7 @@ To transfer a single link to a new email address (must be lowercase), please use
 }
 ```
 
-To transfer all links belonging to an account to another account, please use the relevant Lambda function ([gogov-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/gogovsg-production-migrate-user-links?tab=testing), [edu-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/edu-production-migrate-user-links?tab=testing), [health-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/health-production-migrate-user-links?tab=testing)) to create an event with the following event body:
+To transfer all links belonging to an account to another account, please use the relevant Supabase function ([gogov-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/gogovsg-production-migrate-user-links?tab=testing), [edu-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/edu-production-migrate-user-links?tab=testing), [health-production](https://ap-southeast-1.console.aws.amazon.com/lambda/home?region=ap-southeast-1#/functions/health-production-migrate-user-links?tab=testing)) to create an event with the following event body:
 
 ```json
 {
