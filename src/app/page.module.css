@@ -502,7 +502,7 @@
   text-align: center;
   font-size: 2.5rem;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.05em;
   margin-bottom: 4rem;
   color: #0f172a;
 }
@@ -512,7 +512,7 @@
   text-align: center;
   font-size: 2.5rem;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.05em;
 
   color: #0f172a;
 }
@@ -564,7 +564,7 @@
 
 .featureTitle {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 0.75rem;
   color: #0f172a;
 }
@@ -1229,6 +1229,7 @@
 .blogMainTitle {
   font-size: 2.5rem;
   font-weight: 500;
+  letter-spacing: -0.05em;
   color: #0f172a;
 }
 
@@ -1501,7 +1502,7 @@
 
 .impactTitle {
   font-size: 1.2rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #0f172a;
   margin-bottom: 0.75rem;
 }
@@ -1528,27 +1529,39 @@
 .integrationCard {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 4px;
+  padding: 2rem;
   display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
   transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
 }
 
-.integrationDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: #115e59;
-  margin-top: 0.4rem;
-  flex-shrink: 0;
+
+.integrationImageWrapper {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
+
+.integrationImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
 
 .integrationText {
   color: #0f172a;
   font-weight: 500;
   line-height: 1.6;
+  font-size: 1.1rem;
 }
 
 

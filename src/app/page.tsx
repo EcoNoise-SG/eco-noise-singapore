@@ -155,10 +155,22 @@ export default function Home() {
   ];
 
   const integrationDetails = [
-    "RESTful API with webhook support",
-    "Compatible with existing case management systems",
-    "Real-time push notifications for high-risk zones",
-    "Responsive PWA optimized for ruggedized tablets"
+    {
+      text: "RESTful API with webhook support",
+      image: "/system-assets/undraw_code-contribution_8k0x.svg"
+    },
+    {
+      text: "Compatible with existing case management systems",
+      image: "/system-assets/undraw_scrum-board_7bgh.svg"
+    },
+    {
+      text: "Real-time push notifications for high-risk zones",
+      image: "/system-assets/undraw_alarm-ringing_4deu.svg"
+    },
+    {
+      text: "Responsive PWA optimized for ruggedized tablets",
+      image: "/system-assets/undraw_web-app_141a.svg"
+    }
   ];
 
 
@@ -459,9 +471,11 @@ export default function Home() {
           </div>
           <div className={styles.integrationGrid}>
             {integrationDetails.map((detail) => (
-              <div key={detail} className={styles.integrationCard}>
-                <div className={styles.integrationDot}></div>
-                <p className={styles.integrationText}>{detail}</p>
+              <div key={detail.text} className={styles.integrationCard}>
+                <div className={styles.integrationImageWrapper}>
+                  <img src={detail.image} alt={detail.text} className={styles.integrationImage} />
+                </div>
+                <p className={styles.integrationText}>{detail.text}</p>
               </div>
             ))}
           </div>
