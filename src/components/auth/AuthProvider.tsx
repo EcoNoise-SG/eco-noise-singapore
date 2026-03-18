@@ -7,127 +7,103 @@ import {
   useState,
   type ReactNode,
 } from "react";
-
-type User = {
-  name: string;
-  role: string;
-  agency: string;
-};
-
-type AuthSession = {
-  user: User;
-  issuedAt: string;
-  version: number;
-};
+import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
+import toast from "react-hot-toast";
 
 type AuthContextValue = {
   isAuthenticated: boolean;
   isReady: boolean;
   user: User | null;
-  login: (email: string) => void;
-  logout: () => void;
+  login: (email: string, password?: string) => Promise<void>;
+  logout: () => Promise<void>;
 };
-
-const STORAGE_KEY = "eco-noise-sg-auth";
-const SESSION_VERSION = 1;
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function isUser(value: unknown): value is User {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.name === "string" &&
-    typeof candidate.role === "string" &&
-    typeof candidate.agency === "string"
-  );
-}
-
-function parseStoredSession(value: string | null): User | null {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(value) as AuthSession | User;
-
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      "user" in parsed &&
-      isUser(parsed.user)
-    ) {
-      return parsed.user;
-    }
-
-    if (isUser(parsed)) {
-      return parsed;
-    }
-  } catch {
-    window.localStorage.removeItem(STORAGE_KEY);
-  }
-
-  return null;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isReady, setIsReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const restoreSession = (storedValue: string | null) => {
-      const nextUser = parseStoredSession(storedValue);
-
-      setUser(nextUser);
-      setIsAuthenticated(Boolean(nextUser));
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setIsReady(true);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setIsReady(true);
+    });
+
+    return () => {
+      subscription.unsubscribe();
     };
-
-    restoreSession(window.localStorage.getItem(STORAGE_KEY));
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key !== STORAGE_KEY) {
-        return;
-      }
-
-      restoreSession(event.newValue);
-    };
-
-    window.addEventListener("storage", handleStorage);
-
-    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  function login(email: string) {
-    const nextUser: User = {
-      name: "Operations Analyst",
-      role: "Enforcement Planning",
-      agency: email.includes("gov") ? "GovTech / NEA" : "EcoNoise SG Pilot",
-    };
-    const nextSession: AuthSession = {
-      user: nextUser,
-      issuedAt: new Date().toISOString(),
-      version: SESSION_VERSION,
-    };
+  async function login(email: string, password?: string) {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: password || 'password', // Defaulting for the demo if user doesn't provide it
+      });
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession));
-    setUser(nextUser);
-    setIsAuthenticated(true);
+      if (error) {
+        // Fallback for new users (auto-registration)
+        if (error.message.includes("Invalid login credentials") || error.status === 400) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password: password || 'password',
+            options: {
+              data: {
+                full_name: email.split('@')[0],
+                agency: email.includes('gov') ? "NEA · Enforcement" : "EcoNoise SG Pilot"
+              }
+            }
+          });
+
+          if (signUpError) {
+             if (signUpError.message.includes("User already registered")) {
+                throw new Error("Incorrect password for this email.");
+             }
+             if (signUpError.message.includes("Database error saving new user")) {
+                throw new Error("Supabase internal error. Please ensure 'Confirm Email' is disabled in Supabase > Authentication > Settings.");
+             }
+             throw signUpError;
+          }
+          toast.success("New account provisioned!");
+          return;
+        }
+        throw error;
+      }
+      toast.success("Logged in successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to login");
+      throw error;
+    }
   }
 
-  function logout() {
-    window.localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
-    setIsAuthenticated(false);
+  async function logout() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success("Logged out successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to logout");
+    }
   }
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, isReady, user, login, logout }}
+      value={{ 
+        isAuthenticated: !!user, 
+        isReady, 
+        user, 
+        login, 
+        logout 
+      }}
     >
       {children}
     </AuthContext.Provider>

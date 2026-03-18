@@ -328,7 +328,6 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .headerLeft {
@@ -354,8 +353,8 @@
 
 
 .headerTitle {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 500;
   color: #0f172a;
 }
 
@@ -463,6 +462,7 @@
 
 .userProfile:hover {
   background-color: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .avatar {
@@ -481,6 +481,8 @@
 .userInfo {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .userName {
@@ -495,12 +497,66 @@
   color: #212121;
 }
 
-.logoutBtn {
+.dropdownArrow {
+  color: #94a3b8;
+  transition: transform 0.2s;
+  margin-left: 4px;
+}
+
+.arrowRotate {
+  transform: rotate(180deg);
+}
+
+.profileDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  z-index: 100;
+  animation: slideDown 0.2s ease-out;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.dropdownItem:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background-color: #f1f5f9;
+  margin: 6px 0;
+}
+
+.dropdownLogout {
   color: #ef4444;
 }
 
-.logoutBtn:hover {
+.dropdownLogout:hover {
   background-color: #fef2f2;
+  color: #dc2626;
 }
 
 /* Ribbons & Content */

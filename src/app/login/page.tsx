@@ -8,8 +8,8 @@ import styles from "./page.module.css";
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, isReady } = useAuth();
-  const [email, setEmail] = useState("ops@nea.gov.sg");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     if (isReady && isAuthenticated) {
@@ -30,18 +30,20 @@ export default function LoginPage() {
           <div className={styles.logoContainer}>
             <img src="/LOGO.svg" alt="EcoNoise SG Logo" className={styles.logoImage} />
           </div>
-          <h2>Access dashboard</h2>
-          <span>Use the mock frontend login to enter the prototype workspace.</span>
+          <h2>Enterprise Workspace</h2>
+          <span>Use your credentials to enter the EcoNoise SG operations dashboard.</span>
         </div>
 
         <form
           className={styles.form}
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
-            login(email);
-            startTransition(() => {
-              router.replace("/dashboard");
-            });
+            try {
+              await login(email, password);
+              // Redirect is handled by the useEffect
+            } catch (err) {
+              // Error toast is handled in AuthProvider
+            }
           }}
         >
           <label className={styles.field}>
@@ -50,7 +52,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="ops@nea.gov.sg"
+              placeholder="e.g. officer@agency.gov.sg"
             />
           </label>
 
@@ -60,7 +62,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter password"
+              placeholder="Create or enter password"
             />
           </label>
 
@@ -70,8 +72,8 @@ export default function LoginPage() {
         </form>
 
         <div className={styles.formFooter}>
-          <p>Suggested demo credentials</p>
-          <strong>`ops@nea.gov.sg` with any password</strong>
+          <p>Prototype Sandbox</p>
+          <strong>Enter any email and password to create or access a workspace.</strong>
         </div>
       </section>
     </main>

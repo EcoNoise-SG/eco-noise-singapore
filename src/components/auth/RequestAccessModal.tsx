@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Modal from "../ui/Modal";
+import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 import styles from "./RequestAccessModal.module.css";
 
 interface RequestAccessModalProps {
@@ -8,6 +10,7 @@ interface RequestAccessModalProps {
 }
 
 const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     department: "",
@@ -19,12 +22,33 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
-    console.log("Request Access Submitted:", formData);
-    alert("Request received! We'll get back to you within 48 hours.");
-    onClose();
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase
+        .from('enquiries')
+        .insert([
+          { 
+            full_name: formData.name, 
+            department: formData.department, 
+            email: formData.email,
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast.success("Request submitted successfully!");
+      setFormData({ name: "", department: "", email: "" });
+      onClose();
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast.error(error.message || "Failed to submit request.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,6 +69,7 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
             className={styles.input}
             value={formData.name}
             onChange={handleChange}
+            disabled={isSubmitting}
           />
         </div>
 
@@ -59,6 +84,7 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
             className={styles.input}
             value={formData.department}
             onChange={handleChange}
+            disabled={isSubmitting}
           />
         </div>
 
@@ -73,11 +99,12 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
             className={styles.input}
             value={formData.email}
             onChange={handleChange}
+            disabled={isSubmitting}
           />
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Submit Request
+        <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit Request"}
         </button>
       </form>
     </Modal>
