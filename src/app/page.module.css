@@ -10,10 +10,7 @@
   color: white;
   padding: 8px 1rem;
   text-align: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   z-index: 1000;
   font-size: 14px;
   font-weight: 500;
@@ -26,6 +23,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .notificationLink {
@@ -61,13 +60,10 @@
   align-items: center;
   padding: .3rem 2rem;
   background: white;
-
-  position: fixed;
+  position: sticky;
   box-shadow: 0 2px 4px #00000026;
-  top: 40px;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  top: 0;
+  z-index: 900;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -105,6 +101,8 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .loginBtn {
@@ -182,7 +180,7 @@
 /* Hero Section */
 .hero {
   position: relative;
-  padding: 16rem 2rem 8rem;
+  padding: 10rem 2rem 8rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -807,6 +805,8 @@
   height: 400px;
   display: flex;
   align-items: center;
+  min-width: 0;
+  min-height: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1664,6 +1664,24 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
+  .header {
+    gap: 1rem;
+  }
+
+  .problemLayout {
+    flex-direction: column;
+  }
+
+  .mapContainer,
+  .problemContent {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .mapContainer {
+    height: 420px;
+  }
+
   .footerGrid {
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
@@ -1679,6 +1697,10 @@
 
   .technicalGrid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .githubText {
+    display: none;
   }
 
   .useCasesGrid {
@@ -1697,9 +1719,18 @@
 @media (max-width: 768px) {
   .header {
     padding: 1rem 1.5rem;
+    gap: 0.75rem;
   }
 
   .navLinks {
+    display: none;
+  }
+
+  .authBtns {
+    gap: 0.5rem;
+  }
+
+  .navbarGithubLink {
     display: none;
   }
 
@@ -1714,6 +1745,15 @@
 
   .problemTitle {
     font-size: 2rem;
+  }
+
+  .problemCard {
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .mapContainer {
+    height: 320px;
   }
 
   .problemNumber {
@@ -1786,6 +1826,22 @@
     grid-template-columns: 1fr;
   }
 
+  .faqHeader,
+  .blogHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .blogSection {
+    padding: 5rem 1.5rem;
+  }
+
+  .blogCard {
+    flex: 0 0 85%;
+    min-width: 85%;
+  }
+
   .footerBottom {
     flex-direction: column;
     gap: 1.5rem;
@@ -1799,6 +1855,23 @@
 }
 
 @media (max-width: 480px) {
+  .notificationBar {
+    font-size: 13px;
+  }
+
+  .notificationText {
+    gap: 0.5rem;
+  }
+
+  .header {
+    padding: 0.85rem 1rem;
+  }
+
+  .authBtns {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .heroTitle {
     font-size: 2rem;
   }
@@ -1820,6 +1893,10 @@
 
   .problemTitle {
     font-size: 1.75rem;
+  }
+
+  .problemCard {
+    flex-direction: column;
   }
 
   .sectionTitle {

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -77,9 +77,31 @@ const multiOutputData = [
   { subject: 'Response Coverage', noise: 90, dumping: 65, pest: 82 },
 ];
 
+function ChartFrame({
+  height,
+  minHeight,
+  children,
+}: {
+  height: number | string;
+  minHeight: number;
+  children: React.ReactNode;
+}) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  return (
+    <div style={{ width: '100%', height, minWidth: 0, minHeight, flex: 1 }}>
+      {isMounted ? children : null}
+    </div>
+  );
+}
+
 export const TFTForecastChart = ({ height = 300 }: { height?: number | string }) => (
-  <div style={{ width: '100%', height }}>
-    <ResponsiveContainer>
+  <ChartFrame height={height} minHeight={280}>
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
       <AreaChart data={tftData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
@@ -97,12 +119,12 @@ export const TFTForecastChart = ({ height = 300 }: { height?: number | string })
         <Line type="monotone" dataKey="actual" stroke="#334155" strokeWidth={2} dot={{ r: 4, fill: '#334155' }} />
       </AreaChart>
     </ResponsiveContainer>
-  </div>
+  </ChartFrame>
 );
 
 export const AttentionWeightsChart = ({ height = 200 }: { height?: number | string }) => (
-  <div style={{ width: '100%', height }}>
-    <ResponsiveContainer>
+  <ChartFrame height={height} minHeight={200}>
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={200}>
       <BarChart data={attentionData} layout="vertical" margin={{ left: 40 }}>
         <XAxis type="number" hide />
         <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={100} />
@@ -110,12 +132,12 @@ export const AttentionWeightsChart = ({ height = 200 }: { height?: number | stri
         <Bar dataKey="weight" fill="#115e59" radius={[0, 4, 4, 0]} barSize={20} />
       </BarChart>
     </ResponsiveContainer>
-  </div>
+  </ChartFrame>
 );
 
 export const SpatialPersistenceChart = ({ height = 300 }: { height?: number | string }) => (
-  <div style={{ width: '100%', height }}>
-    <ResponsiveContainer>
+  <ChartFrame height={height} minHeight={280}>
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
       <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
         <XAxis type="number" dataKey="persistence" name="Persistence" unit="%" label={{ value: 'Persistence (%)', position: 'bottom', offset: 0, fontSize: 12 }} />
@@ -130,12 +152,12 @@ export const SpatialPersistenceChart = ({ height = 300 }: { height?: number | st
         </Scatter>
       </ScatterChart>
     </ResponsiveContainer>
-  </div>
+  </ChartFrame>
 );
 
 export const AnomalyDetectionChart = ({ height = 300 }: { height?: number | string }) => (
-  <div style={{ width: '100%', height }}>
-    <ResponsiveContainer>
+  <ChartFrame height={height} minHeight={280}>
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
       <LineChart data={anomalyData}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#cbd5e1" />
         <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
@@ -158,12 +180,12 @@ export const AnomalyDetectionChart = ({ height = 300 }: { height?: number | stri
         />
       </LineChart>
     </ResponsiveContainer>
-  </div>
+  </ChartFrame>
 );
 
 export const MultiOutputRadarChart = ({ height = 350 }: { height?: number | string }) => (
-  <div style={{ width: '100%', height }}>
-    <ResponsiveContainer>
+  <ChartFrame height={height} minHeight={320}>
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
       <RadarChart cx="50%" cy="50%" outerRadius="80%" data={multiOutputData}>
         <PolarGrid stroke="#94a3b8" />
         <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: '#64748b' }} />
@@ -175,5 +197,5 @@ export const MultiOutputRadarChart = ({ height = 350 }: { height?: number | stri
         <Tooltip />
       </RadarChart>
     </ResponsiveContainer>
-  </div>
+  </ChartFrame>
 );

@@ -5,7 +5,10 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import styles from "./profile.module.css";
-import { DashboardSection } from "@/components/dashboard/DashboardSection";
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Failed to update profile";
+}
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -34,8 +37,8 @@ export default function ProfilePage() {
 
       if (error) throw error;
       toast.success("Profile updated successfully!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsUpdating(false);
     }

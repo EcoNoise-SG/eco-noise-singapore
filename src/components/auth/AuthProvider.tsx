@@ -21,6 +21,10 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Authentication request failed.";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -79,8 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       toast.success("Logged in successfully!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to login");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
       throw error;
     }
   }
@@ -90,8 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success("Logged out successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to logout");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   }
 

@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
             <AttentionWeightsChart height={200} />
             <div className={styles.metaText}>
               SHAP-derived attention weights show which real-world signals most
-              influence the model's predictions each forecasting cycle.
+              influence the model&apos;s predictions each forecasting cycle.
             </div>
           </div>
         </DashboardSection>

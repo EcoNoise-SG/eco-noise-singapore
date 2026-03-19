@@ -9,6 +9,10 @@ interface RequestAccessModalProps {
   onClose: () => void;
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Failed to submit request.";
+}
+
 const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,9 +47,9 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
       toast.success("Request submitted successfully!");
       setFormData({ name: "", department: "", email: "" });
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Submission error:", error);
-      toast.error(error.message || "Failed to submit request.");
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -59,7 +63,7 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
         </div>
         
         <div className={styles.inputGroup}>
-          <label htmlFor="name" className={styles.label}>FullName</label>
+          <label htmlFor="name" className={styles.label}>Full Name</label>
           <input
             type="text"
             id="name"

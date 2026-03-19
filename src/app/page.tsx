@@ -1,10 +1,18 @@
 "use client";
 import React, { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { TFTForecastChart, SpatialPersistenceChart, AnomalyDetectionChart, MultiOutputRadarChart } from "@/components/dashboard/AnalyticsCharts";
 import ProjectBoard from "@/components/feedback-loop/ProjectBoard";
 import RequestAccessModal from "@/components/auth/RequestAccessModal";
 import styles from "./page.module.css";
+
+type AccessPath = {
+  title: string;
+  description: string;
+  cta: string;
+  href?: string;
+};
 
 export default function Home() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -14,18 +22,6 @@ export default function Home() {
   const openAccessModal = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     setIsAccessModalOpen(true);
-  };
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const { current } = scrollContainerRef;
-      const scrollAmount = current.offsetWidth / 3 + 11; // Scroll by one card width including gap logic
-      if (direction === "left") {
-        current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-      } else {
-        current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-      }
-    }
   };
 
   const faqItems = [
@@ -86,7 +82,8 @@ export default function Home() {
       excerpt: "Predict renovation noise surges 3 weeks ahead during CNY prep season. Pre-position officers in high-density HDB areas with historical renovation patterns. Impact: 18% reduction in noise complaints",
       tag: "Festive Season",
       date: "March 12, 2026",
-      image: "/blog-assets/blog-1.jpg"
+      image: "/blog-assets/blog-1.jpg",
+      slug: "chinese-new-year-preparation"
     },
     {
       id: 2,
@@ -94,7 +91,8 @@ export default function Home() {
       excerpt: "Correlate NEA weather forecasts with flooding complaint hotspots. Deploy inspection teams to drainage-prone areas before heavy rainfall events. Impact: 22% faster response times",
       tag: "Weather-Driven",
       date: "March 08, 2026",
-      image: "/blog-assets/blog-4.jpg"
+      image: "/blog-assets/blog-4.jpg",
+      slug: "monsoon-season-response"
     },
     {
       id: 3,
@@ -102,15 +100,9 @@ export default function Home() {
       excerpt: "Sync with BCA permit start dates and LTA road works schedules. Coordinate proactive site inspections during high-activity construction phases. Impact: Officer utilization +22%",
       tag: "Construction",
       date: "March 05, 2026",
-      image: "/blog-assets/blog-5.jpg"
+      image: "/blog-assets/blog-5.jpg",
+      slug: "construction-zone-coordination"
     }
-  ];
-
-  const partnerBadges = [
-    "Built for NEA & Town Councils",
-    "Compliant with IM8 Standards",
-    "Powered by GovTech & OGP",
-    "Data from data.gov.sg"
   ];
 
   const impactMetrics = [
@@ -179,7 +171,7 @@ export default function Home() {
 
 
 
-  const accessPaths = [
+  const accessPaths: AccessPath[] = [
     {
       title: "Agency leads",
       description: "Request sandbox access with 48-hour provisioning for pilot review and stakeholder walkthroughs.",
@@ -188,12 +180,14 @@ export default function Home() {
     {
       title: "Officers",
       description: "Open the demo workspace to explore hotspot views, forecast cards, and deployment guidance.",
-      cta: "See Demo Workspace"
+      cta: "See Demo Workspace",
+      href: "/dashboard"
     },
     {
       title: "Developers",
       description: "Review platform integration patterns, API endpoints, and webhook-ready architecture.",
-      cta: "Explore API Documentation"
+      cta: "Explore API Documentation",
+      href: "/api-docs"
     }
   ];
 
@@ -202,14 +196,14 @@ export default function Home() {
       <div className={styles.notificationBar}>
         <span className={styles.notificationText}>
           EcoNoise SG v1.2.0 is now live with enhanced spatio-temporal forecasting!
-          <Link href="#whats-new" className={styles.notificationLink}>
+          <Link href="#technology" className={styles.notificationLink}>
             See what&apos;s new <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
           </Link>
         </span>
       </div>
       <header className={styles.header}>
         <Link href="/" className={styles.logo}>
-          <img src="/LOGO.svg" alt="EcoNoise SG Logo" className={styles.logoImage} />
+          <Image src="/LOGO.svg" alt="EcoNoise SG Logo" width={180} height={52} className={styles.logoImage} priority />
         </Link>
         <nav className={styles.navLinks}>
           <Link href="#features" className={styles.navLink}>Features</Link>
@@ -224,10 +218,13 @@ export default function Home() {
           <Link href="/login" className={styles.loginBtn}>Sign In</Link>
           <button onClick={openAccessModal} className={styles.signupBtn}>Request Access</button>
           <a href="https://github.com/EcoNoise-SG/eco-noise-singapore.git" target="_blank" rel="noopener noreferrer" className={styles.navbarGithubLink}>
-            <img
+            <Image
               src="/navbar-assets/icons8-github.gif"
               alt="GitHub"
               className={styles.navbarGithubIcon}
+              width={32}
+              height={32}
+              unoptimized
             />
             <span className={styles.githubText}>
               Visit GitHub
@@ -301,7 +298,7 @@ export default function Home() {
             {precisionTools.map((tool) => (
               <div key={tool.title} className={styles.featureCard}>
                 <div className={styles.featureImageWrapper}>
-                  <img src={tool.image} alt={tool.title} className={styles.featureImage} />
+                  <Image src={tool.image} alt={tool.title} className={styles.featureImage} width={320} height={180} />
                 </div>
                 <h3 className={styles.featureTitle}>{tool.title}</h3>
                 <p className={styles.featureDesc}>{tool.description}</p>
@@ -320,42 +317,42 @@ export default function Home() {
           <div className={styles.dataSourcesGrid}>
             <div className={styles.dataSourceCard}>
               <div className={styles.dataSourceIcon}>
-                <img src="/data-source/oneservice-logo.png" alt="OneService" />
+                <Image src="/data-source/oneservice-logo.png" alt="OneService" width={160} height={90} />
               </div>
               <h3 className={styles.dataSourceTitle}>OneService Reports</h3>
               <p className={styles.dataSourceDesc}>Aggregate complaint patterns by type and planning area</p>
             </div>
             <div className={styles.dataSourceCard}>
               <div className={styles.dataSourceIcon}>
-                <img src="/data-source/bca-logo.png" alt="BCA" />
+                <Image src="/data-source/bca-logo.png" alt="BCA" width={160} height={90} />
               </div>
               <h3 className={styles.dataSourceTitle}>BCA Construction Permits</h3>
               <p className={styles.dataSourceDesc}>Project start dates and location data</p>
             </div>
             <div className={styles.dataSourceCard}>
               <div className={styles.dataSourceIcon}>
-                <img src="/data-source/primary-logo.jpg" alt="LTA" />
+                <Image src="/data-source/primary-logo.jpg" alt="LTA" width={160} height={90} />
               </div>
               <h3 className={styles.dataSourceTitle}>LTA Road Works</h3>
               <p className={styles.dataSourceDesc}>Weekly published maintenance schedules</p>
             </div>
             <div className={styles.dataSourceCard}>
               <div className={styles.dataSourceIcon}>
-                <img src="/data-source/ogp-logo.svg" alt="OPG" />
+                <Image src="/data-source/ogp-logo.svg" alt="OPG" width={160} height={90} />
               </div>
               <h3 className={styles.dataSourceTitle}>OPG Weather API</h3>
               <p className={styles.dataSourceDesc}>Real-time rain, temperature, and humidity data</p>
             </div>
             <div className={styles.dataSourceCard}>
               <div className={styles.dataSourceIcon}>
-                <img src="/data-source/GTlogo.gif" alt="Calendar" />
+                <Image src="/data-source/GTlogo.gif" alt="Calendar" width={160} height={90} unoptimized />
               </div>
               <h3 className={styles.dataSourceTitle}>Calendar Features</h3>
               <p className={styles.dataSourceDesc}>Public holidays, school terms, and festive seasons</p>
             </div>
             <div className={styles.dataSourceCard}>
               <div className={styles.dataSourceIcon}>
-                <img src="/data-source/CSA10-international-fullcolour.png" alt="IM8" />
+                <Image src="/data-source/CSA10-international-fullcolour.png" alt="IM8" width={160} height={90} />
               </div>
               <h3 className={styles.dataSourceTitle}>IM8 Compliant</h3>
               <p className={styles.dataSourceDesc}>Government-grade encryption and data governance</p>
@@ -450,7 +447,7 @@ export default function Home() {
             {impactMetrics.map((item) => (
               <article key={item.title} className={styles.impactCard}>
                 <div className={styles.impactImageWrapper}>
-                  <img src={item.image} alt={item.title} className={styles.impactImage} />
+                  <Image src={item.image} alt={item.title} className={styles.impactImage} width={240} height={160} />
                 </div>
                 <h3 className={styles.impactTitle}>{item.title}</h3>
                 <p className={styles.impactDescription}>{item.description}</p>
@@ -473,7 +470,7 @@ export default function Home() {
             {integrationDetails.map((detail) => (
               <div key={detail.text} className={styles.integrationCard}>
                 <div className={styles.integrationImageWrapper}>
-                  <img src={detail.image} alt={detail.text} className={styles.integrationImage} />
+                  <Image src={detail.image} alt={detail.text} className={styles.integrationImage} width={280} height={140} />
                 </div>
                 <p className={styles.integrationText}>{detail.text}</p>
               </div>
@@ -502,10 +499,10 @@ export default function Home() {
               <article key={path.title} className={styles.accessCard}>
                 <h3 className={styles.accessTitle}>{path.title}</h3>
                 <p className={styles.accessDescription}>{path.description}</p>
-                {path.cta === "Request Sandbox Access" ? (
-                  <button onClick={openAccessModal} className={styles.accessLink}>{path.cta}</button>
+                {path.href ? (
+                  <Link href={path.href} className={styles.accessLink}>{path.cta}</Link>
                 ) : (
-                  <Link href="/login" className={styles.accessLink}>{path.cta}</Link>
+                  <button onClick={openAccessModal} className={styles.accessLink}>{path.cta}</button>
                 )}
               </article>
             ))}
@@ -557,7 +554,7 @@ export default function Home() {
             {blogPosts.map((post) => (
               <div key={post.id} className={styles.blogCard}>
                 <div className={styles.blogImageWrapper}>
-                  <img src={post.image} alt={post.title} className={styles.blogImage} />
+                  <Image src={post.image} alt={post.title} className={styles.blogImage} width={640} height={360} />
                 </div>
                 <div className={styles.blogContent}>
                   <span className={styles.blogTag}>{post.tag}</span>
@@ -565,7 +562,7 @@ export default function Home() {
                   <p className={styles.blogExcerpt}>{post.excerpt}</p>
                   <div className={styles.blogFooter}>
                     <span className={styles.blogDate}>{post.date}</span>
-                    <Link href="#" className={styles.readMore}>
+                    <Link href={`/blog#${post.slug}`} className={styles.readMore}>
                       Read More
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7" /><path d="M7 7h10v10" /></svg>
                     </Link>
@@ -581,7 +578,7 @@ export default function Home() {
         <div className={styles.footerGrid}>
           <div>
             <Link href="/" className={styles.footerLogoContainer}>
-              <img src="/LOGO.svg" alt="EcoNoise SG Logo" className={`${styles.logoImage} ${styles.whiteLogo}`} />
+              <Image src="/LOGO.svg" alt="EcoNoise SG Logo" width={180} height={52} className={`${styles.logoImage} ${styles.whiteLogo}`} />
             </Link>
             <p className={styles.footerDesc}>
               Advanced predictive modeling for urban noise and environmental nuisance management in Singapore.
@@ -621,33 +618,40 @@ export default function Home() {
           </div>
           <div className={styles.footerCol}>
             <h4 className={styles.footerColTitle}>Legal</h4>
-            <Link href="#" className={styles.footerLink}>Privacy Policy</Link>
-            <Link href="#" className={styles.footerLink}>Terms of Use</Link>
-            <Link href="#" className={styles.footerLink}>Data Governance</Link>
+            <Link href="/privacy-policy" className={styles.footerLink}>Privacy Policy</Link>
+            <Link href="/terms" className={styles.footerLink}>Terms of Use</Link>
+            <Link href="/data-governance" className={styles.footerLink}>Data Governance</Link>
           </div>
           <div className={styles.footerCol}>
             <h4 className={styles.footerColTitle}>Contact</h4>
-            <Link href="#" className={styles.footerLink}>Support Desk</Link>
-            <Link href="#" className={styles.footerLink}>Agency Access</Link>
-            <Link href="#" className={styles.footerLink}>API Documentation</Link>
+            <Link href="/support" className={styles.footerLink}>Support Desk</Link>
+            <Link href="/agency-access" className={styles.footerLink}>Agency Access</Link>
+            <Link href="/api-docs" className={styles.footerLink}>API Documentation</Link>
           </div>
         </div>
         <div className={styles.footerLogos}>
-          <img
+          <Image
             src="/footer-assets/powered-by-govtech.e8355051a1ee7687637fb87ff6231503.svg"
             alt="Powered by GovTech"
             className={styles.footerLogo}
+            width={160}
+            height={40}
           />
-          <img
+          <Image
             src="/footer-assets/ogp-logo.svg"
             alt="Open Government Products"
             className={`${styles.footerLogo} ${styles.whiteLogo}`}
+            width={160}
+            height={40}
           />
           <a href="https://github.com/EcoNoise-SG/eco-noise-singapore.git" target="_blank" rel="noopener noreferrer" className={styles.footerGithubLink}>
-            <img
+            <Image
               src="/navbar-assets/icons8-github.gif"
               alt="GitHub"
               className={styles.footerGithubIcon}
+              width={32}
+              height={32}
+              unoptimized
             />
             <span className={styles.githubText}>
               Visit GitHub
