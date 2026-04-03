@@ -19,7 +19,6 @@
   border-radius: 4px;
   box-shadow: 0 28px 70px -30px rgba(15, 23, 42, 0.5);
   overflow: hidden;
-  backdrop-filter: blur(16px);
 }
 
 .panelHeader {
