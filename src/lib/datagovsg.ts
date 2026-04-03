@@ -108,8 +108,10 @@ async function fetchDatasetDownload(datasetId: string) {
     return {
       rawText: await downloadResponse.text(),
     };
-  } catch (error) {
-    console.error(`Dataset download fetch failed for ${datasetId}:`, error);
+  } catch (error: any) {
+    if (!String(error).includes("429")) {
+      console.error(`Dataset download fetch failed for ${datasetId}:`, error);
+    }
     return null;
   }
 }

@@ -653,6 +653,8 @@ export async function getUserPreferences(userId: string) {
 
   const isNoRowError =
     errorCode === 'PGRST116' ||
+    errorCode === '406' ||
+    errorCode === '403' ||
     errorMessage.toLowerCase().includes('0 rows') ||
     errorMessage.toLowerCase().includes('no rows');
 
@@ -682,6 +684,8 @@ export async function updateUserPreferences(userId: string, preferences: any) {
   const isBenignPreferenceError =
     !errorMessage && !errorCode ||
     errorCode === 'PGRST116' ||
+    errorCode === '406' ||
+    errorCode === '403' ||
     errorMessage.toLowerCase().includes('0 rows') ||
     errorMessage.toLowerCase().includes('no rows');
 
