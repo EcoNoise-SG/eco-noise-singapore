@@ -9,6 +9,7 @@ import { getInterventions, getRiskAlerts, subscribeToInterventions, subscribeToR
 export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [signals, setSignals] = useState<any[]>([]);
+  const [cases, setCases] = useState<any[]>([]);
   const [responseNotes, setResponseNotes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -16,6 +17,19 @@ export default function UsersPage() {
       const [alerts, interventions] = await Promise.all([getRiskAlerts(), getInterventions()]);
       const wellbeingSignals = alerts.filter((alert: any) => ["C8", "C9", "C10"].includes(alert.component));
       setSignals(wellbeingSignals);
+      const derivedCases = wellbeingSignals.map((signal: any) => {
+        const linkedResponses = interventions.filter((item: any) => item.location === signal.location && ["Counseling", "Health_Screening"].includes(item.intervention_type));
+        return {
+          caseId: signal.alert_id,
+          domain: signal.component,
+          area: signal.location,
+          risk: Number(signal.risk_score || 0),
+          status: signal.status,
+          narrative: signal.description || "No live description",
+          linkedResponses: linkedResponses.length,
+        };
+      });
+      setCases(derivedCases);
       setResponseNotes([
         `${wellbeingSignals.filter((signal: any) => signal.component === "C10").length} wellbeing escalations are currently visible.`,
         `${interventions.filter((item: any) => ["Counseling", "Health_Screening"].includes(item.intervention_type)).length} response workflows are mapped to welfare-linked issues.`,
@@ -38,13 +52,13 @@ export default function UsersPage() {
 
   const filtered = useMemo(
     () =>
-      signals.filter(
+      cases.filter(
         (signal) =>
-          signal.location?.toLowerCase().includes(search.toLowerCase()) ||
-          signal.component?.toLowerCase().includes(search.toLowerCase()) ||
-          signal.description?.toLowerCase().includes(search.toLowerCase()),
+          signal.area?.toLowerCase().includes(search.toLowerCase()) ||
+          signal.domain?.toLowerCase().includes(search.toLowerCase()) ||
+          signal.narrative?.toLowerCase().includes(search.toLowerCase()),
       ),
-    [search, signals],
+    [cases, search],
   );
 
   const highRiskCount = signals.filter((signal) => signal.risk_level === "Critical").length;
@@ -55,9 +69,9 @@ export default function UsersPage() {
     <div className={styles.stack}>
       <div className={styles.gridThree}>
         <div className={styles.metricCard}>
-          <p>Total Workers Monitored</p>
+          <p>Total Welfare Cases Monitored</p>
           <strong>{signals.length}</strong>
-          <span className={styles.metaLabel}>Live worker welfare signals across C8-C10</span>
+          <span className={styles.metaLabel}>Live worker-welfare cases across C8-C10 alerts</span>
         </div>
         <div className={styles.metricCard}>
           <p>High Risk (Critical)</p>
@@ -71,7 +85,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <DashboardSection eyebrow="Worker wellbeing" title="Live mental health and welfare risk signals">
+      <DashboardSection eyebrow="Worker wellbeing" title="Live mental health and welfare case signals">
         <div style={{ marginBottom: "16px" }}>
           <input
             type="text"
@@ -106,26 +120,26 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {filtered.map((signal) => (
-                <tr key={signal.alert_id}>
-                  <td style={{ fontSize: "0.75rem", color: "#64748b" }}>{signal.alert_id}</td>
-                  <td style={{ fontWeight: 700 }}>{signal.component}</td>
-                  <td style={{ fontSize: "0.875rem", color: "#64748b" }}>{signal.location}</td>
+                <tr key={signal.caseId}>
+                  <td style={{ fontSize: "0.75rem", color: "#64748b" }}>{signal.caseId}</td>
+                  <td style={{ fontWeight: 700 }}>{signal.domain}</td>
+                  <td style={{ fontSize: "0.875rem", color: "#64748b" }}>{signal.area}</td>
                   <td>
                     <span style={{
-                      background: Number(signal.risk_score || 0) >= 80 ? "#fef2f2" : Number(signal.risk_score || 0) >= 60 ? "#fef3c7" : "#f0fdf4",
-                      color: Number(signal.risk_score || 0) >= 80 ? "#991b1b" : Number(signal.risk_score || 0) >= 60 ? "#92400e" : "#166534",
+                      background: Number(signal.risk || 0) >= 80 ? "#fef2f2" : Number(signal.risk || 0) >= 60 ? "#fef3c7" : "#f0fdf4",
+                      color: Number(signal.risk || 0) >= 80 ? "#991b1b" : Number(signal.risk || 0) >= 60 ? "#92400e" : "#166534",
                       padding: "3px 8px",
                       borderRadius: "4px",
                       fontSize: "0.75rem",
                       fontWeight: 700,
                     }}>
-                      {signal.risk_score}/100
+                      {signal.risk}/100
                     </span>
                   </td>
-                  <td style={{ fontSize: "0.8rem", color: "#64748b" }}>{signal.description || "No live description"}</td>
+                  <td style={{ fontSize: "0.8rem", color: "#64748b" }}>{signal.narrative}</td>
                   <td>
                     <span style={{ color: signal.status === "resolved" ? "#22c55e" : "#dc2626", fontWeight: 700, fontSize: "0.75rem" }}>
-                      ● {signal.status === "resolved" ? "Resolved" : "Active"}
+                      {signal.status === "resolved" ? "Resolved" : `Active · ${signal.linkedResponses} linked responses`}
                     </span>
                   </td>
                 </tr>

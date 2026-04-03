@@ -7,6 +7,7 @@ import settingsStyles from "./settings.module.css";
 import {
   getCurrentUserIdentity,
   getUserPreferences,
+  subscribeToUserPreferences,
   updateUserPreferences,
 } from "@/lib/supabase";
 import toast from "react-hot-toast";
@@ -20,6 +21,7 @@ export default function SettingsPage() {
   const [forecastZone, setForecastZone] = useState("all");
   const [dataDays, setDataDays] = useState("14");
   const [language, setLanguage] = useState("en");
+  const [lastSyncedAt, setLastSyncedAt] = useState<string>("Waiting for sync");
   const notificationItems = [
     {
       label: "Email Notifications",
@@ -54,6 +56,7 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadPreferences() {
       const identity = await getCurrentUserIdentity();
+      if (!identity.id) return;
       const preferences = await getUserPreferences(identity.id);
       if (!preferences) return;
 
@@ -65,9 +68,19 @@ export default function SettingsPage() {
       setForecastZone(preferences.notification_settings?.forecastZone || "all");
       setDataDays(preferences.notification_settings?.dataDays || "14");
       setLanguage(preferences.language || "en");
+      setLastSyncedAt(preferences.updated_at ? new Date(preferences.updated_at).toLocaleString() : "Live");
     }
 
     void loadPreferences();
+    let unsubscribe: () => void = () => {};
+    void getCurrentUserIdentity().then((identity) => {
+      if (!identity.id) return;
+      unsubscribe = subscribeToUserPreferences(identity.id, () => {
+        void loadPreferences();
+      }).unsubscribe;
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const persistPreferences = async (overrides: Record<string, unknown> = {}) => {
@@ -97,19 +110,19 @@ export default function SettingsPage() {
     <div className={styles.stack}>
       <div className={styles.gridThree}>
         <div className={styles.metricCard}>
-          <p>System Version</p>
-          <strong>v2.4.1</strong>
-          <span className={styles.metaLabel}>Realtime preference sync enabled</span>
+          <p>Preference Sync</p>
+          <strong>{lastSyncedAt === "Waiting for sync" ? "Pending" : "Live"}</strong>
+          <span className={styles.metaLabel}>Last sync: {lastSyncedAt}</span>
         </div>
         <div className={styles.metricCard}>
-          <p>Data Retention</p>
-          <strong>36 months</strong>
-          <span className={styles.metaLabel}>Historical complaint data</span>
+          <p>Active Language</p>
+          <strong>{language.toUpperCase()}</strong>
+          <span className={styles.metaLabel}>Current shell preference</span>
         </div>
         <div className={styles.metricCard}>
-          <p>Model Retraining</p>
-          <strong>Monthly</strong>
-          <span className={styles.metaLabel}>Preference-aware filters active</span>
+          <p>Alert Threshold</p>
+          <strong>{alertThreshold}</strong>
+          <span className={styles.metaLabel}>Forecast zone: {forecastZone} · data window: {dataDays} days</span>
         </div>
       </div>
 

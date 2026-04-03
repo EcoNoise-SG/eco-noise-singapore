@@ -11,6 +11,8 @@ const BASE_URL = "https://api-production.data.gov.sg/v2/public/api";
 const REALTIME_BASE_URL = "https://api-open.data.gov.sg/v2/real-time/api";
 const DATASTORE_BASE_URL = "https://data.gov.sg/api/action/datastore_search";
 const OPEN_DATASET_BASE_URL = "https://api-open.data.gov.sg/v1/public/api/datasets";
+const PLANNING_AREA_DATASET_ID = "d_2cc750190544007400b2cfd5d7f53209";
+const ONEMAP_SEARCH_URL = "https://www.onemap.gov.sg/api/common/elastic/search";
 
 async function fetchRealtimeEndpoint(endpoint: string, revalidate = 600) {
   try {
@@ -293,6 +295,61 @@ export async function fetchHDBData() {
     : null;
 }
 
+// ==================== URA / Planning Boundaries ====================
+
+export async function fetchPlanningAreaBoundaries() {
+  const downloaded = await fetchDatasetDownload(PLANNING_AREA_DATASET_ID);
+  if (!downloaded) return null;
+
+  const features = Array.isArray(downloaded?.features) ? downloaded.features : [];
+  return {
+    type: downloaded.type || "FeatureCollection",
+    name: downloaded.name || "PlanningAreas",
+    features,
+    total: features.length,
+  };
+}
+
+export async function fetchOneMapLocation(searchValue: string) {
+  try {
+    const query = new URLSearchParams({
+      searchVal: searchValue,
+      returnGeom: "Y",
+      getAddrDetails: "N",
+      pageNum: "1",
+    });
+
+    const response = await fetch(`${ONEMAP_SEARCH_URL}?${query.toString()}`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      throw new Error(`OneMap search error (${searchValue}): ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const firstResult = payload?.results?.[0];
+    if (!firstResult) return null;
+
+    const latitude = Number(firstResult.LATITUDE || firstResult.latitude);
+    const longitude = Number(firstResult.LONGITUDE || firstResult.longitude || firstResult.LONGTITUDE);
+
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+      return null;
+    }
+
+    return {
+      searchValue,
+      found: payload?.found || 1,
+      coordinates: [latitude, longitude] as [number, number],
+      name: String(firstResult.SEARCHVAL || firstResult.BUILDING || searchValue),
+    };
+  } catch (error) {
+    console.error(`OneMap search failed for ${searchValue}:`, error);
+    return null;
+  }
+}
+
 // ==================== MOH: Health Data ====================
 
 /**
@@ -322,6 +379,21 @@ export interface DataSourceStatus {
   lastFetch?: Date;
   recordCount?: number;
   latencyMs?: number;
+}
+
+export interface GovernmentDomainIntel {
+  construction: {
+    activeProjects: number;
+    topProjectTypes: string[];
+  };
+  dormitories: {
+    indexedRecords: number;
+    topTowns: string[];
+  };
+  health: {
+    datasetCount: number;
+    sourceAgency: string;
+  };
 }
 
 /**
@@ -399,6 +471,55 @@ export async function checkAllDataSources(): Promise<DataSourceStatus[]> {
   return statuses;
 }
 
+export async function getGovernmentDomainIntel(): Promise<GovernmentDomainIntel> {
+  const [bca, hdb, moh] = await Promise.all([
+    fetchBCAProjects(),
+    fetchHDBData(),
+    fetchMOHHealthData(),
+  ]);
+
+  const bcaRecords = bca?.records || [];
+  const hdbRecords = hdb?.records || [];
+  const mohRecords = moh?.data || moh?.records || [];
+
+  const topProjectTypes = (Object.entries(
+    bcaRecords.reduce((acc: Record<string, number>, record: any) => {
+      const type = String(record.type_of_work || record.project_type || record.type || "Unknown");
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {}),
+  ) as Array<[string, number]>)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([type]) => type);
+
+  const topTowns = (Object.entries(
+    hdbRecords.reduce((acc: Record<string, number>, record: any) => {
+      const town = String(record.town || record.address || record.block || "Unknown");
+      acc[town] = (acc[town] || 0) + 1;
+      return acc;
+    }, {}),
+  ) as Array<[string, number]>)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([town]) => town);
+
+  return {
+    construction: {
+      activeProjects: bcaRecords.length,
+      topProjectTypes,
+    },
+    dormitories: {
+      indexedRecords: hdbRecords.length,
+      topTowns,
+    },
+    health: {
+      datasetCount: Array.isArray(mohRecords) ? mohRecords.length : 0,
+      sourceAgency: "MOH",
+    },
+  };
+}
+
 // ==================== Data Processing Helpers ====================
 
 /**
@@ -454,7 +575,10 @@ const dataGovSGExports = {
   fetchBCAProjects,
   fetchHDBData,
   fetchMOHHealthData,
+  fetchPlanningAreaBoundaries,
+  fetchOneMapLocation,
   checkAllDataSources,
+  getGovernmentDomainIntel,
   calculateC1RiskScore,
   calculateC6HeatStress,
   calculateC7DiseaseRisk,

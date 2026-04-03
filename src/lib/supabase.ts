@@ -9,19 +9,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type Unsubscribe = { unsubscribe: () => void };
 let auditLoggingDisabled = false;
-
-function getDemoUserFromStorage() {
-  if (typeof window === 'undefined') return null;
-
-  const storedUser = window.localStorage.getItem('mockAuthUser');
-  if (!storedUser) return null;
-
-  try {
-    return JSON.parse(storedUser) as { id?: string; email?: string };
-  } catch {
-    return null;
-  }
-}
+export type OperationalActivityItem = {
+  id: string;
+  created_at: string;
+  user_id?: string;
+  action: string;
+  resource_type: string;
+  resource_id?: string;
+  severity: 'info' | 'warning' | 'critical';
+  details?: any;
+  source: 'audit' | 'alerts' | 'interventions' | 'reports';
+};
 
 export async function getCurrentUserIdentity() {
   const {
@@ -33,21 +31,22 @@ export async function getCurrentUserIdentity() {
       id: user.id,
       email: user.email || '',
       isDemo: false,
+      isAuthenticated: true,
     };
   }
 
-  const demoUser = getDemoUserFromStorage();
-
   return {
-    id: demoUser?.id || '00000000-0000-0000-0000-000000000001',
-    email: demoUser?.email || 'demo@econoise.sg',
-    isDemo: true,
+    id: '',
+    email: '',
+    isDemo: false,
+    isAuthenticated: false,
   };
 }
 
 async function safeAudit(action: string, resourceType?: string, resourceId?: string, details?: any) {
   try {
     const identity = await getCurrentUserIdentity();
+    if (!identity.id) return;
     await logAudit(identity.id, action, resourceType, resourceId, details);
   } catch {
     // Audit writes should never surface to the UI; the app remains usable without them.
@@ -110,6 +109,9 @@ export function subscribeToNotifications(onChange: () => void): Unsubscribe {
 }
 
 export function subscribeToAuditLogs(onChange: () => void): Unsubscribe {
+  if (!auditLoggingEnabled) {
+    return { unsubscribe: () => undefined };
+  }
   return subscribeToTable('audit-logs-live', 'audit_logs', onChange);
 }
 
@@ -117,8 +119,22 @@ export function subscribeToReports(onChange: () => void): Unsubscribe {
   return subscribeToTable('reports-live', 'reports', onChange);
 }
 
-export function subscribeToUserPreferences(onChange: () => void): Unsubscribe {
-  return subscribeToTable('user-preferences-live', 'user_preferences', onChange);
+export function subscribeToUserPreferences(userId: string, onChange: () => void): Unsubscribe;
+export function subscribeToUserPreferences(onChange: () => void): Unsubscribe;
+export function subscribeToUserPreferences(
+  userIdOrOnChange: string | (() => void),
+  maybeOnChange?: () => void,
+): Unsubscribe {
+  if (typeof userIdOrOnChange === 'string') {
+    return subscribeToScopedTable(
+      `user-preferences-live-${userIdOrOnChange}`,
+      'user_preferences',
+      userIdOrOnChange,
+      maybeOnChange || (() => {}),
+    );
+  }
+
+  return subscribeToTable('user-preferences-live', 'user_preferences', userIdOrOnChange);
 }
 
 export function subscribeToWorkspaceMessages(userId: string, onChange: () => void): Unsubscribe {
@@ -155,7 +171,7 @@ export async function createRiskAlert(alertData: {
       risk_score: data[0].risk_score,
     });
     const identity = await getCurrentUserIdentity();
-    if (!identity.isDemo) {
+    if (identity.id) {
       await createNotification(
         identity.id,
         `New ${data[0].component} alert created`,
@@ -225,7 +241,7 @@ export async function createIntervention(interventionData: {
       location: data[0].location,
     });
     const identity = await getCurrentUserIdentity();
-    if (!identity.isDemo) {
+    if (identity.id) {
       await createNotification(
         identity.id,
         'Intervention created',
@@ -329,6 +345,10 @@ export async function logAudit(userId: string, action: string, resourceType?: st
 }
 
 export async function getAuditLogs(userId?: string, limit = 100) {
+  if (!auditLoggingEnabled) {
+    return [];
+  }
+
   let query = supabase.from('audit_logs').select('*');
 
   if (userId) query = query.eq('user_id', userId);
@@ -339,6 +359,103 @@ export async function getAuditLogs(userId?: string, limit = 100) {
 
   if (error) console.error('Error fetching audit logs:', error);
   return data || [];
+}
+
+function toSeverity(label: string) {
+  if (/critical|error|failed/i.test(label)) return 'critical' as const;
+  if (/warning|acknowledged|deferred/i.test(label)) return 'warning' as const;
+  return 'info' as const;
+}
+
+export async function getOperationalActivity(limit = 100) {
+  const [auditLogs, alerts, interventions, reports] = await Promise.all([
+    getAuditLogs(undefined, limit),
+    getRiskAlerts(),
+    getInterventions(),
+    getReports(),
+  ]);
+
+  const derivedLogs: OperationalActivityItem[] = [
+    ...alerts.map((alert: any) => ({
+      id: `alert-${alert.alert_id}`,
+      created_at: alert.updated_at || alert.created_at,
+      user_id: alert.assigned_to || undefined,
+      action: `${alert.status === 'resolved' ? 'Resolved' : 'Tracked'} ${alert.component} alert at ${alert.location}`,
+      resource_type: 'alert',
+      resource_id: alert.alert_id,
+      severity: toSeverity(alert.risk_level || alert.status || 'info'),
+      details: {
+        risk_level: alert.risk_level,
+        risk_score: alert.risk_score,
+        status: alert.status,
+      },
+      source: 'alerts' as const,
+    })),
+    ...interventions.map((intervention: any) => ({
+      id: `intervention-${intervention.intervention_id}`,
+      created_at: intervention.updated_at || intervention.end_time || intervention.start_time || intervention.created_at,
+      user_id: intervention.assigned_to || undefined,
+      action: `${intervention.outcome === 'Completed' ? 'Completed' : 'Updated'} ${intervention.intervention_type} at ${intervention.location}`,
+      resource_type: 'intervention',
+      resource_id: intervention.intervention_id,
+      severity: toSeverity(intervention.outcome || 'info'),
+      details: {
+        outcome: intervention.outcome,
+        team_members: intervention.team_members,
+      },
+      source: 'interventions' as const,
+    })),
+    ...reports.map((report: any) => ({
+      id: `report-${report.report_id}`,
+      created_at: report.published_at || report.created_at,
+      user_id: report.generated_by || undefined,
+      action: `${report.status === 'published' ? 'Published' : 'Generated'} ${report.report_type} report`,
+      resource_type: 'report',
+      resource_id: report.report_id,
+      severity: toSeverity(report.status || 'info'),
+      details: {
+        title: report.title,
+        status: report.status,
+      },
+      source: 'reports' as const,
+    })),
+  ];
+
+  const canonicalAuditLogs: OperationalActivityItem[] = auditLogs.map((log: any) => ({
+    id: `audit-${log.id}`,
+    created_at: log.created_at,
+    user_id: log.user_id || undefined,
+    action: log.action,
+    resource_type: log.resource_type || 'audit',
+    resource_id: log.resource_id || undefined,
+    severity: toSeverity(log.action || 'info'),
+    details: log.details,
+    source: 'audit',
+  }));
+
+  const activity = [...canonicalAuditLogs, ...derivedLogs]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit);
+
+  return activity;
+}
+
+export function subscribeToOperationalActivity(onChange: () => void): Unsubscribe {
+  const subscriptions = [
+    subscribeToRiskAlerts(onChange),
+    subscribeToInterventions(onChange),
+    subscribeToReports(onChange),
+  ];
+
+  if (auditLoggingEnabled) {
+    subscriptions.push(subscribeToAuditLogs(onChange));
+  }
+
+  return {
+    unsubscribe: () => {
+      subscriptions.forEach((subscription) => subscription.unsubscribe());
+    },
+  };
 }
 
 // ==================== RISK HISTORY ====================
@@ -774,7 +891,7 @@ export async function publishReport(reportId: string) {
       status: 'published',
     });
     const identity = await getCurrentUserIdentity();
-    if (!identity.isDemo) {
+    if (identity.id) {
       await createNotification(
         identity.id,
         'Report published',

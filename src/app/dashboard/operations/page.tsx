@@ -63,10 +63,9 @@ export default function OperationsPage() {
         data.slice(0, 3).map((int: any) => ({
           title: `${int.intervention_type.replace(/_/g, " ")} — ${int.location}`,
           time: new Date(int.start_time).toLocaleString(),
-          detail:
-            typeof int.objectives === "string"
-              ? int.objectives
-              : JSON.stringify(int.objectives || {}),
+          detail: `Assigned to ${int.assigned_to || "field team"} · ${typeof int.objectives === "string"
+            ? int.objectives
+            : JSON.stringify(int.objectives || {})}`,
         })),
       );
       setInterventions(data.map((int: any) => ({
@@ -128,13 +127,13 @@ export default function OperationsPage() {
             <div className={styles.timelineItem} key={action.title}>
               <div className={styles.timelineHeader}>
                 <strong>{action.title}</strong>
-                <span className={styles.riskBadge}>Medium-High Risk</span>
+                <span className={styles.riskBadge}>{interventions.find((item) => `${item.type.replace(/_/g, " ")} — ${item.location}` === action.title)?.status || "Live"}</span>
               </div>
               <span className={styles.timeLabel}>{action.time}</span>
               <p className={styles.actionDetail}>{action.detail}</p>
               <div className={styles.logicNode}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
-                <span>Trigger: Machinery phase + historical incident pattern match</span>
+                <span>Recommendation reflects the current live intervention payload, officer assignment, and location context.</span>
               </div>
             </div>
           ))}
@@ -155,12 +154,7 @@ export default function OperationsPage() {
               <div className={styles.timelineItem} key={int.intervention_id}>
                 <div className={styles.timelineHeader}>
                   <strong>{int.type.replace(/_/g, " ")} — {int.location}</strong>
-                  <span style={{
-                    padding: "4px 8px",
-                    background: int.status === "Completed" ? "#d1fae5" : int.status === "In Progress" ? "#dbeafe" : "#fef3c7",
-                    borderRadius: "4px",
-                    fontSize: "12px",
-                  }}>
+                  <span className={`${styles.statusPill} ${int.status === "Completed" ? styles.statusSynced : styles.statusRealtime}`}>
                     {int.status}
                   </span>
                 </div>
@@ -178,16 +172,7 @@ export default function OperationsPage() {
                       outcome: "Completed",
                       findings: "",
                     })}
-                    style={{
-                      marginTop: "12px",
-                      padding: "6px 12px",
-                      background: "#10b981",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontSize: "12px",
-                    }}
+                    className={styles.secondaryActionBtn}
                   >
                     Update Outcome
                   </button>
@@ -252,40 +237,16 @@ export default function OperationsPage() {
 
       {/* Outcome Update Modal */}
       {outcomeModal.isOpen && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0,0,0,0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: "white",
-            padding: "24px",
-            borderRadius: "8px",
-            maxWidth: "500px",
-            width: "90%",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-          }}>
-            <h2 style={{ marginTop: 0, marginBottom: "16px" }}>Update Intervention Outcome</h2>
-            
-            <label style={{ display: "block", marginBottom: "16px" }}>
-              <span style={{ display: "block", marginBottom: "4px", fontWeight: 500 }}>Outcome</span>
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalCard}>
+            <h2 className={styles.modalTitle}>Update Intervention Outcome</h2>
+
+            <label className={styles.modalField}>
+              <span className={styles.modalLabel}>Outcome</span>
               <select
                 value={outcomeModal.outcome}
                 onChange={(e) => setOutcomeModal({ ...outcomeModal, outcome: e.target.value })}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "4px",
-                  boxSizing: "border-box",
-                }}
+                className={styles.modalInput}
               >
                 <option value="Completed">Completed</option>
                 <option value="In Progress">In Progress</option>
@@ -293,46 +254,26 @@ export default function OperationsPage() {
               </select>
             </label>
 
-            <label style={{ display: "block", marginBottom: "16px" }}>
-              <span style={{ display: "block", marginBottom: "4px", fontWeight: 500 }}>Findings & Notes</span>
+            <label className={styles.modalField}>
+              <span className={styles.modalLabel}>Findings & Notes</span>
               <textarea
                 value={outcomeModal.findings}
                 onChange={(e) => setOutcomeModal({ ...outcomeModal, findings: e.target.value })}
                 placeholder="Document findings, actions taken, recommendations..."
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "4px",
-                  boxSizing: "border-box",
-                  minHeight: "100px",
-                }}
+                className={styles.modalTextarea}
               />
             </label>
 
-            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+            <div className={styles.modalActions}>
               <button
                 onClick={() => setOutcomeModal({ isOpen: false, interventionId: "", outcome: "Completed", findings: "" })}
-                style={{
-                  padding: "8px 16px",
-                  background: "#e2e8f0",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
+                className={styles.modalSecondaryBtn}
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateOutcome}
-                style={{
-                  padding: "8px 16px",
-                  background: "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
+                className={styles.primaryActionBtn}
               >
                 Save Outcome
               </button>

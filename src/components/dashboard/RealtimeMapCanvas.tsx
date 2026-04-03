@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import type { Feature, Geometry } from "geojson";
 import L from "leaflet";
-import { Circle, MapContainer, Pane, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { Circle, GeoJSON, MapContainer, Pane, TileLayer, Tooltip, useMap } from "react-leaflet";
 import styles from "./map.module.css";
 
 type OverlayLayer = "all" | "alerts" | "ops" | "ml-nea";
@@ -10,6 +11,7 @@ type OverlayLayer = "all" | "alerts" | "ops" | "ml-nea";
 type ZoneOverlay = {
   area: string;
   coordinates: [number, number];
+  geometry?: Geometry;
   score: number;
   status: string;
   detail: string;
@@ -51,6 +53,15 @@ function MapViewportSync({
     if (!zones.length) return;
 
     const selectedZone = zones.find((zone) => zone.area === selectedArea);
+    if (selectedZone?.geometry) {
+      const geometryLayer = L.geoJSON(selectedZone.geometry);
+      map.flyToBounds(geometryLayer.getBounds().pad(0.15), {
+        animate: true,
+        duration: 1.1,
+      });
+      return;
+    }
+
     if (selectedZone) {
       map.flyTo(selectedZone.coordinates, Math.max(map.getZoom(), 11), {
         animate: true,
@@ -108,38 +119,72 @@ export default function RealtimeMapCanvas({
           const isSelected = zone.area === selectedArea;
 
           return (
-            <Circle
-              key={`${zone.area}-${activeLayer}`}
-              center={zone.coordinates}
-              radius={radiusFromScore(zone.score)}
-              pathOptions={{
-                color: palette.stroke,
-                weight: isSelected ? 3 : 2,
-                fillColor: palette.fill,
-                fillOpacity: isSelected ? 0.28 : 0.18,
-              }}
-              eventHandlers={{
-                click: () => onZoneSelect(zone.area),
-              }}
-            >
-              <Tooltip
-                direction="top"
-                offset={[0, -8]}
-                opacity={1}
-                permanent
-                className={`${styles.mapTooltip} ${isSelected ? styles.mapTooltipActive : ""}`}
+            zone.geometry ? (
+              <GeoJSON
+                key={`${zone.area}-${activeLayer}`}
+                data={{ type: "Feature", properties: { area: zone.area }, geometry: zone.geometry } as Feature}
+                style={{
+                  color: palette.stroke,
+                  weight: isSelected ? 3 : 2,
+                  fillColor: palette.fill,
+                  fillOpacity: isSelected ? 0.24 : 0.14,
+                }}
+                eventHandlers={{
+                  click: () => onZoneSelect(zone.area),
+                }}
               >
-                <div className={styles.tooltipInner}>
-                  <strong>{zone.area}</strong>
-                  <span>{zone.status}</span>
-                  <p>{zone.detail}</p>
-                  <small>
-                    {zone.alerts} alerts · {zone.interventions} ops
-                    {zone.predictionScore ? ` · ML ${zone.predictionScore}` : ""}
-                  </small>
-                </div>
-              </Tooltip>
-            </Circle>
+                <Tooltip
+                  direction="top"
+                  offset={[0, -8]}
+                  opacity={1}
+                  permanent
+                  className={`${styles.mapTooltip} ${isSelected ? styles.mapTooltipActive : ""}`}
+                >
+                  <div className={styles.tooltipInner}>
+                    <strong>{zone.area}</strong>
+                    <span>{zone.status}</span>
+                    <p>{zone.detail}</p>
+                    <small>
+                      {zone.alerts} alerts · {zone.interventions} ops
+                      {zone.predictionScore ? ` · ML ${zone.predictionScore}` : ""}
+                    </small>
+                  </div>
+                </Tooltip>
+              </GeoJSON>
+            ) : (
+              <Circle
+                key={`${zone.area}-${activeLayer}`}
+                center={zone.coordinates}
+                radius={radiusFromScore(zone.score)}
+                pathOptions={{
+                  color: palette.stroke,
+                  weight: isSelected ? 3 : 2,
+                  fillColor: palette.fill,
+                  fillOpacity: isSelected ? 0.28 : 0.18,
+                }}
+                eventHandlers={{
+                  click: () => onZoneSelect(zone.area),
+                }}
+              >
+                <Tooltip
+                  direction="top"
+                  offset={[0, -8]}
+                  opacity={1}
+                  permanent
+                  className={`${styles.mapTooltip} ${isSelected ? styles.mapTooltipActive : ""}`}
+                >
+                  <div className={styles.tooltipInner}>
+                    <strong>{zone.area}</strong>
+                    <span>{zone.status}</span>
+                    <p>{zone.detail}</p>
+                    <small>
+                      {zone.alerts} alerts · {zone.interventions} ops
+                      {zone.predictionScore ? ` · ML ${zone.predictionScore}` : ""}
+                    </small>
+                  </div>
+                </Tooltip>
+              </Circle>
+            )
           );
         })}
       </Pane>

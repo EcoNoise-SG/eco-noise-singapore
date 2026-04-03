@@ -4,7 +4,12 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./map.module.css";
-import { fetchNEAAirQuality, fetchNEAWeather } from "@/lib/datagovsg";
+import {
+  fetchNEAAirQuality,
+  fetchNEAWeather,
+  fetchOneMapLocation,
+  fetchPlanningAreaBoundaries,
+} from "@/lib/datagovsg";
 import {
   getInterventions,
   getRiskAlerts,
@@ -26,6 +31,7 @@ type MapPrediction = {
 type ZoneOverlay = {
   area: string;
   coordinates: [number, number];
+  geometry?: any;
   score: number;
   status: string;
   detail: string;
@@ -43,6 +49,7 @@ type ZoneOverlay = {
 type AreaAggregate = {
   area: string;
   coordinates: [number, number];
+  geometry?: any;
   score: number;
   alerts: number;
   interventions: number;
@@ -55,48 +62,19 @@ type AreaAggregate = {
   };
 };
 
+type PlanningBoundaryFeature = {
+  type: string;
+  properties?: {
+    PLN_AREA_N?: string;
+    [key: string]: unknown;
+  };
+  geometry?: any;
+};
+
 const RealtimeMapCanvas = dynamic(() => import("./RealtimeMapCanvas"), {
   ssr: false,
   loading: () => <div className={styles.mapLoading}>Loading live map layers...</div>,
 });
-
-const AREA_COORDINATES: Record<string, [number, number]> = {
-  Singapore: [1.3521, 103.8198],
-  "Bukit Merah": [1.2852, 103.8198],
-  Bedok: [1.3236, 103.9273],
-  Woodlands: [1.4382, 103.789],
-  "Jurong East": [1.3329, 103.7436],
-  "Jurong West": [1.35, 103.704],
-  "Jurong Industrial": [1.3215, 103.7052],
-  "Choa Chu Kang": [1.3854, 103.7443],
-  Clementi: [1.3151, 103.7654],
-  Queenstown: [1.2942, 103.7861],
-  Yishun: [1.4294, 103.8354],
-  Sembawang: [1.4491, 103.8185],
-  Bishan: [1.3508, 103.8485],
-  AngMoKio: [1.3691, 103.8454],
-  "Ang Mo Kio": [1.3691, 103.8454],
-  Hougang: [1.3612, 103.8863],
-  Sengkang: [1.3868, 103.8914],
-  Punggol: [1.4043, 103.902],
-  Serangoon: [1.3521, 103.869],
-  Tampines: [1.3496, 103.9568],
-  "Pasir Ris": [1.3731, 103.9493],
-  Geylang: [1.3188, 103.887],
-  Kallang: [1.3106, 103.866],
-  ToaPayoh: [1.3343, 103.8563],
-  "Toa Payoh": [1.3343, 103.8563],
-  Novena: [1.3201, 103.8439],
-  Orchard: [1.3048, 103.8318],
-  Marina: [1.276, 103.8546],
-  "Marina Bay": [1.276, 103.8546],
-  Changi: [1.3644, 103.9915],
-  Tuas: [1.2942, 103.635],
-  BoonLay: [1.3386, 103.705],
-  "Boon Lay": [1.3386, 103.705],
-};
-
-const LOCATION_MATCHERS = Object.entries(AREA_COORDINATES).sort((a, b) => b[0].length - a[0].length);
 
 const LAYER_META: Record<Exclude<OverlayLayer, "all">, { label: string; description: string }> = {
   alerts: { label: "Alerts", description: "Live risk alerts from Supabase" },
@@ -104,14 +82,59 @@ const LAYER_META: Record<Exclude<OverlayLayer, "all">, { label: string; descript
   "ml-nea": { label: "ML + NEA", description: "Predictions blended with environmental signals" },
 };
 
-function resolveCoordinates(area: string): [number, number] {
-  const normalized = area.trim();
-  if (AREA_COORDINATES[normalized]) {
-    return AREA_COORDINATES[normalized];
+function normalizeAreaName(area: string) {
+  return area.toLowerCase().replace(/\s+/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
+}
+
+function getBoundaryCentroid(geometry: any): [number, number] | null {
+  if (!geometry?.coordinates || !geometry?.type) return null;
+
+  const coordinateGroups =
+    geometry.type === "Polygon"
+      ? geometry.coordinates.flat(1)
+      : geometry.type === "MultiPolygon"
+        ? geometry.coordinates.flat(2)
+        : [];
+
+  if (!coordinateGroups.length) return null;
+
+  const [lngSum, latSum] = coordinateGroups.reduce(
+    (sum: [number, number], point: [number, number]) => [sum[0] + point[0], sum[1] + point[1]],
+    [0, 0],
+  );
+
+  return [latSum / coordinateGroups.length, lngSum / coordinateGroups.length];
+}
+
+function matchPlanningBoundary(area: string, features: PlanningBoundaryFeature[]) {
+  const normalizedArea = normalizeAreaName(area);
+  return features.find((feature) => normalizeAreaName(String(feature.properties?.PLN_AREA_N || "")) === normalizedArea)
+    || features.find((feature) => normalizedArea.includes(normalizeAreaName(String(feature.properties?.PLN_AREA_N || ""))))
+    || features.find((feature) => normalizeAreaName(String(feature.properties?.PLN_AREA_N || "")).includes(normalizedArea));
+}
+
+async function resolveAreaSpatial(area: string, features: PlanningBoundaryFeature[]) {
+  const matchedBoundary = matchPlanningBoundary(area, features);
+  const centroid = matchedBoundary?.geometry ? getBoundaryCentroid(matchedBoundary.geometry) : null;
+  if (matchedBoundary?.geometry && centroid) {
+    return {
+      coordinates: centroid,
+      geometry: matchedBoundary.geometry,
+    };
   }
 
-  const match = LOCATION_MATCHERS.find(([candidate]) => normalized.toLowerCase().includes(candidate.toLowerCase()));
-  return match ? match[1] : AREA_COORDINATES.Singapore;
+  const geocodedLocation = await fetchOneMapLocation(area);
+  if (geocodedLocation?.coordinates) {
+    return {
+      coordinates: geocodedLocation.coordinates,
+      geometry: undefined,
+    };
+  }
+
+  return {
+    coordinates: [1.3521, 103.8198] as [number, number],
+    geometry: undefined,
+  };
 }
 
 function getZoneStatus(score: number) {
@@ -149,6 +172,7 @@ function toZoneOverlay(zone: AreaAggregate, layer: OverlayLayer): ZoneOverlay {
   return {
     area: zone.area,
     coordinates: zone.coordinates,
+    geometry: zone.geometry,
     score: zone.score,
     status: getZoneStatus(zone.score),
     detail: buildLayerDetail(zone, layer),
@@ -180,11 +204,12 @@ export function MockMap({
   useEffect(() => {
     async function loadSpatialData() {
       try {
-        const [alerts, interventions, weather, airQuality, predictionResponse] = await Promise.all([
+        const [alerts, interventions, weather, airQuality, planningBoundaries, predictionResponse] = await Promise.all([
           getRiskAlerts(),
           getInterventions(),
           fetchNEAWeather(),
           fetchNEAAirQuality(),
+          fetchPlanningAreaBoundaries(),
           fetch("/api/model/predictions").catch(() => null),
         ]);
 
@@ -202,18 +227,68 @@ export function MockMap({
         const weatherDetail = `${weatherLabel} · ${String(weatherRecord.forecast || "Live field conditions")}`;
 
         const mergedByArea = new Map<string, AreaAggregate>();
+        const boundaryFeatures: PlanningBoundaryFeature[] = planningBoundaries?.features || [];
+        const areas = new Set<string>();
 
         alerts.forEach((alert: any) => {
-          const key = String(alert.location || "Singapore");
-          const existing = mergedByArea.get(key) || {
-            area: key,
-            coordinates: resolveCoordinates(key),
-            score: 0,
+          areas.add(String(alert.location || "Singapore"));
+        });
+
+        interventions.forEach((intervention: any) => {
+          areas.add(String(intervention.location || "Singapore"));
+        });
+
+        predictions.forEach((prediction) => {
+          areas.add(prediction.area || "Singapore");
+        });
+
+        if (!areas.size) {
+          areas.add("Singapore");
+        }
+
+        const spatialLookup = new Map<
+          string,
+          {
+            coordinates: [number, number];
+            geometry?: any;
+          }
+        >();
+
+        await Promise.all(
+          Array.from(areas).map(async (area) => {
+            const spatial = await resolveAreaSpatial(area, boundaryFeatures);
+            spatialLookup.set(area, spatial);
+          }),
+        );
+
+        const ensureAreaAggregate = (area: string, score = 0) => {
+          const existing = mergedByArea.get(area);
+          if (existing) {
+            return existing;
+          }
+
+          const spatial = spatialLookup.get(area) || {
+            coordinates: [1.3521, 103.8198] as [number, number],
+            geometry: undefined,
+          };
+          const aggregate: AreaAggregate = {
+            area,
+            coordinates: spatial.coordinates,
+            geometry: spatial.geometry,
+            score,
             alerts: 0,
             interventions: 0,
             weatherDetail,
             sources: { alerts: [], ops: [], model: [] },
           };
+
+          mergedByArea.set(area, aggregate);
+          return aggregate;
+        };
+
+        alerts.forEach((alert: any) => {
+          const key = String(alert.location || "Singapore");
+          const existing = ensureAreaAggregate(key);
 
           existing.score = Math.max(existing.score, Number(alert.risk_score || 0));
           existing.alerts += 1;
@@ -223,15 +298,7 @@ export function MockMap({
 
         interventions.forEach((intervention: any) => {
           const key = String(intervention.location || "Singapore");
-          const existing = mergedByArea.get(key) || {
-            area: key,
-            coordinates: resolveCoordinates(key),
-            score: 48,
-            alerts: 0,
-            interventions: 0,
-            weatherDetail,
-            sources: { alerts: [], ops: [], model: [] },
-          };
+          const existing = ensureAreaAggregate(key, 48);
 
           existing.score = Math.max(existing.score, intervention.outcome === "Completed" ? 55 : 68);
           existing.interventions += 1;
@@ -241,15 +308,7 @@ export function MockMap({
 
         predictions.forEach((prediction) => {
           const key = prediction.area || "Singapore";
-          const existing = mergedByArea.get(key) || {
-            area: key,
-            coordinates: resolveCoordinates(key),
-            score: 0,
-            alerts: 0,
-            interventions: 0,
-            weatherDetail,
-            sources: { alerts: [], ops: [], model: [] },
-          };
+          const existing = ensureAreaAggregate(key);
 
           const predictedScore = Math.round(prediction.predicted_score);
           existing.score = Math.max(existing.score, predictedScore);
@@ -309,6 +368,7 @@ export function MockMap({
           {
             area: zone.area,
             coordinates: zone.coordinates,
+            geometry: zone.geometry,
             score: zone.score,
             alerts: zone.alerts,
             interventions: zone.interventions,
@@ -424,7 +484,7 @@ export function MockMap({
       </div>
 
       <div className={styles.mapFooter}>
-        <p>Realtime overlays are now pinned to live latitude and longitude coordinates, so alerts, ops, and ML + NEA signals move with the map during zoom and pan.</p>
+        <p>Realtime overlays now use planning-area boundary geometry first and live OneMap geocoding for unmatched zones, so alerts, ops, and ML + NEA signals stay attached to the live map surface during zoom and pan.</p>
       </div>
     </div>
   );

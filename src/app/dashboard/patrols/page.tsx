@@ -14,6 +14,7 @@ export default function PatrolsPage() {
     completed: 0,
     teamSize: "0.0 officers",
   });
+  const [dispatchTable, setDispatchTable] = useState<any[]>([]);
   const [liveNarrative, setLiveNarrative] = useState<string[]>([]);
 
   useEffect(() => {
@@ -37,6 +38,16 @@ export default function PatrolsPage() {
         completed: patrolLike.filter((item: any) => item.outcome === "Completed").length,
         teamSize: `${averageTeam} officers`,
       });
+      setDispatchTable(
+        patrolLike.slice(0, 6).map((item: any) => ({
+          id: item.intervention_id,
+          area: item.location,
+          workflow: item.intervention_type.replace(/_/g, " "),
+          status: item.outcome || "In Progress",
+          officers: ((item.team_members as any[])?.length || 1),
+          started: new Date(item.start_time).toLocaleString(),
+        })),
+      );
       setLiveNarrative([
         `${patrolLike.filter((item: any) => item.outcome !== "Completed").length} patrol-like workflows are still active in the field.`,
         `${new Set(patrolLike.map((item: any) => item.location)).size} planning areas currently have staged patrol coverage.`,
@@ -65,9 +76,9 @@ export default function PatrolsPage() {
 
       <div className={styles.gridThree}>
         <div className={styles.metricCard}>
-          <p>Patrols This Week</p>
+          <p>Patrol Workflows This Week</p>
           <strong>{metrics.patrols}</strong>
-          <span className={styles.metaLabel}>Interventions currently tracked as patrol operations</span>
+          <span className={styles.metaLabel}>Live intervention workflows currently acting as patrol coverage</span>
         </div>
         <div className={styles.metricCard}>
           <p>Completed Outcomes</p>
@@ -81,7 +92,7 @@ export default function PatrolsPage() {
         </div>
       </div>
 
-      <DashboardSection eyebrow="Patrol dispatch" title="Live, scheduled, and completed patrol missions">
+      <DashboardSection eyebrow="Patrol dispatch" title="Live patrol-equivalent field missions">
         <div className={styles.timeline}>
           {patrols.map((patrol: any) => (
             <div className={styles.timelineItem} key={patrol.intervention_id}>
@@ -126,6 +137,35 @@ export default function PatrolsPage() {
           <div className={styles.metaText} style={{ marginTop: "16px" }}>
             {liveNarrative.join(" ")}
           </div>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection eyebrow="Dispatch table" title="Live patrol-equivalent deployment records">
+        <div className={styles.tableCard}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Area</th>
+                <th>Workflow</th>
+                <th>Status</th>
+                <th>Assigned</th>
+                <th>Started</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dispatchTable.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.id}</td>
+                  <td>{row.area}</td>
+                  <td>{row.workflow}</td>
+                  <td>{row.status}</td>
+                  <td>{row.officers} officers</td>
+                  <td>{row.started}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </DashboardSection>
     </div>

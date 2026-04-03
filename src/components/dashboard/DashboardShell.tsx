@@ -8,15 +8,17 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useAuth } from "@/components/auth/AuthProvider";
 import styles from "./dashboard-shell.module.css";
 import WorkspaceDock from "./WorkspaceDock";
+import { DashboardI18nProvider } from "./DashboardI18n";
 import {
   getCurrentUserIdentity,
   getInterventions,
+  getOperationalActivity,
   getReports,
   getRiskAlerts,
   getUserPreferences,
   getUserNotifications,
   markNotificationAsRead,
-  subscribeToAuditLogs,
+  subscribeToOperationalActivity,
   subscribeToInterventions,
   subscribeToNotifications,
   subscribeToReports,
@@ -253,6 +255,7 @@ const translations: Record<string, Record<string, string>> = {
     activeResolution: "தேசிய செயலில் தீர்வு",
     activeStaging: "செயலில் உள்ள தளப்படுத்தல் அணிகள்",
     reports: "செயற்பாட்டு அறிக்கைகள்",
+    workspace: "வேலைப்பகுதி",
   },
 };
 
@@ -263,10 +266,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Rotating Advisories
-  const [advisories, setAdvisories] = useState([
-    "Realtime advisory feed initializing...",
-  ]);
+  const [advisories, setAdvisories] = useState<string[]>([]);
   const [currentAdvisory, setCurrentAdvisory] = useState(0);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -304,21 +304,26 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentAdvisory(prev => (prev + 1) % advisories.length);
+      setCurrentAdvisory(prev => (advisories.length ? (prev + 1) % advisories.length : 0));
     }, 4000);
     return () => clearInterval(timer);
   }, [advisories.length]);
 
   useEffect(() => {
+    let preferencesSubscription: { unsubscribe: () => void } = { unsubscribe: () => undefined };
+
     async function loadLiveHeaderData() {
-      const [identity, alerts, interventions, reports] = await Promise.all([
+      const [identity, alerts, interventions, reports, activity, domainIntelResponse] = await Promise.all([
         getCurrentUserIdentity(),
         getRiskAlerts(),
         getInterventions(),
         getReports(),
+        getOperationalActivity(6),
+        fetch("/api/model/domain-intel").catch(() => null),
       ]);
-      const userNotifications = identity.isDemo ? [] : await getUserNotifications(identity.id);
-      const preferences = await getUserPreferences(identity.id);
+      const domainIntel = domainIntelResponse && domainIntelResponse.ok ? await domainIntelResponse.json() : null;
+      const userNotifications = identity.id ? await getUserNotifications(identity.id) : [];
+      const preferences = identity.id ? await getUserPreferences(identity.id) : null;
       const liveAlerts = alerts.filter((alert: any) => ['open', 'active', 'acknowledged'].includes(alert.status));
       const activeInterventions = interventions.filter((item: any) => item.outcome !== 'Completed');
       const highPriorityAlerts = liveAlerts.filter((alert: any) => ['High', 'Critical'].includes(alert.risk_level));
@@ -340,11 +345,29 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         staging: `${activeInterventions.length}/${Math.max(interventions.length, 1)} active units`,
         confidence: `${reports.length} reports in archive`,
       });
-      setAdvisories(
-        liveAlerts.slice(0, 3).map((alert: any) =>
+      const liveAdvisories = [
+        ...activity
+          .filter((item: any) => item.resource_type && item.action)
+          .slice(0, 4)
+          .map((item: any) => `${item.action.replace(/_/g, " ")} · ${item.resource_type}${item.resource_id ? ` ${item.resource_id}` : ""}`),
+        ...liveAlerts.slice(0, 2).map((alert: any) =>
           `${alert.component} ${alert.risk_level} alert in ${alert.location} (${alert.risk_score}/100)`,
-        ).concat("Realtime advisory feed healthy."),
-      );
+        ),
+        ...(domainIntel
+          ? [
+              `${domainIntel.construction.activeProjects} BCA project records active · ${domainIntel.construction.topProjectTypes.slice(0, 2).join(", ") || "project mix syncing"}`,
+              `${domainIntel.dormitories.indexedRecords} HDB baseline records indexed · ${domainIntel.health.datasetCount} MOH datasets available`,
+            ]
+          : []),
+      ].filter(Boolean);
+      setAdvisories(liveAdvisories.length ? liveAdvisories : ["Realtime operational feed healthy."]);
+
+      if (identity.id) {
+        preferencesSubscription.unsubscribe();
+        preferencesSubscription = subscribeToUserPreferences(identity.id, () => {
+          void loadLiveHeaderData();
+        });
+      }
     }
 
     void loadLiveHeaderData();
@@ -361,19 +384,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const reportsSubscription = subscribeToReports(() => {
       void loadLiveHeaderData();
     });
-    const auditSubscription = subscribeToAuditLogs(() => {
+    const activitySubscription = subscribeToOperationalActivity(() => {
       void loadLiveHeaderData();
     });
-    const preferencesSubscription = subscribeToUserPreferences(() => {
-      void loadLiveHeaderData();
-    });
-
     return () => {
       alertsSubscription.unsubscribe();
       interventionsSubscription.unsubscribe();
       notificationsSubscription.unsubscribe();
       reportsSubscription.unsubscribe();
-      auditSubscription.unsubscribe();
+      activitySubscription.unsubscribe();
       preferencesSubscription.unsubscribe();
     };
   }, []);
@@ -381,6 +400,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   useEffect(() => {
     async function persistLanguagePreference() {
       const identity = await getCurrentUserIdentity();
+      if (!identity.id) return;
       await updateUserPreferences(identity.id, { language });
     }
 
@@ -488,7 +508,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         <div className={styles.banner}>
           <div className={styles.bannerLeft}>
             <span key={currentAdvisory} className={styles.animateFadeIn}>
-              {advisories[currentAdvisory]}
+              {advisories[currentAdvisory] || "Realtime operational feed healthy."}
             </span>
           </div>
           <div className={styles.bannerRight}>
@@ -710,9 +730,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         )}
 
         {/* Primary Page Workflow */}
-        <main className={styles.contentArea} id="main">
-          {children}
-        </main>
+        <DashboardI18nProvider value={{ language, t: (key, fallback) => translations[language]?.[key] || fallback || key }}>
+          <main className={styles.contentArea} id="main">
+            {children}
+          </main>
+        </DashboardI18nProvider>
       </div>
 
       <WorkspaceDock />

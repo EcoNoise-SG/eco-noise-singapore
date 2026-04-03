@@ -5,9 +5,8 @@ import { useEffect, useState } from "react";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import styles from "../dashboard.module.css";
 import {
-  getAuditLogs,
-  getCurrentUserIdentity,
-  subscribeToAuditLogs,
+  getOperationalActivity,
+  subscribeToOperationalActivity,
 } from "@/lib/supabase";
 
 const severityStyle: Record<string, { bg: string; color: string; label: string }> = {
@@ -21,13 +20,12 @@ export default function LogsPage() {
 
   useEffect(() => {
     async function loadLogs() {
-      const identity = await getCurrentUserIdentity();
-      const data = await getAuditLogs(identity.isDemo ? undefined : identity.id, 100);
+      const data = await getOperationalActivity(100);
       setLogs(data);
     }
 
     void loadLogs();
-    const subscription = subscribeToAuditLogs(() => {
+    const subscription = subscribeToOperationalActivity(() => {
       void loadLogs();
     });
 
@@ -42,7 +40,7 @@ export default function LogsPage() {
         <div className={styles.metricCard}>
           <p>Log Entries (24h)</p>
           <strong>{logs.length}</strong>
-          <span className={styles.metaLabel}>Realtime audit trail</span>
+          <span className={styles.metaLabel}>Realtime operational activity</span>
         </div>
         <div className={styles.metricCard}>
           <p>Warnings / Errors</p>
@@ -52,13 +50,13 @@ export default function LogsPage() {
         <div className={styles.metricCard}>
           <p>Scheduled System Jobs</p>
           <strong className={styles.positive}>Tracked</strong>
-          <span className={styles.metaLabel}>Backed by live audit events</span>
+          <span className={styles.metaLabel}>Backed by live workflow changes</span>
         </div>
       </div>
 
       <DashboardSection
         eyebrow="Audit trail"
-        title="System and user activity log — live feed"
+        title="System and user activity log — operational live feed"
       >
         <div className={styles.tableCard}>
           <table className={styles.table}>

@@ -53,6 +53,8 @@ export default function ComplaintsPage() {
   const [categoryMetrics, setCategoryMetrics] = useState<any[]>([]);
   const [forecastDrivers, setForecastDrivers] = useState<any[]>([]);
   const [complaintTrend, setComplaintTrend] = useState<any[]>([]);
+  const [anomalySeries, setAnomalySeries] = useState<any[]>([]);
+  const [hazardRadar, setHazardRadar] = useState<any[]>([]);
   const [availableTypes, setAvailableTypes] = useState<string[]>(["WSH_Inspection"]);
   const [suggestedLocations, setSuggestedLocations] = useState<string[]>([]);
   const [modal, setModal] = useState<InterventionModal>({
@@ -125,7 +127,7 @@ export default function ComplaintsPage() {
         Object.entries(grouped).map(([category, count]) => ({
           category: category.replace(/_/g, " "),
           driver: `${count} live interventions recorded for this workflow across ${Math.max(liveLocations.length, 1)} active areas.`,
-          target: count > 0 ? `${Math.min(100, 40 + Number(count) * 12)}% live coverage` : "Awaiting escalation",
+          target: count > 0 ? `${Math.round((Number(count) / Math.max(data.length, 1)) * 100)}% of current workflow volume` : "Awaiting escalation",
         })),
       );
 
@@ -143,6 +145,39 @@ export default function ComplaintsPage() {
           .slice(-5)
           .map(([week, value]) => ({ week, ...value })),
       );
+      setAnomalySeries(
+        alerts.slice(0, 8).map((alert: any, index: number) => ({
+          time: new Date(alert.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || `T${index + 1}`,
+          value: Number(alert.risk_score || 0),
+          isAnomaly: ["High", "Critical"].includes(alert.risk_level),
+        })),
+      );
+      const liveHazardGroups = [
+        {
+          subject: "Falls",
+          noise: alerts.filter((alert: any) => ["C1", "C2"].includes(alert.component) && alert.status !== "resolved").length * 16,
+          dumping: data.filter((item: any) => item.intervention_type === "WSH_Inspection").length * 20,
+          pest: alerts.filter((alert: any) => ["C1", "C2"].includes(alert.component) && ["High", "Critical"].includes(alert.risk_level)).length * 18,
+        },
+        {
+          subject: "Machinery",
+          noise: alerts.filter((alert: any) => ["C3", "C4"].includes(alert.component) && alert.status !== "resolved").length * 16,
+          dumping: data.filter((item: any) => ["Contractor_Audit", "Ventilation_Audit"].includes(item.intervention_type)).length * 20,
+          pest: alerts.filter((alert: any) => ["C3", "C4"].includes(alert.component) && ["High", "Critical"].includes(alert.risk_level)).length * 18,
+        },
+        {
+          subject: "Heat & Health",
+          noise: alerts.filter((alert: any) => ["C5", "C6", "C7"].includes(alert.component) && alert.status !== "resolved").length * 16,
+          dumping: data.filter((item: any) => ["Health_Screening", "Cooling_Measures"].includes(item.intervention_type)).length * 20,
+          pest: alerts.filter((alert: any) => ["C5", "C6", "C7"].includes(alert.component) && ["High", "Critical"].includes(alert.risk_level)).length * 18,
+        },
+      ].map((item) => ({
+        ...item,
+        noise: Math.min(100, item.noise),
+        dumping: Math.min(100, item.dumping),
+        pest: Math.min(100, item.pest),
+      }));
+      setHazardRadar(liveHazardGroups);
 
       setInterventions(data.map((int: any) => ({
         id: int.id,
@@ -215,20 +250,14 @@ export default function ComplaintsPage() {
         eyebrow="Active Interventions"
         title="Intervention Tracking & Status"
       >
-        <button
-          onClick={() => setModal({ ...modal, isOpen: true })}
-          style={{
-            marginBottom: "20px",
-            padding: "10px 20px",
-            background: "#3b82f6",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          + Create Intervention
-        </button>
+        <div className={styles.pageActionBar}>
+          <button
+            onClick={() => setModal({ ...modal, isOpen: true })}
+            className={styles.primaryActionBtn}
+          >
+            Create Intervention
+          </button>
+        </div>
 
         {loading ? (
           <p>Loading interventions...</p>
@@ -281,15 +310,10 @@ export default function ComplaintsPage() {
           <div className={styles.chartCard}>
             <MultiOutputRadarChart
               height={280}
-              data={forecastDrivers.map((driver, index) => ({
-                subject: driver.category,
-                noise: Math.max(40, 55 + index * 8),
-                dumping: Math.max(35, 45 + index * 6),
-                pest: Math.max(30, 40 + index * 5),
-              }))}
+              data={hazardRadar}
             />
             <div className={styles.metaText}>
-              This view now reflects live intervention categories instead of a static hazard scorecard.
+              This radar now reflects live alert pressure, open workflow volume, and high-severity hazard concentration by domain.
             </div>
           </div>
         </DashboardSection>
@@ -299,7 +323,7 @@ export default function ComplaintsPage() {
           title="Intraday surge flags — Today"
         >
           <div className={styles.chartCard}>
-            <AnomalyDetectionChart height={240} />
+            <AnomalyDetectionChart height={240} data={anomalySeries} />
             <div className={styles.anomalyBadge}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
               <span>{interventions[0] ? `Most recent intervention: ${interventions[0].type.replace(/_/g, " ")} at ${interventions[0].location}` : "No live anomaly-linked intervention yet."}</span>

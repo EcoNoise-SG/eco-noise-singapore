@@ -14,8 +14,12 @@ import {
   cacheDataSourceResponse,
   getCachedDataSource,
   getContractors,
+  getInterventions,
   getReports,
   getRiskAlerts,
+  subscribeToInterventions,
+  subscribeToReports,
+  subscribeToRiskAlerts,
   syncContractorData,
 } from "../../../lib/supabase";
 
@@ -54,9 +58,10 @@ export default function DataSourcesPage() {
   const validateDataSources = useCallback(async () => {
     setLoading(true);
     try {
-      const [statuses, alerts, reports, contractorRows, predictionResponse] = await Promise.all([
+      const [statuses, alerts, interventions, reports, contractorRows, predictionResponse] = await Promise.all([
         checkAllDataSources(),
         getRiskAlerts(),
+        getInterventions(),
         getReports(),
         getContractors(),
         fetch("/api/model/predictions").catch(() => null),
@@ -93,6 +98,16 @@ export default function DataSourcesPage() {
           records: alerts.length,
           since: "Current workspace",
           apiEndpoint: "public.risk_alerts realtime",
+          lastUpdated: new Date().toLocaleTimeString(),
+        },
+        {
+          source: "Supabase Intervention Stream",
+          signal: "Open and completed intervention workflows",
+          status: "realtime",
+          latency: "< 1s subscription",
+          records: interventions.length,
+          since: "Current workspace",
+          apiEndpoint: "public.interventions realtime",
           lastUpdated: new Date().toLocaleTimeString(),
         },
         {
@@ -174,6 +189,30 @@ export default function DataSourcesPage() {
     void validateDataSources();
     void loadContractors();
     void loadLiveContext();
+    const interval = setInterval(() => {
+      void validateDataSources();
+      void loadContractors();
+      void loadLiveContext();
+    }, 60000);
+    const alertSubscription = subscribeToRiskAlerts(() => {
+      void validateDataSources();
+      void loadLiveContext();
+    });
+    const interventionSubscription = subscribeToInterventions(() => {
+      void validateDataSources();
+      void loadLiveContext();
+    });
+    const reportSubscription = subscribeToReports(() => {
+      void validateDataSources();
+      void loadLiveContext();
+    });
+
+    return () => {
+      clearInterval(interval);
+      alertSubscription.unsubscribe();
+      interventionSubscription.unsubscribe();
+      reportSubscription.unsubscribe();
+    };
   }, [loadLiveContext, validateDataSources]);
 
   const handleSyncContractors = async () => {
@@ -195,10 +234,10 @@ export default function DataSourcesPage() {
         .map((record: any, index: number) => ({
           uen: record.uen || record.UEN || `UEN-${index}`,
           company_name: record.entity_name || record.company_name || record.name || `Contractor ${index + 1}`,
-          crs_status: record.crs_status || ["Certified", "Provisional", "Conditional"][index % 3],
-          safety_score: Number(record.safety_score || 55 + (index % 20)),
-          incident_count: Number(record.incident_count || index % 4),
-          stop_work_orders: Number(record.stop_work_orders || index % 2),
+          crs_status: record.crs_status || "Unknown",
+          safety_score: record.safety_score !== undefined && record.safety_score !== null ? Number(record.safety_score) : undefined,
+          incident_count: record.incident_count !== undefined && record.incident_count !== null ? Number(record.incident_count) : undefined,
+          stop_work_orders: record.stop_work_orders !== undefined && record.stop_work_orders !== null ? Number(record.stop_work_orders) : undefined,
         }))
         .filter((record: any) => record.uen && record.company_name);
 

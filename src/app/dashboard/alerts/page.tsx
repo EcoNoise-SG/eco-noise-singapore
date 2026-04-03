@@ -97,7 +97,7 @@ export default function AlertsPage() {
     try {
       await updateAlertStatus(alertId, newStatus);
       const identity = await getCurrentUserIdentity();
-      if (!identity.isDemo) {
+      if (identity.id) {
         await createNotification(
           identity.id,
           `Alert ${newStatus}`,

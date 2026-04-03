@@ -32,6 +32,17 @@ export default function MaintenancePage() {
       const healthInterventions = interventions.filter((item: any) =>
         ["Health_Screening", "Cooling_Measures", "Ventilation_Audit"].includes(item.intervention_type),
       );
+      const activeHealthInterventions = healthInterventions.filter((item: any) => item.outcome !== "Completed");
+      const interventionAgeBuckets = activeHealthInterventions.reduce(
+        (acc: { under4h: number; sameShift: number; overShift: number }, item: any) => {
+          const ageHours = Math.max(0, (Date.now() - new Date(item.start_time).getTime()) / 36e5);
+          if (ageHours <= 4) acc.under4h += 1;
+          else if (ageHours <= 12) acc.sameShift += 1;
+          else acc.overShift += 1;
+          return acc;
+        },
+        { under4h: 0, sameShift: 0, overShift: 0 },
+      );
 
       const byArea = heatAlerts.reduce((acc: Record<string, number>, alert: any) => {
         acc[alert.location] = Math.max(acc[alert.location] || 0, Number(alert.risk_score || 0));
@@ -58,17 +69,21 @@ export default function MaintenancePage() {
           date: new Date(item.start_time).toLocaleDateString(),
         })),
       );
+      const completedSameDay = healthInterventions.filter((item: any) => {
+        if (item.outcome !== "Completed" || !item.end_time) return false;
+        return new Date(item.end_time).toDateString() === new Date(item.start_time).toDateString();
+      }).length;
       setPostureNotes([
-        `${healthInterventions.filter((item: any) => item.intervention_type === "Cooling_Measures").length} cooling workflows are open in the current live queue.`,
-        `${healthInterventions.filter((item: any) => item.intervention_type === "Health_Screening").length} health screening deployments are tied to present dormitory-linked signals.`,
+        `${activeHealthInterventions.filter((item: any) => item.intervention_type === "Cooling_Measures").length} cooling workflows are open in the current live queue.`,
+        `${activeHealthInterventions.filter((item: any) => item.intervention_type === "Health_Screening").length} health screening deployments are tied to present dormitory-linked signals.`,
         `${heatAlerts.filter((alert: any) => Number(alert.risk_score || 0) >= 75).length} locations are sitting above the elevated heat threshold right now.`,
-        `Coverage updates will change as ${healthInterventions.length} live interventions move through outcome logging.`,
+        `Coverage updates will change as ${activeHealthInterventions.length} live interventions move through outcome logging.`,
       ]);
       setSlaNotes([
-        `${liveAreas.filter((item) => item.heatScore >= 80).length} critical areas should have immediate coverage opened.`,
-        `${liveAreas.filter((item) => item.heatScore >= 65 && item.heatScore < 80).length} high-risk areas should remain covered within the same shift.`,
-        `${liveAreas.filter((item) => item.heatScore < 65).length} moderate areas stay under watch until the next signal cycle.`,
-        `${healthInterventions.filter((item: any) => item.outcome === "Completed").length} completed interventions are already feeding back into operational learning.`,
+        `${interventionAgeBuckets.under4h} open welfare interventions were created within the last 4 hours.`,
+        `${interventionAgeBuckets.sameShift} active cases are still within the same-shift response window.`,
+        `${interventionAgeBuckets.overShift} open cases have run beyond a single shift and need escalation review.`,
+        `${completedSameDay} completed interventions were closed within the same calendar day.`,
       ]);
     }
 

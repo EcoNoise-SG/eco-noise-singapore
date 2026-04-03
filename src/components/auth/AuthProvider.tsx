@@ -53,10 +53,7 @@ function isExistingUserError(error: unknown) {
   );
 }
 
-function canUseDemoFallback() {
-  if (typeof window === "undefined") return false;
-  return process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true";
-}
+const selfSignupEnabled = process.env.NEXT_PUBLIC_ENABLE_SELF_SIGNUP === "true";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null);
@@ -77,15 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           last_sign_in_at: session.user.last_sign_in_at,
           user_metadata: session.user.user_metadata,
         });
-      } else if (typeof window !== "undefined" && canUseDemoFallback()) {
-        const storedUser = localStorage.getItem("mockAuthUser");
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-          } catch {
-            localStorage.removeItem("mockAuthUser");
-          }
-        }
       }
 
       if (isMounted) {
@@ -105,9 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           last_sign_in_at: session.user.last_sign_in_at,
           user_metadata: session.user.user_metadata,
         });
-        if (typeof window !== "undefined") {
-          window.localStorage.removeItem("mockAuthUser");
-        }
       }
     });
 
@@ -145,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (signInResult.error && isInvalidCredentialsError(signInResult.error)) {
+      if (signInResult.error && isInvalidCredentialsError(signInResult.error) && selfSignupEnabled) {
         const signUpResult = await supabase.auth.signUp({
           email,
           password,
@@ -201,27 +186,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (!canUseDemoFallback()) {
-        throw signInResult.error || new Error("Pilot account required for this environment.");
+      if (signInResult.error && isInvalidCredentialsError(signInResult.error) && !selfSignupEnabled) {
+        throw new Error("Invalid credentials. If you do not have an account yet, use Request Access first.");
       }
 
-      // Fallback local session for environments without a provisioned pilot account
-      const mockUser: MockUser = {
-        id: "00000000-0000-0000-0000-000000000001",
-        email,
-        last_sign_in_at: new Date().toISOString(),
-        user_metadata: {
-          full_name: email.split('@')[0],
-          agency: email.includes('gov') || email.includes('mom') || email.includes('bca') || email.includes('nea') 
-            ? "Government Agency" 
-            : "Authorized Partner"
-        }
-      };
-
-      // Store in localStorage
-      localStorage.setItem("mockAuthUser", JSON.stringify(mockUser));
-      setUser(mockUser);
-      toast.success(`Welcome ${mockUser.user_metadata?.full_name}!`);
+      throw signInResult.error || new Error("Authentication could not be completed for this account.");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
       throw error;
@@ -231,9 +200,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout() {
     try {
       await supabase.auth.signOut();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("mockAuthUser");
-      }
       setUser(null);
       toast.success("Logged out successfully");
     } catch (error: unknown) {

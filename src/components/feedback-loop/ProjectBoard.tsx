@@ -10,13 +10,10 @@ export type Task = {
   title: string
   color: string
   status?: string
+  source?: string
+  relatedId?: string
+  createdAt?: string
 }
-
-const TASKS: Task[] = [
-  { id: 'task-1', title: 'Connecting OneService reports, BCA permits, LTA road works, and NEA weather data into a unified lake.', color: '#FDDCB5' },
-  { id: 'task-2', title: 'Spatial-temporal models process signals to identify risk correlations and upcoming activity peaks.', color: '#D4B8F0' },
-  { id: 'task-3', title: 'Command teams receive precise recommendations for officer staging and inspection sweeps.', color: '#B8D0F5' },
-]
 
 const GUIDE_X = [160, 280, 400]
 const TASK_TOPS = [40, 160, 280]
@@ -51,7 +48,7 @@ export default function ProjectBoard({ tasks }: { tasks?: Task[] }) {
 
         {/* Panel */}
         <div className={styles.panelWrap}>
-          <ProjectPanel tasks={safeTasks.length > 0 ? safeTasks : TASKS} />
+          <ProjectPanel tasks={safeTasks} />
         </div>
       </div>
     </div>

@@ -39,60 +39,71 @@ export default function DashboardOverviewPage() {
 
   useEffect(() => {
     async function loadOverview() {
-      const [alerts, interventions, reports] = await Promise.all([
+      const [alerts, interventions, reports, predictionResponse] = await Promise.all([
         getRiskAlerts(),
         getInterventions(),
         getReports(),
+        fetch("/api/model/predictions").catch(() => null),
       ]);
+      const predictions =
+        predictionResponse && predictionResponse.ok ? ((await predictionResponse.json()).predictions || []) : [];
 
       const openAlerts = alerts.filter((alert: any) => ["open", "active", "acknowledged"].includes(alert.status));
       const criticalAlerts = openAlerts.filter((alert: any) => ["Critical", "High"].includes(alert.risk_level));
       const activeLocations = new Set(openAlerts.map((alert: any) => alert.location));
       const activeInterventions = interventions.filter((item: any) => item.outcome !== "Completed");
       const completedInterventions = interventions.filter((item: any) => item.outcome === "Completed");
+      const publishedReports = reports.filter((report: any) => report.status === "published").length;
+      const avgOpenRisk = openAlerts.length
+        ? Math.round(openAlerts.reduce((sum: number, alert: any) => sum + Number(alert.risk_score || 0), 0) / openAlerts.length)
+        : 0;
 
       const responseCoverage = openAlerts.length
         ? Math.round((activeInterventions.length / openAlerts.length) * 100)
         : 100;
-      const projectedReduction = Math.min(38, 12 + completedInterventions.length * 3);
-      const wellbeingROI = completedInterventions.length
-        ? (completedInterventions.length / Math.max(openAlerts.length, 1) + 1.8).toFixed(1)
-        : "1.0";
+      const completionRate = interventions.length
+        ? Math.round((completedInterventions.length / interventions.length) * 100)
+        : 0;
+      const reportCoverage = activeLocations.size
+        ? Math.round((reports.length / activeLocations.size) * 100)
+        : reports.length > 0
+          ? 100
+          : 0;
 
       setTopMetrics([
         {
-          label: "High-risk construction sites this week",
+          label: "Active risk zones",
           value: String(activeLocations.size),
           sub: `${criticalAlerts.length} high-severity alerts currently active`,
         },
         {
-          label: "Dormitories flagged for wellness concerns",
-          value: String(alerts.filter((alert: any) => ["C5", "C6", "C7", "C10"].includes(alert.component)).length),
-          sub: "Derived from active C5-C7-C10 live signals",
+          label: "Open field workflows",
+          value: String(activeInterventions.length),
+          sub: `${completedInterventions.length} interventions have completed outcomes recorded`,
         },
         {
-          label: "Recommended WSH inspections",
-          value: `${Math.max(activeInterventions.length, criticalAlerts.length)} priority`,
-          sub: "Based on active interventions and unresolved alerts",
+          label: "Published operational reports",
+          value: String(publishedReports),
+          sub: `${reports.length} total reports generated from the live workspace`,
         },
       ]);
 
       setImpactMetrics([
         {
-          label: "Projected Injury Reduction",
-          value: `${projectedReduction}%`,
-          sub: "Estimated from completed interventions vs open alerts",
+          label: "Completed Outcome Rate",
+          value: `${completionRate}%`,
+          sub: `${completedInterventions.length} of ${interventions.length} interventions have recorded outcomes`,
           positive: true,
         },
         {
-          label: "Inspector Coverage",
+          label: "Live Alert Coverage",
           value: `${Math.min(100, responseCoverage)}%`,
           sub: "Open alerts with active intervention coverage",
         },
         {
-          label: "Worker Wellbeing ROI",
-          value: `${wellbeingROI}x`,
-          sub: `${reports.length} operational reports available for follow-through`,
+          label: "Average Open Risk",
+          value: `${avgOpenRisk}/100`,
+          sub: `${Math.min(100, reportCoverage)}% report coverage across active zones`,
         },
       ]);
 
@@ -101,15 +112,23 @@ export default function DashboardOverviewPage() {
         .sort((a: any, b: any) => Number(b.risk_score || 0) - Number(a.risk_score || 0));
 
       setForecastData(
-        orderedAlerts.slice(0, 8).map((alert: any, index: number) => ({
-          day: `Day ${index + 1}`,
-          actual: Math.max(0, Number(alert.risk_score || 0) - 3),
-          predicted: Number(alert.risk_score || 0),
-          confidence: [
-            Math.max(0, Number(alert.risk_score || 0) - 5),
-            Math.min(100, Number(alert.risk_score || 0) + 5),
-          ],
-        })),
+        (predictions.length ? predictions.slice(0, 8) : orderedAlerts.slice(0, 8)).map((item: any, index: number) => {
+          const predicted = Math.round(Number(item.predicted_score ?? item.risk_score ?? 0));
+          const actual = Math.round(
+            orderedAlerts.find((alert: any) => alert.location === item.area || alert.location === item.location)?.risk_score
+              ?? predicted,
+          );
+          const confidenceRadius = Math.max(4, Math.round((1 - Number(item.confidence ?? 0.8)) * 20));
+          return {
+            day: item.area || item.location || `Zone ${index + 1}`,
+            actual,
+            predicted,
+            confidence: [
+              Math.max(0, predicted - confidenceRadius),
+              Math.min(100, predicted + confidenceRadius),
+            ],
+          };
+        }),
       );
 
       const componentCounts = openAlerts.reduce((acc: Record<string, number>, alert: any) => {
@@ -128,13 +147,13 @@ export default function DashboardOverviewPage() {
       );
 
       setScheduleRows(
-        orderedAlerts.slice(0, 5).map((alert: any, index: number) => ({
-          day: new Date(Date.now() + index * 86400000).toLocaleDateString("en-US", { weekday: "long" }),
+        orderedAlerts.slice(0, 5).map((alert: any) => ({
+          day: new Date(alert.created_at || Date.now()).toLocaleDateString("en-US", { weekday: "long" }),
           area: alert.location,
           issue: `${alert.component} ${alert.risk_level.toLowerCase()} risk`,
           action: activeInterventions.find((item: any) => item.location === alert.location)
             ? "Continue active intervention and record field outcome"
-            : "Stage inspection team and open intervention workflow",
+            : predictions.find((item: any) => item.area === alert.location)?.recommended_action || "Stage inspection team and open intervention workflow",
         })),
       );
 

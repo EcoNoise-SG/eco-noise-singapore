@@ -46,11 +46,15 @@ export default function CompliancePage() {
       const stopWorkOrders = sorted.reduce((sum: number, row: any) => sum + Number(row.stop_work_orders || 0), 0);
       const outreach = sorted.filter((row: any) => Number(row.incident_count || 0) > 1 || Number(row.safety_score || 0) < 60).length;
       const activeC4Alerts = alerts.filter((alert: any) => ["open", "active", "acknowledged"].includes(alert.status)).length;
+      const recentSyncCount = sorted.filter((row: any) => {
+        if (!row.last_synced) return false;
+        return Date.now() - new Date(row.last_synced).getTime() <= 24 * 60 * 60 * 1000;
+      }).length;
 
       setContractors(sorted.slice(0, 8));
       setStats([
         { metric: "High-Risk Contractors", value: String(highRisk), change: "Safety score below 50", up: false },
-        { metric: "CRS Certified", value: String(certified), change: `${sorted.length} synced contractors`, up: true },
+        { metric: "CRS Certified", value: String(certified), change: `${recentSyncCount} records refreshed in the last 24h`, up: true },
         { metric: "Contractor Compliance", value: `${avgScore}%`, change: "Average live contractor safety score", up: true },
         { metric: "Active C4 Alerts", value: String(activeC4Alerts), change: "Open contractor risk thresholds", up: null },
         { metric: "Stop Work Orders", value: String(stopWorkOrders), change: "Captured in contractor registry", up: false },
@@ -59,21 +63,30 @@ export default function CompliancePage() {
     }
 
     void loadCompliance();
+    const interval = setInterval(() => {
+      void loadCompliance();
+    }, 60000);
     const subscription = subscribeToRiskAlerts(() => {
       void loadCompliance();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearInterval(interval);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const repeatOffenders = contractors
     .filter((row) => Number(row.incident_count || 0) > 0 || Number(row.stop_work_orders || 0) > 0)
     .slice(0, 3);
+  const liveScores = contractors.map((row) => Number(row.safety_score || 0)).filter((score) => score > 0).sort((a, b) => a - b);
+  const medianScore = liveScores.length ? liveScores[Math.floor(liveScores.length / 2)] : 0;
+  const lowerQuartile = liveScores.length ? liveScores[Math.floor(liveScores.length / 4)] : 0;
   const dynamicThresholds = [
-    `High-risk threshold now tracks live contractor median safety score at ${stats[2]?.value || "0%"} and escalates contractors below ${Math.max(35, Number(String(stats[2]?.value || "0").replace(/\D/g, "")) - 15)}.`,
+    `Median contractor safety score is ${medianScore || 0}, while the lower-quartile threshold is ${lowerQuartile || 0}.`,
     `${stats[3]?.value || "0"} live contractor-linked alerts are currently influencing enhanced monitoring priority.`,
-    `${stats[5]?.value || "0"} contractors are queued for outreach based on current sync health and incident counts.`,
-    `Registry review cadence is tied to last sync timestamps and open C4 exposure instead of a fixed policy placeholder.`,
+    `${stats[5]?.value || "0"} contractors are queued for outreach based on current sync health, low scores, or incident counts.`,
+    `Registry review cadence is now tied to last sync timestamps, current C4 exposure, and lower-quartile safety score drift.`,
   ];
 
   return (

@@ -42,6 +42,7 @@ export default function ForecastsPage() {
     { label: "Training Data Horizon", value: "Live", sub: "Current runtime signals loaded" },
     { label: "Active Clusters", value: "0", sub: "High-persistence hotspots" },
   ]);
+  const [scenarioBadge, setScenarioBadge] = useState("Live forecast posture");
 
   useEffect(() => {
     async function loadDeploymentMode() {
@@ -81,6 +82,9 @@ export default function ForecastsPage() {
         return acc;
       }, {});
 
+      const openAlerts = alerts.filter((item: any) => item.status !== "resolved").length;
+      const activeInterventions = interventions.filter((item: any) => item.outcome !== "Completed").length;
+
       setForecastRows(
         predictions.slice(0, 6).map((prediction: any) => {
           const areaAlerts = byArea[prediction.area] || [];
@@ -88,8 +92,8 @@ export default function ForecastsPage() {
           const intervention = interventions.find((item: any) => item.location === prediction.area && item.outcome !== "Completed");
           return [
             prediction.area,
-            topAlert?.component === "C2" ? "High" : topAlert ? topAlert.risk_level : "Moderate",
-            topAlert?.component === "C3" ? "High" : intervention ? "High" : "Moderate",
+            topAlert ? `${topAlert.risk_score}/100` : "No live alert",
+            `${Math.round(Number(prediction.predicted_score || 0))}/100`,
             intervention
               ? `Continue ${intervention.intervention_type.replace(/_/g, " ")} and log outcome`
               : prediction.recommended_action || "Open proactive inspection workflow",
@@ -98,11 +102,24 @@ export default function ForecastsPage() {
       );
 
       setModelData([
-        { subject: "Forecasting Accuracy", noise: Math.max(55, 70 + predictions.length * 2), dumping: 68, pest: 72 },
-        { subject: "Recall", noise: Math.max(50, alerts.length * 8), dumping: 64, pest: 70 },
-        { subject: "Precision", noise: Math.max(52, interventions.filter((item: any) => item.outcome === "Completed").length * 12), dumping: 66, pest: 69 },
-        { subject: "F1 Score", noise: Math.max(54, alerts.filter((item: any) => item.status !== "resolved").length * 9), dumping: 67, pest: 71 },
-        { subject: "Response Coverage", noise: Math.max(58, interventions.length * 10), dumping: 70, pest: 74 },
+        {
+          subject: "Predicted Clusters",
+          noise: Math.min(100, predictions.filter((item: any) => Number(item.predicted_score || 0) >= 60).length * 16),
+          dumping: Math.min(100, predictions.filter((item: any) => Number(item.predicted_score || 0) >= 75).length * 20),
+          pest: Math.min(100, predictions.filter((item: any) => Number(item.confidence || 0) >= 0.75).length * 18),
+        },
+        {
+          subject: "Open Alerts",
+          noise: Math.min(100, openAlerts * 10),
+          dumping: Math.min(100, alerts.filter((item: any) => ["High", "Critical"].includes(item.risk_level)).length * 12),
+          pest: Math.min(100, alerts.filter((item: any) => item.status === "acknowledged").length * 14),
+        },
+        {
+          subject: "Field Coverage",
+          noise: Math.min(100, activeInterventions * 14),
+          dumping: Math.min(100, interventions.filter((item: any) => item.outcome === "Completed").length * 16),
+          pest: Math.min(100, new Set(interventions.map((item: any) => item.location)).size * 18),
+        },
       ]);
 
       setAnomalyData(
@@ -118,7 +135,7 @@ export default function ForecastsPage() {
           region: prediction.area,
           persistence: Math.min(100, Math.round(Number(prediction.predicted_score || 0))),
           seasonality: Math.max(25, Math.round(Number(prediction.confidence || 0.65) * 100)),
-          count: Math.max(20, Math.round((byArea[prediction.area]?.length || 1) * 18)),
+          count: Math.max(20, Math.round((byArea[prediction.area]?.filter((item: any) => item.status !== "resolved").length || 1) * 18)),
         })),
       );
 
@@ -126,25 +143,26 @@ export default function ForecastsPage() {
         ? Math.round(predictions.reduce((sum: number, item: any) => sum + Number(item.confidence || 0.65), 0) / predictions.length * 100)
         : 0;
       const activePredictions = predictions.filter((item: any) => Number(item.predicted_score || 0) >= 60).length;
-      const openAlerts = alerts.filter((item: any) => item.status !== "resolved").length;
-      const activeInterventions = interventions.filter((item: any) => item.outcome !== "Completed").length;
       setSimulatorMetrics({
         proactive: {
-          suppression: `-${Math.max(8, Math.min(28, Math.round((activePredictions * 4 + activeInterventions * 2) / Math.max(openAlerts, 1))))}%`,
+          suppression: `${activePredictions} clusters pre-staged`,
           manHours: `${Math.max(180, activePredictions * 42 + activeInterventions * 18)}h/wk`,
-          impactNote: `${activePredictions} high-score clusters now justify pre-staged deployments before the next risk spike.`,
+          impactNote: `${activePredictions} predicted hotspots and ${activeInterventions} live workflows justify pre-staged deployments before the next risk spike.`,
         },
         standard: {
-          suppression: `-${Math.max(5, Math.min(18, Math.round((activePredictions * 3 + activeInterventions) / Math.max(openAlerts, 1))))}%`,
+          suppression: `${Math.max(activePredictions - 1, 1)} leading zones staffed`,
           manHours: `${Math.max(140, activePredictions * 30 + activeInterventions * 14)}h/wk`,
           impactNote: `Balanced staging focuses on ${Math.max(activePredictions - 1, 1)} leading clusters while keeping reserve capacity available.`,
         },
         reactive: {
-          suppression: `-${Math.max(2, Math.min(10, Math.round(((activeInterventions + 1) / Math.max(openAlerts, 1)) * 8)))}%`,
+          suppression: `${activeInterventions} active responses only`,
           manHours: `${Math.max(90, activeInterventions * 20 + 80)}h/wk`,
           impactNote: `Reactive posture follows current incident pressure and may trail ${activePredictions} predicted hotspots.`,
         },
       });
+      setScenarioBadge(
+        `${activePredictions} predicted clusters · ${openAlerts} open alerts · ${activeInterventions} active interventions`,
+      );
       setSummaryMetrics([
         { label: "Global model confidence", value: `${avgConfidence}%`, sub: "Latest model output" },
         { label: "Training Data Horizon", value: `${Math.max(alerts.length, predictions.length)} live signals`, sub: "Current runtime signals loaded" },
@@ -200,8 +218,8 @@ export default function ForecastsPage() {
             <thead>
               <tr>
                 <th>Project Area</th>
-                <th>Fall Risk</th>
-                <th>Machinery Risk</th>
+                <th>Observed Live Risk</th>
+                <th>Predicted Risk</th>
                 <th>Recommended WSH Action</th>
               </tr>
             </thead>
@@ -250,7 +268,7 @@ export default function ForecastsPage() {
             </div>
             <div className={styles.simResult}>
               <div className={styles.simMetric}>
-                <p>Predicted Complaint Suppression</p>
+                <p>Cluster Staging Scope</p>
                 <strong className={styles.positive}>{activeScenario.suppression}</strong>
               </div>
               <div className={styles.simMetric}>
@@ -261,19 +279,22 @@ export default function ForecastsPage() {
             <p className={styles.metaText} style={{ marginTop: "20px" }}>
               {activeScenario.impactNote}
             </p>
+            <p className={styles.metaText} style={{ marginTop: "8px" }}>
+              {scenarioBadge}
+            </p>
           </div>
         </DashboardSection>
       </div>
 
       <div className={styles.gridTwo}>
         <DashboardSection
-          eyebrow="Specialized Models"
-          title="Multi-Output Model Performance"
+          eyebrow="Live forecast composition"
+          title="Prediction pressure, alert load, and field coverage"
         >
           <div className={styles.chartCard}>
             <MultiOutputRadarChart data={modelData} />
             <div className={styles.metaText}>
-              Model card now reflects live alerts, interventions, and the latest generated prediction output.
+              Radar axes now reflect the current prediction load, open alert pressure, and field workflow coverage.
             </div>
           </div>
         </DashboardSection>

@@ -84,23 +84,38 @@ export default function AnalyticsPage() {
               alerts.reduce((sum: number, alert: any) => sum + Number(alert.risk_score || 0), 0) / alerts.length,
             )
           : 0;
-      const openAlerts = alerts.filter((alert: any) => ['active', 'open'].includes(alert.status)).length;
-      const acknowledgedAlerts = alerts.filter((alert: any) => alert.status === 'acknowledged').length;
-      const resolvedAlerts = alerts.filter((alert: any) => alert.status === 'resolved').length;
-
       const byLocation = alerts.reduce((acc: Record<string, any>, alert: any) => {
-        const current = acc[alert.location] || { total: 0, max: 0 };
+        const current = acc[alert.location] || { total: 0, max: 0, high: 0, open: 0 };
         current.total += 1;
         current.max = Math.max(current.max, Number(alert.risk_score || 0));
+        current.high += ['Critical', 'High'].includes(alert.risk_level) ? 1 : 0;
+        current.open += ['active', 'open', 'acknowledged'].includes(alert.status) ? 1 : 0;
         acc[alert.location] = current;
+        return acc;
+      }, {});
+      const groupedComponents = alerts.reduce((acc: Record<string, { open: number; high: number; resolved: number }>, alert: any) => {
+        const group =
+          alert.component === 'C4'
+            ? 'C4'
+            : ['C1', 'C2', 'C3'].includes(alert.component)
+              ? 'C1-C3'
+              : ['C5', 'C6', 'C7'].includes(alert.component)
+                ? 'C5-C7'
+                : ['C8', 'C9', 'C10'].includes(alert.component)
+                  ? 'C8-C10'
+                  : 'Other';
+        acc[group] = acc[group] || { open: 0, high: 0, resolved: 0 };
+        if (['active', 'open', 'acknowledged'].includes(alert.status)) acc[group].open += 1;
+        if (['High', 'Critical'].includes(alert.risk_level)) acc[group].high += 1;
+        if (alert.status === 'resolved') acc[group].resolved += 1;
         return acc;
       }, {});
 
       setKpiCards([
-        { label: "Model Accuracy", value: `${Math.max(70, Math.min(96, averageScore))}%`, sub: "Average live risk calibration", positive: true },
-        { label: "Forecast Horizon", value: `${Math.max(mergedHistory.length, predictions.length, 1)} live cycles`, sub: "History plus prediction windows loaded", positive: false },
+        { label: "Average Live Risk", value: `${averageScore}/100`, sub: "Across current active alerts", positive: true },
+        { label: "Forecast Windows", value: `${Math.max(mergedHistory.length, predictions.length, 1)}`, sub: "History plus prediction records loaded", positive: false },
         { label: "Risk Dimensions", value: String(new Set(alerts.map((alert: any) => alert.component)).size || 0), sub: "Live components participating in analytics", positive: false },
-        { label: "Ensemble Score", value: `${Math.max(62, Math.round((averageScore + Math.min(predictions.length * 4, 24)) / 1.1))}%`, sub: "Live alerts blended with prediction feed", positive: true },
+        { label: "Mean Prediction Confidence", value: `${predictions.length ? Math.round(predictions.reduce((sum: number, item: any) => sum + Number(item.confidence || 0), 0) / predictions.length * 100) : 0}%`, sub: "Current model output confidence", positive: true },
         { label: "Active Alerts (7d)", value: activeAlerts.toString(), sub: "Real-time safety threshold violations", positive: false },
         { label: "Risk Clusters", value: String(Math.max(highRiskLocations, predictions.filter((item: any) => Number(item.predicted_score || 0) >= 60).length)), sub: "Active high-risk zones", positive: false },
       ]);
@@ -126,34 +141,42 @@ export default function AnalyticsPage() {
           }));
 
       setForecastData(historyScores);
-      setAttentionData([
-        { name: "Open Alerts", weight: Math.max(0.05, openAlerts / Math.max(alerts.length, 1)) },
-        { name: "Acknowledged", weight: Math.max(0.05, acknowledgedAlerts / Math.max(alerts.length, 1)) },
-        { name: "Resolved", weight: Math.max(0.05, resolvedAlerts / Math.max(alerts.length, 1)) },
-        { name: "Avg Risk", weight: Math.max(0.05, averageScore / 100) },
-      ]);
+      setAttentionData(
+        Object.entries(groupedComponents)
+          .map(([name, value]) => ({
+            name,
+            weight: Number(((value.open + value.high) / Math.max(alerts.length * 2, 1)).toFixed(2)),
+          }))
+          .slice(0, 5),
+      );
       setAnomalyData(
-        alerts.slice(0, 8).map((alert: any, index: number) => ({
-          time: new Date(alert.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || `T${index + 1}`,
-          value: Number(alert.risk_score || 0),
-          isAnomaly: ['Critical', 'High'].includes(alert.risk_level),
-        })),
+        (predictions.length ? predictions.slice(0, 8) : alerts.slice(0, 8)).map((entry: any, index: number) => {
+          const matchingAlert = alerts.find((alert: any) => alert.location === (entry.area || entry.location));
+          const predicted = Number(entry.predicted_score ?? matchingAlert?.risk_score ?? 0);
+          const actual = Number(matchingAlert?.risk_score ?? predicted);
+          return {
+            time: new Date(entry.created_at || matchingAlert?.created_at || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || `T${index + 1}`,
+            value: Math.abs(predicted - actual),
+            isAnomaly: Math.abs(predicted - actual) >= 12 || predicted >= 80,
+          };
+        }),
       );
       setClusterData(
         Object.entries(byLocation).map(([location, value]: [string, any]) => ({
           region: location,
-          persistence: Math.min(100, value.total * 20),
+          persistence: Math.min(100, value.open * 22 + value.high * 12),
           seasonality: Math.min(100, value.max),
-          count: value.total * 20,
+          count: Math.max(18, value.total * 18),
         })),
       );
-      setRadarData([
-        { subject: 'Forecasting Accuracy', noise: Math.max(60, averageScore), dumping: 70, pest: 72 },
-        { subject: 'Recall', noise: Math.max(55, openAlerts * 12), dumping: 68, pest: 70 },
-        { subject: 'Precision', noise: Math.max(55, resolvedAlerts * 15), dumping: 74, pest: 69 },
-        { subject: 'F1 Score', noise: Math.max(55, acknowledgedAlerts * 14), dumping: 71, pest: 67 },
-        { subject: 'Response Coverage', noise: Math.max(60, alerts.length * 8), dumping: 73, pest: 75 },
-      ]);
+      setRadarData(
+        Object.entries(groupedComponents).map(([subject, value]) => ({
+          subject,
+          noise: Math.min(100, value.open * 16),
+          dumping: Math.min(100, value.high * 20),
+          pest: Math.min(100, value.resolved * 18),
+        })),
+      );
       const weeklyBuckets = alerts.reduce((acc: Record<string, any[]>, alert: any) => {
         const alertDate = new Date(alert.created_at);
         const weekKey = alertDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -165,16 +188,14 @@ export default function AnalyticsPage() {
       setPerformanceLog(
         Object.entries(weeklyBuckets)
           .slice(-4)
-          .map(([week, weekAlerts], index) => {
-            const weekAverage =
-              weekAlerts.reduce((sum: number, item: any) => sum + Number(item.risk_score || 0), 0) /
-              Math.max(weekAlerts.length, 1);
+          .map(([week, weekAlerts]) => {
+            const meanRisk = Math.round(weekAlerts.reduce((sum: number, item: any) => sum + Number(item.risk_score || 0), 0) / Math.max(weekAlerts.length, 1));
             return {
               week,
-              falls: `${Math.max(60, Math.round(weekAverage) - 4 + index)}%`,
-              machinery: `${Math.max(58, Math.round(weekAverage) - 7 + index)}%`,
-              heat: `${Math.max(59, Math.round(weekAverage) - 5 + index)}%`,
-              ensemble: `${Math.max(62, Math.round(weekAverage) - 2 + index)}%`,
+              falls: `${weekAlerts.filter((item: any) => item.component === 'C1').length}`,
+              machinery: `${weekAlerts.filter((item: any) => item.component === 'C3').length}`,
+              heat: `${weekAlerts.filter((item: any) => ['C5', 'C6', 'C7'].includes(item.component)).length}`,
+              ensemble: `${meanRisk}/100`,
             };
           }),
       );
@@ -216,27 +237,26 @@ export default function AnalyticsPage() {
 
       <div className={styles.gridTwo}>
         <DashboardSection
-          eyebrow="Dormitory Wellness Risk (C5)"
-          title="Weekly Dormitory Risk Forecast — Live vs Predicted"
+          eyebrow="Forecast windows"
+          title="Multi-area live risk trajectory"
         >
           <div className={styles.chartCard}>
             <TFTForecastChart height={280} data={forecastData} />
             <div className={styles.chartMeta}>
-              <p>Architecture: <span>Temporal Fusion Transformer</span></p>
-              <p>Components: <span>Wellness (C5) + Heat (C6) + Disease (C7)</span></p>
+              <p>Source: <span>Risk history plus current prediction output</span></p>
+              <p>Scope: <span>Top live location-component combinations</span></p>
             </div>
           </div>
         </DashboardSection>
 
         <DashboardSection
-          eyebrow="Module Integration"
-          title="Signal Contribution — Module C5-C8 Weights"
+          eyebrow="Signal weighting"
+          title="Current live component mix"
         >
           <div className={styles.chartCard}>
             <AttentionWeightsChart height={200} data={attentionData} />
             <div className={styles.metaText}>
-              SHAP-derived attention weights show which real-world signals most
-              influence the model&apos;s predictions each forecasting cycle.
+              Weighting now reflects the current distribution of live alerts by component group.
             </div>
           </div>
         </DashboardSection>
@@ -244,8 +264,8 @@ export default function AnalyticsPage() {
 
       <div className={styles.gridTwo}>
         <DashboardSection
-          eyebrow="Specialised models"
-          title="Multi-Output Model Performance Radar"
+          eyebrow="Signal profile"
+          title="Live signal distribution radar"
         >
           <div className={styles.chartCard}>
             <MultiOutputRadarChart height={320} data={radarData} />
@@ -279,19 +299,19 @@ export default function AnalyticsPage() {
         </div>
       </DashboardSection>
 
-      <DashboardSection
-        eyebrow="Weekly model audit"
-        title="Model accuracy log — latest live windows"
+        <DashboardSection
+          eyebrow="Weekly live audit"
+        title="Weekly live alert mix"
       >
         <div className={styles.tableCard}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>Week</th>
-                <th>Fall Risk Model</th>
-                <th>Machinery Model</th>
-                <th>Heat Stress Model</th>
-                <th>Ensemble Score</th>
+                <th>C1 Alerts</th>
+                <th>C3 Alerts</th>
+                <th>C5-C7 Alerts</th>
+                <th>Avg Risk</th>
               </tr>
             </thead>
             <tbody>

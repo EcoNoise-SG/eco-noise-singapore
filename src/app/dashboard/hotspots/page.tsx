@@ -38,9 +38,10 @@ export default function HotspotsPage() {
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [loading, setLoading] = useState(true);
   const [clusterData, setClusterData] = useState<any[]>([]);
-  const [suppressionSummary, setSuppressionSummary] = useState({
-    baseline: 0,
-    suppression: 0,
+  const [coverageSummary, setCoverageSummary] = useState({
+    totalBurden: 0,
+    coveredBurden: 0,
+    coveredZones: 0,
   });
   const [alertModal, setAlertModal] = useState<AlertModalState>({
     isOpen: false,
@@ -53,13 +54,16 @@ export default function HotspotsPage() {
   useEffect(() => {
     async function loadHotspots() {
       try {
-        const [weather, airQuality, dengue, existingAlerts, interventions] = await Promise.all([
+        const [weather, airQuality, dengue, existingAlerts, interventions, predictionResponse] = await Promise.all([
           fetchNEAWeather(),
           fetchNEAAirQuality(),
           fetchNEADengueClusters(),
           getRiskAlerts({ component: "C1" }),
           getInterventions(),
+          fetch("/api/model/predictions").catch(() => null),
         ]);
+        const predictions =
+          predictionResponse && predictionResponse.ok ? ((await predictionResponse.json()).predictions || []) : [];
 
         const weatherRecord = (weather?.records?.[0] || {}) as Record<string, number | string | undefined>;
         const airRecord = (airQuality?.records?.[0] || {}) as Record<string, number | string | undefined>;
@@ -84,11 +88,12 @@ export default function HotspotsPage() {
             [
               ...existingAlerts.map((alert: any) => alert.location),
               ...interventions.map((item: any) => item.location),
+              ...predictions.map((item: any) => item.area),
             ].filter(Boolean),
           ),
         );
 
-        const dynamicHotspots = (hotspotAreas.length > 0 ? hotspotAreas.slice(0, 8) : ["Bukit Merah", "Jurong East", "Bedok", "Woodlands"]).map((area, index) => {
+        const dynamicHotspots = hotspotAreas.slice(0, 8).map((area, index) => {
           const score = Math.min(
             100,
             Math.round(
@@ -119,9 +124,16 @@ export default function HotspotsPage() {
             count: 30 + spot.score,
           })),
         );
-        const baseline = dynamicHotspots.reduce((sum, spot) => sum + spot.score, 0);
-        const suppression = Math.round(baseline * 0.18);
-        setSuppressionSummary({ baseline, suppression });
+        const totalBurden = dynamicHotspots.reduce((sum, spot) => sum + spot.score, 0);
+        const coveredZones = dynamicHotspots.filter((spot) =>
+          interventions.some((item: any) => item.location === spot.area && item.outcome !== "Completed"),
+        );
+        const coveredBurden = coveredZones.reduce((sum, spot) => sum + spot.score, 0);
+        setCoverageSummary({
+          totalBurden,
+          coveredBurden,
+          coveredZones: coveredZones.length,
+        });
       } catch (error) {
         console.error("Error loading hotspots:", error);
         toast.error("Falling back to latest cached hotspot signals");
@@ -168,7 +180,7 @@ export default function HotspotsPage() {
           drivers: [alertModal.description],
         },
         status: "open",
-        assigned_to: identity.isDemo ? null : identity.id,
+        assigned_to: identity.id || null,
       });
 
       toast.success(`Alert ${alertId} created!`);
@@ -237,13 +249,13 @@ export default function HotspotsPage() {
 
       <DashboardSection
         eyebrow="Impact Simulation"
-        title="Predictive suppression of OneService reports"
+        title="Current hotspot burden and field coverage"
       >
         <div className={styles.metricCard}>
-          <p>Next Week Est. Baseline (Reactive)</p>
-          <strong>{suppressionSummary.baseline || 0} Risk Points</strong>
+          <p>Current Live Hotspot Burden</p>
+          <strong>{coverageSummary.totalBurden || 0} Risk Points</strong>
           <p className={styles.metaText}>
-            Suppression through proactive staging: <strong className={styles.positive}>-{suppressionSummary.suppression} risk points</strong>
+            Active field coverage: <strong className={styles.positive}>{coverageSummary.coveredBurden} risk points across {coverageSummary.coveredZones} zones</strong>
           </p>
         </div>
       </DashboardSection>
