@@ -686,6 +686,7 @@ export async function updateUserPreferences(userId: string, preferences: any) {
     errorCode === 'PGRST116' ||
     errorCode === '406' ||
     errorCode === '403' ||
+    errorCode === '42501' ||
     errorMessage.toLowerCase().includes('0 rows') ||
     errorMessage.toLowerCase().includes('no rows');
 

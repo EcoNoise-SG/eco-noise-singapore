@@ -72,48 +72,60 @@ async function fetchDatastoreDataset(
   }
 }
 
+const cache: Record<string, any> = {}
+const lastFetch: Record<string, number> = {}
+const inFlight: Record<string, Promise<any> | null> = {}
+
 async function fetchDatasetDownload(datasetId: string) {
-  try {
-    const response = await fetch(`${OPEN_DATASET_BASE_URL}/${datasetId}/poll-download`, {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-      next: { revalidate: 3600 },
-    });
+  const now = Date.now()
 
-    if (!response.ok) {
-      throw new Error(`Dataset download API error (${datasetId}): ${response.status}`);
-    }
-
-    const payload = await response.json();
-    const downloadUrl = payload?.data?.url;
-    if (!downloadUrl) {
-      return null;
-    }
-
-    const finalUrl = typeof window !== "undefined" ? `/api/proxy?url=${encodeURIComponent(downloadUrl)}` : downloadUrl;
-    const downloadResponse = await fetch(finalUrl, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!downloadResponse.ok) {
-      throw new Error(`Dataset file fetch error (${datasetId}): ${downloadResponse.status}`);
-    }
-
-    const contentType = downloadResponse.headers.get("content-type") || "";
-    if (contentType.includes("application/json") || contentType.includes("geo+json")) {
-      return await downloadResponse.json();
-    }
-
-    return {
-      rawText: await downloadResponse.text(),
-    };
-  } catch (error: any) {
-    if (!String(error).includes("429")) {
-      console.error(`Dataset download fetch failed for ${datasetId}:`, error);
-    }
-    return null;
+  // ✅ 1. cache hit (1 min)
+  if (cache[datasetId] && now - (lastFetch[datasetId] || 0) < 60000) {
+    return cache[datasetId]
   }
+
+  // ✅ 2. dedupe requests
+  if (inFlight[datasetId]) {
+    return inFlight[datasetId]
+  }
+
+  inFlight[datasetId] = (async () => {
+    try {
+      const response = await fetch(`${OPEN_DATASET_BASE_URL}/${datasetId}/poll-download`, {
+        headers: { "x-api-key": API_KEY },
+      })
+
+      if (!response.ok) throw new Error("poll failed")
+
+      const payload = await response.json()
+      const downloadUrl = payload?.data?.url
+      if (!downloadUrl) return null
+
+      const finalUrl =
+        typeof window !== "undefined"
+          ? `/api/proxy?url=${encodeURIComponent(downloadUrl)}`
+          : downloadUrl
+
+      const downloadResponse = await fetch(finalUrl)
+
+      if (!downloadResponse.ok) throw new Error("download failed")
+
+      const data = await downloadResponse.json()
+
+      // ✅ store cache
+      cache[datasetId] = data
+      lastFetch[datasetId] = Date.now()
+
+      return data
+    } catch (err) {
+      console.error("fetch failed:", err)
+      return cache[datasetId] || null
+    } finally {
+      inFlight[datasetId] = null
+    }
+  })()
+
+  return inFlight[datasetId]
 }
 
 function averageValues(values: Array<number | null | undefined>) {
@@ -128,7 +140,13 @@ function averageValues(values: Array<number | null | undefined>) {
  * Fetch real-time weather data from NEA
  * Components: C1 (construction risk), C6 (heat stress), C7 (disease)
  */
+let lastWeatherFetch = 0;
+let cachedWeather: any = null;
+
 export async function fetchNEAWeather() {
+  const now = Date.now();
+  if (cachedWeather && now - lastWeatherFetch < 60000) return cachedWeather;
+
   try {
     const [temperature, humidity, rainfall, windSpeed, forecast] = await Promise.all([
       fetchRealtimeEndpoint("air-temperature"),
@@ -152,7 +170,7 @@ export async function fetchNEAWeather() {
     );
     const firstForecast = forecast?.data?.items?.[0]?.forecasts?.[0];
 
-    return {
+    const result = {
       records: [
         {
           air_temperature: airTemperature,
@@ -174,6 +192,9 @@ export async function fetchNEAWeather() {
         forecast,
       },
     };
+    cachedWeather = result;
+    lastWeatherFetch = now;
+    return result;
   } catch (error) {
     console.error("NEA Weather fetch failed:", error);
     return null;
@@ -184,13 +205,19 @@ export async function fetchNEAWeather() {
  * Fetch real-time air quality (PM2.5) from NEA
  * Components: C6 (heat), C7 (disease outbreak - respiratory risk)
  */
+let lastAirQualityFetch = 0;
+let cachedAirQuality: any = null;
+
 export async function fetchNEAAirQuality() {
+  const now = Date.now();
+  if (cachedAirQuality && now - lastAirQualityFetch < 60000) return cachedAirQuality;
+
   try {
     const data = await fetchRealtimeEndpoint("pm25");
     const pm25Readings = data?.data?.items?.[0]?.readings?.pm25_one_hourly || {};
     const regionalValues = Object.values(pm25Readings).map((value) => Number(value));
 
-    return {
+    const result = {
       records: [
         {
           pm25_one_hourly: averageValues(regionalValues),
@@ -200,6 +227,9 @@ export async function fetchNEAAirQuality() {
       ],
       raw: data,
     };
+    cachedAirQuality = result;
+    lastAirQualityFetch = now;
+    return result;
   } catch (error) {
     console.error("NEA Air Quality fetch failed:", error);
     return null;
@@ -210,21 +240,31 @@ export async function fetchNEAAirQuality() {
  * Fetch dengue cluster data from NEA
  * Component: C7 (disease outbreak early warning)
  */
+let cachedDengueClusters: any = null;
+
 export async function fetchNEADengueClusters() {
+  if (cachedDengueClusters) return cachedDengueClusters;
+
   const downloaded = await fetchDatasetDownload("d_f2d4a22e47e4387f4571433c92ba4e8e");
   if (!downloaded) return null;
 
   const features = Array.isArray(downloaded?.features)
     ? downloaded.features
     : Array.isArray(downloaded?.records)
-    ? downloaded.records
-    : [];
+      ? downloaded.records
+      : [];
 
-  return {
+  const result = {
     records: features,
     total: features.length,
     raw: downloaded,
   };
+
+  if (features.length > 0) {
+    cachedDengueClusters = result;
+  }
+
+  return result;
 }
 
 // ==================== ACRA: Company Registry ====================
@@ -254,9 +294,9 @@ export async function fetchACRACompanies(offset = 0, limit = 100) {
 
   return data
     ? {
-        records: data.result?.records || [],
-        total: data.result?.total || 0,
-      }
+      records: data.result?.records || [],
+      total: data.result?.total || 0,
+    }
     : null;
 }
 
@@ -292,25 +332,35 @@ export async function fetchHDBData() {
 
   return data
     ? {
-        records: data.result?.records || [],
-        total: data.result?.total || 0,
-      }
+      records: data.result?.records || [],
+      total: data.result?.total || 0,
+    }
     : null;
 }
 
 // ==================== URA / Planning Boundaries ====================
 
+let cachedPlanningBoundaries: any = null;
+
 export async function fetchPlanningAreaBoundaries() {
+  if (cachedPlanningBoundaries) return cachedPlanningBoundaries;
+
   const downloaded = await fetchDatasetDownload(PLANNING_AREA_DATASET_ID);
   if (!downloaded) return null;
 
   const features = Array.isArray(downloaded?.features) ? downloaded.features : [];
-  return {
+  const result = {
     type: downloaded.type || "FeatureCollection",
     name: downloaded.name || "PlanningAreas",
     features,
     total: features.length,
   };
+
+  if (features.length > 0) {
+    cachedPlanningBoundaries = result;
+  }
+
+  return result;
 }
 
 export async function fetchOneMapLocation(searchValue: string) {
@@ -530,13 +580,13 @@ export async function getGovernmentDomainIntel(): Promise<GovernmentDomainIntel>
  */
 export function calculateC1RiskScore(weather: any, projectPhase: string): number {
   let score = 50; // baseline
-  
+
   if (weather?.windSpeed > 30) score += 15; // high wind risk
   if (weather?.rainfall > 10) score += 10; // wet conditions increase fall risk
   if (weather?.temperature > 32) score += 8; // heat stress during construction
   if (projectPhase === "foundation") score += 25; // high-risk phase
   if (projectPhase === "frame") score += 20;
-  
+
   return Math.min(100, score);
 }
 
@@ -546,12 +596,12 @@ export function calculateC1RiskScore(weather: any, projectPhase: string): number
 export function calculateC6HeatStress(temperature: number, humidity: number, outdoorExposureHours: number): number {
   const heatIndex = temperature + (0.5555 * (humidity / 100) * (temperature - 14.5)); // Simplified heat index
   let score = 40;
-  
+
   if (heatIndex > 32) score += 20;
   if (heatIndex > 35) score += 25;
   if (humidity > 85) score += 10;
   if (outdoorExposureHours > 8) score += 15;
-  
+
   return Math.min(100, score);
 }
 
@@ -560,12 +610,12 @@ export function calculateC6HeatStress(temperature: number, humidity: number, out
  */
 export function calculateC7DiseaseRisk(pm25: number, dengueClusterCount: number, temperature: number): number {
   let score = 40;
-  
+
   if (pm25 > 50) score += 15; // respiratory risk
   if (pm25 > 75) score += 20;
   if (dengueClusterCount > 0) score += 25; // dengue cluster presence
   if (temperature > 30) score += 10; // mosquito breeding season
-  
+
   return Math.min(100, score);
 }
 
