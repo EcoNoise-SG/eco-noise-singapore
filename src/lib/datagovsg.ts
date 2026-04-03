@@ -91,7 +91,8 @@ async function fetchDatasetDownload(datasetId: string) {
       return null;
     }
 
-    const downloadResponse = await fetch(downloadUrl, {
+    const finalUrl = typeof window !== "undefined" ? `/api/proxy?url=${encodeURIComponent(downloadUrl)}` : downloadUrl;
+    const downloadResponse = await fetch(finalUrl, {
       next: { revalidate: 3600 },
     });
 

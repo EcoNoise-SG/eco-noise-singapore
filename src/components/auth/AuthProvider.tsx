@@ -53,7 +53,9 @@ function isExistingUserError(error: unknown) {
   );
 }
 
-const selfSignupEnabled = process.env.NEXT_PUBLIC_ENABLE_SELF_SIGNUP === "true";
+// Commented out "Request Access" logic to allow login & register directly
+// const selfSignupEnabled = process.env.NEXT_PUBLIC_ENABLE_SELF_SIGNUP === "true";
+const selfSignupEnabled = true;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null);
