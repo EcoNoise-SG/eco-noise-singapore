@@ -1,0 +1,157 @@
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dormListGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
+  justify-content: center;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.priorityGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .priorityGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .priorityGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.topBadge {
+  font-size: 0.825rem;
+  font-weight: 700;
+}
+
+.topMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.dormItemMini {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dormItemMini:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+}
+
+.dormHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.regionBadge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.riskDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dormContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dormName {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.dormAddr {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.riskValueSmall {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: right;
+  margin-top: auto;
+}
+
+.moreIndicator {
+  padding: 32px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-weight: 600;
+  background: #f8fafc;
+  border-radius: 4px;
+  border: 2px dashed #e2e8f0;
+  margin-top: 24px;
+}
+
+@media (max-width: 1280px) {
+  .dormListGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .dormListGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .dormListGrid {
+    grid-template-columns: 1fr;
+  }
+}

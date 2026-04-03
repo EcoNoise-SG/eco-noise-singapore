@@ -14,6 +14,8 @@ import {
   subscribeToReports,
   subscribeToRiskAlerts,
 } from "@/lib/supabase";
+import { HeatStressMonitor } from "@/components/dashboard/HeatStressMonitor";
+import { ComplianceMonitor } from "@/components/dashboard/ComplianceMonitor";
 
 type OverviewMetric = {
   label: string;
@@ -36,6 +38,7 @@ export default function DashboardOverviewPage() {
   const [attentionData, setAttentionData] = useState<any[]>([]);
   const [scheduleRows, setScheduleRows] = useState<ScheduleRow[]>([]);
   const [anomalyText, setAnomalyText] = useState("Live anomaly scan initializing...");
+  const [openAlerts, setOpenAlerts] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadOverview() {
@@ -163,6 +166,7 @@ export default function DashboardOverviewPage() {
           ? `Live anomaly focus: ${anomalyAlert.location} flagged at ${anomalyAlert.risk_score}/100 for ${anomalyAlert.component}.`
           : "No anomalous risk spikes detected in the latest live cycle.",
       );
+      setOpenAlerts(openAlerts);
     }
 
     void loadOverview();
@@ -187,6 +191,11 @@ export default function DashboardOverviewPage() {
   return (
     <div className={styles.stack}>
       <MockMap title="National Construction & Dormitory Safety Status" mapContext="overview" />
+
+      <div className={styles.gridTwo}>
+        <HeatStressMonitor />
+        <ComplianceMonitor alerts={openAlerts} />
+      </div>
 
       <div className={styles.gridThree}>
         {topMetrics.map((metric) => (
