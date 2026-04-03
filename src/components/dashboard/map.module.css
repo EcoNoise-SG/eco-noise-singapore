@@ -64,7 +64,8 @@
   background:
     linear-gradient(180deg, rgba(15, 23, 42, 0.02) 0%, rgba(15, 23, 42, 0.1) 100%),
     #f8fafc;
-  display: flex; /* Split view */
+  display: flex;
+  /* Split view */
 }
 
 .mapContainerMain {
@@ -207,7 +208,7 @@
   flex-wrap: wrap;
   gap: 12px;
   z-index: 800;
-  max-width: 52%;
+  max-width: 60%;
 }
 
 .overlayCard {

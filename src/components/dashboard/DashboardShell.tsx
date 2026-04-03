@@ -26,6 +26,7 @@ import {
   subscribeToUserPreferences,
   updateUserPreferences,
 } from "@/lib/supabase";
+import { fetchNEADengueClusters } from "@/lib/datagovsg";
 
 const navigation = [
   {
@@ -313,15 +314,22 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     let preferencesSubscription: { unsubscribe: () => void } = { unsubscribe: () => undefined };
 
     async function loadLiveHeaderData() {
-      const [identity, alerts, interventions, reports, activity, domainIntelResponse] = await Promise.all([
+      const [identity, alerts, interventions, reports, activity, domainIntelResponse, dengueData] = await Promise.all([
         getCurrentUserIdentity(),
         getRiskAlerts(),
         getInterventions(),
         getReports(),
         getOperationalActivity(6),
         fetch("/api/model/domain-intel").catch(() => null),
+        fetchNEADengueClusters().catch(() => null),
       ]);
       const domainIntel = domainIntelResponse && domainIntelResponse.ok ? await domainIntelResponse.json() : null;
+      const dengueCount = (dengueData?.records || []).length;
+      const criticalDengue = (dengueData?.records || []).filter((r: any) => {
+        const cases = parseInt(r.properties?.CASE_SIZE || r.properties?.case_size || r.case_size) || 0;
+        return cases > 25;
+      }).length;
+      const highDengue = dengueCount - criticalDengue;
       const userNotifications = identity.id ? await getUserNotifications(identity.id) : [];
       const preferences = identity.id ? await getUserPreferences(identity.id) : null;
       const liveAlerts = alerts.filter((alert: any) => ['open', 'active', 'acknowledged'].includes(alert.status));
@@ -341,9 +349,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         pendingAlerts: highPriorityAlerts.length,
       });
       setRibbonStats({
-        compliance: `${alerts.filter((alert: any) => alert.status === 'resolved').length} resolved signals`,
-        staging: `${activeInterventions.length}/${Math.max(interventions.length, 1)} active units`,
-        confidence: `${reports.length} reports in archive`,
+        compliance: pathname === '/dashboard/alerts'
+          ? `${liveAlerts.filter((a: any) => a.risk_level === 'Critical').length + criticalDengue} critical alerts`
+          : `${alerts.filter((alert: any) => alert.status === 'resolved').length} resolved signals`,
+        staging: pathname === '/dashboard/alerts'
+          ? `${liveAlerts.filter((a: any) => a.risk_level === 'High').length + highDengue} high priority`
+          : `${activeInterventions.length}/${Math.max(interventions.length, 1)} active units`,
+        confidence: pathname === '/dashboard/alerts'
+          ? `${liveAlerts.length + dengueCount} pending alerts`
+          : `${reports.length} reports in archive`,
       });
       const liveAdvisories = [
         ...activity
@@ -715,16 +729,25 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         {pathname !== '/dashboard/profile' && pathname !== '/dashboard/data-sources' && (
           <div className={styles.ribbon}>
             <div className={styles.ribbonCard}>
-              <p>{t('activeResolution')}</p>
-              <strong>{ribbonStats.compliance}</strong>
+              <p>{pathname === '/dashboard/alerts' ? 'Critical Alerts' : t('activeResolution')}</p>
+              <strong style={pathname === '/dashboard/alerts' ? { color: "#dc2626", fontSize: "24px" } : {}}>{ribbonStats.compliance.split(' ')[0]}</strong>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                {pathname === '/dashboard/alerts' ? 'Requiring immediate response' : ribbonStats.compliance.split(' ').slice(1).join(' ')}
+              </span>
             </div>
             <div className={styles.ribbonCard}>
-              <p>{t('activeStaging')}</p>
-              <strong>{ribbonStats.staging}</strong>
+              <p>{pathname === '/dashboard/alerts' ? 'High Priority' : t('activeStaging')}</p>
+              <strong style={pathname === '/dashboard/alerts' ? { color: "#f59e0b", fontSize: "24px" } : {}}>{ribbonStats.staging.split(' ')[0]}</strong>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                {pathname === '/dashboard/alerts' ? 'Actionable within 2 hours' : ribbonStats.staging.split(' ').slice(1).join(' ')}
+              </span>
             </div>
             <div className={styles.ribbonCard}>
-              <p>{t('reports')}</p>
-              <strong>{ribbonStats.confidence}</strong>
+              <p>{pathname === '/dashboard/alerts' ? 'Open Alerts' : t('reports')}</p>
+              <strong style={pathname === '/dashboard/alerts' ? { fontSize: "24px" } : {}}>{ribbonStats.confidence.split(' ')[0]}</strong>
+              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                {pathname === '/dashboard/alerts' ? 'Pending officer response' : ribbonStats.confidence.split(' ').slice(1).join(' ')}
+              </span>
             </div>
           </div>
         )}

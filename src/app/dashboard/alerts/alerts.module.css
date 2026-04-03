@@ -9,17 +9,13 @@
   padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid #e2e8f0;
+  font-family: inherit;
   background: #f8fafc;
   color: #64748b;
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-}
-
-.filterBtn:hover {
-  border-color: #008094;
-  color: #008094;
 }
 
 .filterActive {

@@ -14,6 +14,7 @@ import {
   subscribeToRiskAlerts,
   updateAlertStatus,
 } from "@/lib/supabase";
+import { fetchNEADengueClusters } from "@/lib/datagovsg";
 
 interface Alert {
   id: string;
@@ -65,10 +66,12 @@ export default function AlertsPage() {
 
   const loadAlerts = async () => {
     try {
-      const dbAlerts = await getRiskAlerts();
+      const [dbAlerts, dengueData] = await Promise.all([
+        getRiskAlerts(),
+        fetchNEADengueClusters().catch(() => null)
+      ]);
       
-      // Map database alerts to UI format
-      const mappedAlerts = dbAlerts.map((alert: any) => {
+      const mappedDbAlerts = dbAlerts.map((alert: any) => {
         const riskLevel = alert.risk_level || "Medium";
         return {
           id: alert.id,
@@ -86,7 +89,28 @@ export default function AlertsPage() {
         };
       });
 
-      setAlerts(mappedAlerts);
+      const dengueAlerts = (dengueData?.records || []).map((cluster: any, index: number) => {
+        const locality = cluster.properties?.LOCALITY || cluster.properties?.locality || cluster.locality || "Unknown Cluster";
+        const cases = parseInt(cluster.properties?.CASE_SIZE || cluster.properties?.case_size || cluster.case_size) || 0;
+        const severity = cases > 25 ? "critical" : "high";
+        
+        return {
+          id: `dengue-${index}`,
+          alert_id: `DNG-${index}`,
+          severity: severity as any,
+          title: `Dengue Disease Outbreak — ${locality}`,
+          time: "LIVE SIGNAL",
+          description: `Live dengue cluster with ${cases} active cases.`,
+          area: locality,
+          category: "Health Monitor",
+          status: "open" as any,
+          risk_level: severity === "critical" ? "Critical" : "High",
+          component: "Disease Monitor (C7)",
+          risk_score: severity === "critical" ? 85 : 70,
+        };
+      });
+
+      setAlerts([...dengueAlerts, ...mappedDbAlerts]);
     } catch (error) {
       console.error("Error loading alerts:", error);
     } finally {
@@ -126,23 +150,6 @@ export default function AlertsPage() {
   return (
     <div className={styles.stack}>
       <MockMap title="Live Dengue Clusters & Disease Outbreak Hotspots Map (Module C7)" mapContext="disease" />
-      <div className={styles.gridThree}>
-        <div className={styles.metricCard}>
-          <p>Critical Alerts</p>
-          <strong style={{ color: "#dc2626" }}>{counts.critical}</strong>
-          <span className={styles.metaLabel}>Requiring immediate response</span>
-        </div>
-        <div className={styles.metricCard}>
-          <p>High Priority</p>
-          <strong style={{ color: "#f59e0b" }}>{counts.high}</strong>
-          <span className={styles.metaLabel}>Actionable within 2 hours</span>
-        </div>
-        <div className={styles.metricCard}>
-          <p>Open Alerts</p>
-          <strong>{counts.open}</strong>
-          <span className={styles.metaLabel}>Pending officer response</span>
-        </div>
-      </div>
 
       <DashboardSection
         eyebrow="Live alert feed"
@@ -189,7 +196,7 @@ export default function AlertsPage() {
                   <span>Alert ID: {alert.alert_id}</span>
                 </div>
                 <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                  {alert.status === "open" && (
+                  {alert.status === "open" && alert.alert_id.startsWith('DNG-') === false && (
                     <>
                       <button
                         onClick={() => handleStatusChange(alert.alert_id, "acknowledged")}
