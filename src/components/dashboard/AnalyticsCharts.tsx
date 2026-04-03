@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -93,12 +93,48 @@ function ChartFrame({
   children: React.ReactNode;
   hasData?: boolean;
 }) {
-  const [isMounted] = useState(typeof window !== 'undefined');
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const [hasMeasuredSize, setHasMeasuredSize] = useState(false);
+
+  useEffect(() => {
+    const node = frameRef.current;
+    if (!node) return;
+
+    const checkSize = () => {
+      const { width, height: frameHeight } = node.getBoundingClientRect();
+      setHasMeasuredSize(width > 0 && frameHeight > 0);
+    };
+
+    checkSize();
+    const animationFrame = window.requestAnimationFrame(checkSize);
+
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        window.cancelAnimationFrame(animationFrame);
+      };
+    }
+
+    const observer = new ResizeObserver(() => {
+      checkSize();
+    });
+
+    observer.observe(node);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      observer.disconnect();
+    };
+  }, []);
 
   return (
-    <div style={{ width: '100%', height, minWidth: 0, minHeight, flex: 1 }}>
-      {isMounted ? (
-        hasData ? children : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 14 }}>No live data available for this chart yet.</div>
+    <div
+      ref={frameRef}
+      style={{ width: '100%', height, minWidth: 0, minHeight, flex: 1 }}
+    >
+      {!hasData ? (
+        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 14 }}>No live data available for this chart yet.</div>
+      ) : hasMeasuredSize ? (
+        children
       ) : null}
     </div>
   );

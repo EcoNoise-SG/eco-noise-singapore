@@ -154,11 +154,97 @@
   gap: 20px;
 }
 
+.pageActionBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.primaryActionBtn,
+.secondaryActionBtn {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  min-height: 40px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.primaryActionBtn {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 10px 20px -16px rgba(15, 23, 42, 0.75);
+}
+
+.primaryActionBtn:hover {
+  background: #1e293b;
+  border-color: #1e293b;
+}
+
+.primaryActionBtn:disabled {
+  background: #cbd5e1;
+  border-color: #cbd5e1;
+  color: #ffffff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.secondaryActionBtn {
+  background: #ffffff;
+  color: #334155;
+  border-color: #dbe3ee;
+}
+
+.secondaryActionBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.primaryActionBtn:focus-visible,
+.secondaryActionBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(17, 94, 89, 0.12);
+}
+
 .timelineItem {
   padding: 20px;
   background: #f8fafc;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
+}
+
+.reportHeaderMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reportTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.timelineActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
 
 .timelineItem strong {

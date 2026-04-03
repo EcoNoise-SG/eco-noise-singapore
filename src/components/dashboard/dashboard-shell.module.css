@@ -269,52 +269,6 @@
   outline: none;
 }
 
-/* Ticker */
-.topTicker {
-  background-color: #0d9488;
-  color: white;
-  padding: 0 32px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.tickerScrollTitle {
-  font-size: 0.8125rem;
-  font-weight: 800;
-  white-space: nowrap;
-  margin-right: 24px;
-  color: #99f6e4;
-  z-index: 2;
-  background-color: #0d9488;
-  padding-right: 24px;
-}
-
-.tickerMarquee {
-  flex: 1;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.tickerContent {
-  display: inline-block;
-  animation: marquee 30s linear infinite;
-  padding-left: 100%;
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0%);
-  }
-
-  100% {
-    transform: translateX(-200%);
-  }
-}
-
 /* Header */
 .header {
   height: 72px;

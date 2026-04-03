@@ -3,10 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://apjomfculzncvglxuegt.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const auditLoggingEnabled = process.env.NEXT_PUBLIC_ENABLE_AUDIT_LOGS === 'true';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type Unsubscribe = { unsubscribe: () => void };
+let auditLoggingDisabled = false;
 
 function getDemoUserFromStorage() {
   if (typeof window === 'undefined') return null;
@@ -273,6 +275,10 @@ export async function updateInterventionOutcome(interventionId: string, outcome:
 // ==================== AUDIT LOGS ====================
 
 export async function logAudit(userId: string, action: string, resourceType?: string, resourceId?: string, details?: any) {
+  if (!auditLoggingEnabled || auditLoggingDisabled) {
+    return false;
+  }
+
   const { data, error } = await supabase
     .from('audit_logs')
     .insert([{
@@ -305,9 +311,18 @@ export async function logAudit(userId: string, action: string, resourceType?: st
 
   const isBenignAuditError =
     !hasUsefulAuditError ||
+    errorCode === '403' ||
+    errorCode === '42501' ||
     errorCode === 'PGRST116' ||
+    errorMessage.toLowerCase().includes('permission') ||
+    errorMessage.toLowerCase().includes('forbidden') ||
+    errorMessage.toLowerCase().includes('row-level security') ||
     errorMessage.toLowerCase().includes('0 rows') ||
     errorMessage.toLowerCase().includes('no rows');
+
+  if (error && isBenignAuditError) {
+    auditLoggingDisabled = true;
+  }
 
   if (error && !isBenignAuditError) console.error('Error logging audit:', error);
   return !!data;

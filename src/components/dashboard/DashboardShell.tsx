@@ -206,7 +206,6 @@ const translations: Record<string, Record<string, string>> = {
     searchPlaceholder: "Query sensor, site, or planning area...",
     liveZones: "Live Zones Online",
     highPriorityAlerts: "High-Priority Alerts",
-    detWin: "Deterrence Wins:",
     preferenceRecorded: "Preference recorded",
     skip: "Skip to content",
     activeResolution: "National Active Resolution",
@@ -221,7 +220,6 @@ const translations: Record<string, Record<string, string>> = {
     searchPlaceholder: "Cari sensor, tapak, atau kawasan perancangan...",
     liveZones: "Zon Langsung Online",
     highPriorityAlerts: "Amaran Keutamaan Tinggi",
-    detWin: "Kemenangan Tindakan:",
     preferenceRecorded: "Pilihan direkodkan",
     skip: "Langkau ke kandungan",
     activeResolution: "Resolusi Aktif Nasional",
@@ -236,7 +234,6 @@ const translations: Record<string, Record<string, string>> = {
     searchPlaceholder: "搜索传感器、站点或规划区域...",
     liveZones: "在线实时区域",
     highPriorityAlerts: "高优先级警报",
-    detWin: "处置成果：",
     preferenceRecorded: "已记录选择",
     skip: "跳到内容",
     activeResolution: "全国活跃处置",
@@ -251,7 +248,6 @@ const translations: Record<string, Record<string, string>> = {
     searchPlaceholder: "சென்சார், தளம், அல்லது திட்டப்பகுதியை தேடுங்கள்...",
     liveZones: "நேரடி மண்டலங்கள் ஆன்லைனில்",
     highPriorityAlerts: "உயர் முன்னுரிமை எச்சரிக்கைகள்",
-    detWin: "தடுப்பு வெற்றிகள்:",
     preferenceRecorded: "தேர்வு பதிவு செய்யப்பட்டது",
     skip: "உள்ளடக்கத்திற்குச் செல்லவும்",
     activeResolution: "தேசிய செயலில் தீர்வு",
@@ -272,11 +268,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     "Realtime advisory feed initializing...",
   ]);
   const [currentAdvisory, setCurrentAdvisory] = useState(0);
-
-  // Live Safety Wins (Ticker)
-  const [wins, setWins] = useState([
-    { id: '1', text: 'Loading live operational wins...' }
-  ]);
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -353,12 +344,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         liveAlerts.slice(0, 3).map((alert: any) =>
           `${alert.component} ${alert.risk_level} alert in ${alert.location} (${alert.risk_score}/100)`,
         ).concat("Realtime advisory feed healthy."),
-      );
-      setWins(
-        liveAlerts.slice(0, 3).map((alert: any) => ({
-          id: alert.alert_id,
-          text: `${alert.component} monitoring active in ${alert.location} with score ${alert.risk_score}/100.`,
-        })),
       );
     }
 
@@ -521,18 +506,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               <option value="zh">中文</option>
               <option value="ta">தமிழ்</option>
             </select>
-          </div>
-        </div>
-
-        {/* Dynamic Deterrence Ticker */}
-        <div className={styles.topTicker}>
-          <div className={styles.tickerScrollTitle}>⚡ {t('detWin')}</div>
-          <div className={styles.tickerMarquee}>
-            <div className={styles.tickerContent}>
-              {wins.map((w, i) => (
-                <span key={w.id || i}>{w.text} &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;</span>
-              ))}
-            </div>
           </div>
         </div>
 

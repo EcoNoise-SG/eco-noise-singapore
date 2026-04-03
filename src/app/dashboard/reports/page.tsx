@@ -95,36 +95,27 @@ export default function ReportsPage() {
         eyebrow="Report archive"
         title="Intelligence briefs and operational reviews"
       >
-        <button
-          onClick={handleGenerateReport}
-          disabled={creating}
-          style={{
-            marginBottom: "16px",
-            padding: "10px 20px",
-            background: creating ? "#cbd5e1" : "#3b82f6",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: creating ? "not-allowed" : "pointer",
-          }}
-        >
-          {creating ? "Generating..." : "Generate Report"}
-        </button>
+        <div className={styles.pageActionBar}>
+          <button
+            onClick={handleGenerateReport}
+            disabled={creating}
+            className={styles.primaryActionBtn}
+          >
+            {creating ? "Generating..." : "Generate Report"}
+          </button>
+        </div>
 
         <div className={styles.timeline}>
           {reports.map((report) => (
             <div className={styles.timelineItem} key={report.report_id}>
               <div className={styles.timelineHeader}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div className={styles.reportHeaderMeta}>
                   <strong>{report.title}</strong>
                   <span
+                    className={styles.reportTypeBadge}
                     style={{
                       background: typeColors[report.report_type]?.bg ?? "#f1f5f9",
                       color: typeColors[report.report_type]?.color ?? "#475569",
-                      padding: "3px 8px",
-                      borderRadius: "4px",
-                      fontSize: "0.6875rem",
-                      fontWeight: 700,
                     }}
                   >
                     {report.report_type}
@@ -142,7 +133,7 @@ export default function ReportsPage() {
               </div>
               <span className={styles.timeLabel}>{report.report_id} · {new Date(report.created_at).toLocaleString()}</span>
               <p className={styles.actionDetail}>{report.summary}</p>
-              <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+              <div className={styles.timelineActions}>
                 {report.status !== "published" && (
                   <button
                     onClick={async () => {
@@ -150,14 +141,7 @@ export default function ReportsPage() {
                       toast.success("Report published");
                       setReports(await getReports());
                     }}
-                    style={{
-                      padding: "8px 14px",
-                      background: "#16a34a",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
+                    className={styles.secondaryActionBtn}
                   >
                     Publish Report
                   </button>
