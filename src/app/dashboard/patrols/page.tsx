@@ -14,6 +14,7 @@ export default function PatrolsPage() {
     completed: 0,
     teamSize: "0.0 officers",
   });
+  const [liveNarrative, setLiveNarrative] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadPatrols() {
@@ -36,6 +37,11 @@ export default function PatrolsPage() {
         completed: patrolLike.filter((item: any) => item.outcome === "Completed").length,
         teamSize: `${averageTeam} officers`,
       });
+      setLiveNarrative([
+        `${patrolLike.filter((item: any) => item.outcome !== "Completed").length} patrol-like workflows are still active in the field.`,
+        `${new Set(patrolLike.map((item: any) => item.location)).size} planning areas currently have staged patrol coverage.`,
+        `${patrolLike.filter((item: any) => item.intervention_type === "WSH_Inspection").length} inspections are acting as patrol dispatch equivalents right now.`,
+      ]);
     }
 
     void loadPatrols();
@@ -118,7 +124,7 @@ export default function PatrolsPage() {
             ))}
           </div>
           <div className={styles.metaText} style={{ marginTop: "16px" }}>
-            Coverage score is derived from count of live interventions and whether outcomes have been completed.
+            {liveNarrative.join(" ")}
           </div>
         </div>
       </DashboardSection>

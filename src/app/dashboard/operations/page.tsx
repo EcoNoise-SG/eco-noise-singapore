@@ -41,6 +41,8 @@ export default function OperationsPage() {
     outcome: "Completed",
     findings: "",
   });
+  const [reductionNotes, setReductionNotes] = useState<string[]>([]);
+  const [readinessNotes, setReadinessNotes] = useState<string[]>([]);
 
   useEffect(() => {
     void loadInterventions();
@@ -79,6 +81,18 @@ export default function OperationsPage() {
         findings: typeof int.findings === 'string' ? int.findings : JSON.stringify(int.findings || {}),
         created_at: new Date(int.created_at).toLocaleString(),
       })));
+      const active = data.filter((item: any) => item.outcome !== "Completed");
+      const completed = data.filter((item: any) => item.outcome === "Completed");
+      setReductionNotes([
+        `${active.length} operations are currently open across machinery-linked workflows.`,
+        `${completed.length} outcomes have already been verified and fed back into the system.`,
+        `${data.filter((item: any) => item.intervention_type === "Contractor_Audit").length} contractor audit actions are supporting machinery risk reduction.`,
+      ]);
+      setReadinessNotes([
+        `${active.length > 0 ? "Teams are staged in live intervention zones." : "No live staging units are open right now."}`,
+        `${data.filter((item: any) => item.team_members?.length).length} records include explicit team assignment data.`,
+        `${Math.max(data.slice(0, 3).length, 1)} recent operations are available for immediate command review.`,
+      ]);
     } catch (error) {
       console.error("Error loading interventions:", error);
     } finally {
@@ -188,9 +202,7 @@ export default function OperationsPage() {
         <DashboardSection eyebrow="Risk Reduction" title="Proactive Machinery Incident Prevention">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li><strong>Target:</strong> 15–25% Reduction in incident risk volume.</li>
-              <li><strong>Efficiency:</strong> Reduce travel-to-intervention time by pre-staging.</li>
-              <li><strong>Satisfaction:</strong> Visible enforcement creates psychological deterrence.</li>
+              {reductionNotes.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
         </DashboardSection>
@@ -198,9 +210,7 @@ export default function OperationsPage() {
         <DashboardSection eyebrow="Agency posture" title="Deployment Readiness">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li>Teams staged at predicted clusters 30m prior to forecast peak.</li>
-              <li>Inspection packs tailored by model output (Safety vs Health focus).</li>
-              <li>Outcome feedback loop feeds back into temporal weights.</li>
+              {readinessNotes.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
         </DashboardSection>

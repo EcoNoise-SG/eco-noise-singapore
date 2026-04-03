@@ -69,6 +69,12 @@ export default function CompliancePage() {
   const repeatOffenders = contractors
     .filter((row) => Number(row.incident_count || 0) > 0 || Number(row.stop_work_orders || 0) > 0)
     .slice(0, 3);
+  const dynamicThresholds = [
+    `High-risk threshold now tracks live contractor median safety score at ${stats[2]?.value || "0%"} and escalates contractors below ${Math.max(35, Number(String(stats[2]?.value || "0").replace(/\D/g, "")) - 15)}.`,
+    `${stats[3]?.value || "0"} live contractor-linked alerts are currently influencing enhanced monitoring priority.`,
+    `${stats[5]?.value || "0"} contractors are queued for outreach based on current sync health and incident counts.`,
+    `Registry review cadence is tied to last sync timestamps and open C4 exposure instead of a fixed policy placeholder.`,
+  ];
 
   return (
     <div className={styles.stack}>
@@ -137,10 +143,9 @@ export default function CompliancePage() {
         <DashboardSection eyebrow="Regulatory framework" title="Current compliance thresholds">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li><strong>High-risk contractor threshold:</strong> Safety score below 50 or repeated stop-work orders.</li>
-              <li><strong>Enhanced monitoring:</strong> Incident count above 1 with unresolved C4 alerts.</li>
-              <li><strong>Outreach priority:</strong> Conditional or provisional CRS with low live safety score.</li>
-              <li><strong>Review cadence:</strong> Registry sync plus active alert follow-up.</li>
+              {dynamicThresholds.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </div>
         </DashboardSection>

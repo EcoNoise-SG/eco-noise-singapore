@@ -30,6 +30,8 @@ type DataSourceStatus = {
   apiEndpoint?: string;
 };
 
+type SourceHealth = Awaited<ReturnType<typeof checkAllDataSources>>[number];
+
 type Contractor = {
   id: string;
   uen: string;
@@ -59,71 +61,30 @@ export default function DataSourcesPage() {
         getContractors(),
         fetch("/api/model/predictions").catch(() => null),
       ]);
-      const statusMap = new Map(statuses.map((status) => [status.name, status]));
       const predictions =
         predictionResponse && predictionResponse.ok ? ((await predictionResponse.json()).predictions || []) : [];
+      const endpointByName: Record<string, string> = {
+        "NEA Real-time Weather": "api-open.data.gov.sg/v2/real-time/api/air-temperature",
+        "NEA Air Quality (PM2.5)": "api-open.data.gov.sg/v2/real-time/api/pm25",
+        "ACRA Company Registry": "data.gov.sg datastore / ACRA registry",
+        "HDB Housing Data": "data.gov.sg datastore / HDB housing",
+        "BCA Construction Projects": "data.gov.sg datastore / BCA projects",
+        "MOH Health Datasets": "data.gov.sg / MOH collections",
+      };
+
+      const liveCatalog: DataSourceStatus[] = statuses.map((status: SourceHealth) => ({
+        source: status.name,
+        signal: status.status === "online" ? "Validated live source health and record availability" : "Validation currently unavailable or retrying",
+        status: (status.status === "online" && status.name.includes("NEA") ? "realtime" : status.status === "online" ? "synced" : "error") as "realtime" | "synced" | "error",
+        latency: `${Math.round(status.latencyMs || 0)} ms`,
+        records: status.name === "ACRA Company Registry" ? contractorRows.length || status.recordCount || 0 : status.recordCount || 0,
+        since: "Live validation",
+        apiEndpoint: endpointByName[status.name] || "Validated live connector",
+        lastUpdated: status.lastFetch?.toLocaleTimeString(),
+      }));
 
       setDataSources([
-        {
-          source: "NEA Real-time Weather",
-          signal: "Temperature, humidity, wind speed, rainfall",
-          status: statusMap.get("NEA Real-time Weather")?.status === "online" ? "realtime" : "error",
-          latency: `${Math.round(statusMap.get("NEA Real-time Weather")?.latencyMs || 0)} ms`,
-          records: statusMap.get("NEA Real-time Weather")?.recordCount || "Live",
-          since: "2022",
-          apiEndpoint: "api-open.data.gov.sg/v2/real-time/api/air-temperature",
-          lastUpdated: statusMap.get("NEA Real-time Weather")?.lastFetch?.toLocaleTimeString(),
-        },
-        {
-          source: "NEA Air Quality (PM2.5)",
-          signal: "PM2.5 regional readings across Singapore",
-          status: statusMap.get("NEA Air Quality (PM2.5)")?.status === "online" ? "realtime" : "error",
-          latency: `${Math.round(statusMap.get("NEA Air Quality (PM2.5)")?.latencyMs || 0)} ms`,
-          records: statusMap.get("NEA Air Quality (PM2.5)")?.recordCount || "Live",
-          since: "2022",
-          apiEndpoint: "api-open.data.gov.sg/v2/real-time/api/pm25",
-          lastUpdated: statusMap.get("NEA Air Quality (PM2.5)")?.lastFetch?.toLocaleTimeString(),
-        },
-        {
-          source: "ACRA Company Registry",
-          signal: "Contractor registration, UEN verification",
-          status: statusMap.get("ACRA Company Registry")?.status === "online" ? "synced" : "error",
-          latency: `${Math.round(statusMap.get("ACRA Company Registry")?.latencyMs || 0)} ms`,
-          records: contractorRows.length || statusMap.get("ACRA Company Registry")?.recordCount || 0,
-          since: "2020",
-          apiEndpoint: "api-production.data.gov.sg/v2/public/api/datasets/d_65a9a8e6982d52ac86e17527e1b39ee4",
-          lastUpdated: statusMap.get("ACRA Company Registry")?.lastFetch?.toLocaleTimeString(),
-        },
-        {
-          source: "BCA Construction Projects",
-          signal: "Projects and permits used for construction context",
-          status: statusMap.get("BCA Construction Projects")?.status === "online" ? "synced" : "error",
-          latency: `${Math.round(statusMap.get("BCA Construction Projects")?.latencyMs || 0)} ms`,
-          records: statusMap.get("BCA Construction Projects")?.recordCount || 0,
-          since: "2021",
-          apiEndpoint: "data.gov.sg/BCA project collection",
-          lastUpdated: statusMap.get("BCA Construction Projects")?.lastFetch?.toLocaleTimeString(),
-        },
-        {
-          source: "HDB Housing Data",
-          signal: "Dormitory and housing locality baseline context",
-          status: statusMap.get("HDB Housing Data")?.status === "online" ? "synced" : "error",
-          latency: `${Math.round(statusMap.get("HDB Housing Data")?.latencyMs || 0)} ms`,
-          records: statusMap.get("HDB Housing Data")?.recordCount || 0,
-          since: "2020",
-          apiEndpoint: "data.gov.sg/HDB public collection",
-          lastUpdated: statusMap.get("HDB Housing Data")?.lastFetch?.toLocaleTimeString(),
-        },
-        {
-          source: "MOH Health Datasets",
-          signal: "Disease surveillance and public health context",
-          status: statusMap.get("MOH Health Datasets")?.status === "online" ? "synced" : "error",
-          latency: `${Math.round(statusMap.get("MOH Health Datasets")?.latencyMs || 0)} ms`,
-          records: statusMap.get("MOH Health Datasets")?.recordCount || 0,
-          since: "2021",
-          apiEndpoint: "data.gov.sg/MOH collections",
-          lastUpdated: statusMap.get("MOH Health Datasets")?.lastFetch?.toLocaleTimeString(),
-        },
+        ...liveCatalog,
         {
           source: "Supabase Risk Alerts Stream",
           signal: "Open, acknowledged, and resolved risk alerts",

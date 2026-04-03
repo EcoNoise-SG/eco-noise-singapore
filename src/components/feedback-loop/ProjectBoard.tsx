@@ -21,7 +21,9 @@ const TASKS: Task[] = [
 const GUIDE_X = [160, 280, 400]
 const TASK_TOPS = [40, 160, 280]
 
-export default function ProjectBoard({ tasks = TASKS }: { tasks?: Task[] }) {
+export default function ProjectBoard({ tasks }: { tasks?: Task[] }) {
+  const safeTasks = tasks && tasks.length > 0 ? tasks : []
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
@@ -31,7 +33,7 @@ export default function ProjectBoard({ tasks = TASKS }: { tasks?: Task[] }) {
             <div key={x} className={styles.guide} style={{ left: x }} />
           ))}
 
-          {tasks.map((task, i) => (
+          {safeTasks.map((task, i) => (
             <div
               key={task.id}
               className={styles.taskRow}
@@ -44,12 +46,12 @@ export default function ProjectBoard({ tasks = TASKS }: { tasks?: Task[] }) {
             </div>
           ))}
 
-          <ConnectorLines panelOpen={true} count={tasks.length} />
+          <ConnectorLines panelOpen={true} count={safeTasks.length} />
         </div>
 
         {/* Panel */}
         <div className={styles.panelWrap}>
-          <ProjectPanel tasks={tasks} />
+          <ProjectPanel tasks={safeTasks.length > 0 ? safeTasks : TASKS} />
         </div>
       </div>
     </div>

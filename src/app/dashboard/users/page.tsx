@@ -4,24 +4,36 @@
 import { useEffect, useMemo, useState } from "react";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import styles from "../dashboard.module.css";
-import { getRiskAlerts, subscribeToRiskAlerts } from "@/lib/supabase";
+import { getInterventions, getRiskAlerts, subscribeToInterventions, subscribeToRiskAlerts } from "@/lib/supabase";
 
 export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [signals, setSignals] = useState<any[]>([]);
+  const [responseNotes, setResponseNotes] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadSignals() {
-      const alerts = await getRiskAlerts();
+      const [alerts, interventions] = await Promise.all([getRiskAlerts(), getInterventions()]);
       const wellbeingSignals = alerts.filter((alert: any) => ["C8", "C9", "C10"].includes(alert.component));
       setSignals(wellbeingSignals);
+      setResponseNotes([
+        `${wellbeingSignals.filter((signal: any) => signal.component === "C10").length} wellbeing escalations are currently visible.`,
+        `${interventions.filter((item: any) => ["Counseling", "Health_Screening"].includes(item.intervention_type)).length} response workflows are mapped to welfare-linked issues.`,
+        `${new Set(wellbeingSignals.map((signal: any) => signal.location)).size} areas currently carry active worker-welfare monitoring.`,
+      ]);
     }
 
     void loadSignals();
     const subscription = subscribeToRiskAlerts(() => {
       void loadSignals();
     });
-    return () => subscription.unsubscribe();
+    const interventionSubscription = subscribeToInterventions(() => {
+      void loadSignals();
+    });
+    return () => {
+      subscription.unsubscribe();
+      interventionSubscription.unsubscribe();
+    };
   }, []);
 
   const filtered = useMemo(
@@ -138,10 +150,7 @@ export default function UsersPage() {
         <DashboardSection eyebrow="Intervention programs" title="Operational response pathways">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li><strong>Counseling:</strong> Triggered when C10 alerts remain unresolved.</li>
-              <li><strong>Health screening:</strong> Used when welfare and dormitory risk signals overlap.</li>
-              <li><strong>Escalation review:</strong> Open C9 alerts should feed directly into reports and interventions.</li>
-              <li><strong>Outcome logging:</strong> Field teams should close the loop through intervention findings.</li>
+              {responseNotes.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
         </DashboardSection>

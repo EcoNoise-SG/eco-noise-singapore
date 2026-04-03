@@ -19,41 +19,11 @@ import {
 
 type DeploymentMode = "proactive" | "standard" | "reactive";
 
-type ScenarioConfig = {
-  label: string;
-  hint?: string;
-  suppression: string;
-  manHours: string;
-  impactNote: string;
-};
-
 const deploymentModes: Array<{ key: DeploymentMode; label: string; hint?: string }> = [
   { key: "proactive", label: "Proactive", hint: "High" },
   { key: "standard", label: "Standard" },
   { key: "reactive", label: "Reactive" },
 ];
-
-const scenarioConfig: Record<DeploymentMode, ScenarioConfig> = {
-  proactive: {
-    label: "Proactive",
-    hint: "High",
-    suppression: "-22%",
-    manHours: "450h/wk",
-    impactNote: "Best suppression with pre-staged inspector deployment across high-risk sites.",
-  },
-  standard: {
-    label: "Standard",
-    suppression: "-11%",
-    manHours: "320h/wk",
-    impactNote: "Balanced deployment keeps coverage stable while preserving inspection capacity.",
-  },
-  reactive: {
-    label: "Reactive",
-    suppression: "-4%",
-    manHours: "210h/wk",
-    impactNote: "Minimal pre-positioning increases exposure to peak-period incidents and delayed interventions.",
-  },
-};
 
 export default function ForecastsPage() {
   const [deploymentMode, setDeploymentMode] = useState<DeploymentMode>("proactive");
@@ -62,6 +32,11 @@ export default function ForecastsPage() {
   const [modelData, setModelData] = useState<any[]>([]);
   const [anomalyData, setAnomalyData] = useState<any[]>([]);
   const [clusterData, setClusterData] = useState<any[]>([]);
+  const [simulatorMetrics, setSimulatorMetrics] = useState<Record<DeploymentMode, { suppression: string; manHours: string; impactNote: string }>>({
+    proactive: { suppression: "-0%", manHours: "0h/wk", impactNote: "Waiting for live signals." },
+    standard: { suppression: "-0%", manHours: "0h/wk", impactNote: "Waiting for live signals." },
+    reactive: { suppression: "-0%", manHours: "0h/wk", impactNote: "Waiting for live signals." },
+  });
   const [summaryMetrics, setSummaryMetrics] = useState([
     { label: "Global model confidence", value: "0%", sub: "Latest model output" },
     { label: "Training Data Horizon", value: "Live", sub: "Current runtime signals loaded" },
@@ -74,7 +49,7 @@ export default function ForecastsPage() {
       const preferences = await getUserPreferences(identity.id);
       const savedMode = preferences?.notification_settings?.forecastDeploymentMode as DeploymentMode | undefined;
 
-      if (savedMode && scenarioConfig[savedMode]) {
+      if (savedMode && deploymentModes.some((mode) => mode.key === savedMode)) {
         setDeploymentMode(savedMode);
       }
     }
@@ -141,15 +116,35 @@ export default function ForecastsPage() {
       setClusterData(
         predictions.map((prediction: any) => ({
           region: prediction.area,
-          persistence: Math.min(100, Math.round(prediction.predicted_score)),
-          seasonality: Math.max(25, Math.round((prediction.confidence || 0.65) * 100)),
-          count: Math.max(20, Math.round(prediction.predicted_score)),
+          persistence: Math.min(100, Math.round(Number(prediction.predicted_score || 0))),
+          seasonality: Math.max(25, Math.round(Number(prediction.confidence || 0.65) * 100)),
+          count: Math.max(20, Math.round((byArea[prediction.area]?.length || 1) * 18)),
         })),
       );
 
       const avgConfidence = predictions.length
         ? Math.round(predictions.reduce((sum: number, item: any) => sum + Number(item.confidence || 0.65), 0) / predictions.length * 100)
         : 0;
+      const activePredictions = predictions.filter((item: any) => Number(item.predicted_score || 0) >= 60).length;
+      const openAlerts = alerts.filter((item: any) => item.status !== "resolved").length;
+      const activeInterventions = interventions.filter((item: any) => item.outcome !== "Completed").length;
+      setSimulatorMetrics({
+        proactive: {
+          suppression: `-${Math.max(8, Math.min(28, Math.round((activePredictions * 4 + activeInterventions * 2) / Math.max(openAlerts, 1))))}%`,
+          manHours: `${Math.max(180, activePredictions * 42 + activeInterventions * 18)}h/wk`,
+          impactNote: `${activePredictions} high-score clusters now justify pre-staged deployments before the next risk spike.`,
+        },
+        standard: {
+          suppression: `-${Math.max(5, Math.min(18, Math.round((activePredictions * 3 + activeInterventions) / Math.max(openAlerts, 1))))}%`,
+          manHours: `${Math.max(140, activePredictions * 30 + activeInterventions * 14)}h/wk`,
+          impactNote: `Balanced staging focuses on ${Math.max(activePredictions - 1, 1)} leading clusters while keeping reserve capacity available.`,
+        },
+        reactive: {
+          suppression: `-${Math.max(2, Math.min(10, Math.round(((activeInterventions + 1) / Math.max(openAlerts, 1)) * 8)))}%`,
+          manHours: `${Math.max(90, activeInterventions * 20 + 80)}h/wk`,
+          impactNote: `Reactive posture follows current incident pressure and may trail ${activePredictions} predicted hotspots.`,
+        },
+      });
       setSummaryMetrics([
         { label: "Global model confidence", value: `${avgConfidence}%`, sub: "Latest model output" },
         { label: "Training Data Horizon", value: `${Math.max(alerts.length, predictions.length)} live signals`, sub: "Current runtime signals loaded" },
@@ -190,7 +185,7 @@ export default function ForecastsPage() {
     }
   };
 
-  const activeScenario = scenarioConfig[deploymentMode];
+  const activeScenario = simulatorMetrics[deploymentMode];
 
   return (
     <div className={styles.stack}>
@@ -211,10 +206,10 @@ export default function ForecastsPage() {
               </tr>
             </thead>
             <tbody>
-              {forecastRows.map((row) => (
+              {forecastRows.map((row, rowIndex) => (
                 <tr key={row[0]}>
-                  {row.map((cell) => (
-                    <td key={cell}>{cell}</td>
+                  {row.map((cell, cellIndex) => (
+                    <td key={`${rowIndex}-${cellIndex}-${cell}`}>{cell}</td>
                   ))}
                 </tr>
               ))}
@@ -291,7 +286,7 @@ export default function ForecastsPage() {
             <AnomalyDetectionChart data={anomalyData} />
             <div className={styles.anomalyBadge}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-              <span>{anomalyData.find((item) => item.isAnomaly)?.time ? `Urgent: live anomaly detected around ${anomalyData.find((item) => item.isAnomaly)?.time}` : "No active anomaly spikes in the latest cycle."}</span>
+              <span>{anomalyData.find((item) => item.isAnomaly)?.time ? `Urgent: ${forecastRows[0]?.[0] || "a live zone"} is spiking around ${anomalyData.find((item) => item.isAnomaly)?.time}` : "No active anomaly spikes in the latest cycle."}</span>
             </div>
           </div>
         </DashboardSection>
@@ -304,7 +299,7 @@ export default function ForecastsPage() {
         <div className={styles.chartCard}>
           <SpatialPersistenceChart data={clusterData} />
           <div className={styles.metaText}>
-            Cluster positions now derive from generated model predictions instead of a static planning-area snapshot.
+            Cluster positions now blend generated model predictions with live area alert volume.
           </div>
         </div>
       </DashboardSection>

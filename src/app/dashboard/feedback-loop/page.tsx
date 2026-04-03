@@ -54,6 +54,7 @@ export default function FeedbackLoopPage() {
         { id: "task-1", title: `${feedbackRecords} alert and workflow events ingested into the audit layer.`, color: "#FDDCB5", status: "Ingestion" },
         { id: "task-2", title: `${reports.length} reports and model outputs are available for operational review.`, color: "#D4B8F0", status: "Inference" },
         { id: "task-3", title: `${completed} interventions already carry field outcomes back into the loop.`, color: "#B8D0F5", status: "Field Feedback" },
+        { id: "task-4", title: `${Math.max(0, interventions.length - completed)} open interventions are still waiting for closure signals.`, color: "#B5F5EC", status: "Pending Validation" },
       ]);
     }
 

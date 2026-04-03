@@ -15,6 +15,8 @@ export default function MaintenancePage() {
   });
   const [areas, setAreas] = useState<Array<{ area: string; heatScore: number }>>([]);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [postureNotes, setPostureNotes] = useState<string[]>([]);
+  const [slaNotes, setSlaNotes] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadMaintenance() {
@@ -56,6 +58,18 @@ export default function MaintenancePage() {
           date: new Date(item.start_time).toLocaleDateString(),
         })),
       );
+      setPostureNotes([
+        `${healthInterventions.filter((item: any) => item.intervention_type === "Cooling_Measures").length} cooling workflows are open in the current live queue.`,
+        `${healthInterventions.filter((item: any) => item.intervention_type === "Health_Screening").length} health screening deployments are tied to present dormitory-linked signals.`,
+        `${heatAlerts.filter((alert: any) => Number(alert.risk_score || 0) >= 75).length} locations are sitting above the elevated heat threshold right now.`,
+        `Coverage updates will change as ${healthInterventions.length} live interventions move through outcome logging.`,
+      ]);
+      setSlaNotes([
+        `${liveAreas.filter((item) => item.heatScore >= 80).length} critical areas should have immediate coverage opened.`,
+        `${liveAreas.filter((item) => item.heatScore >= 65 && item.heatScore < 80).length} high-risk areas should remain covered within the same shift.`,
+        `${liveAreas.filter((item) => item.heatScore < 65).length} moderate areas stay under watch until the next signal cycle.`,
+        `${healthInterventions.filter((item: any) => item.outcome === "Completed").length} completed interventions are already feeding back into operational learning.`,
+      ]);
     }
 
     void loadMaintenance();
@@ -141,10 +155,7 @@ export default function MaintenancePage() {
         <DashboardSection eyebrow="Preventive schedule" title="Current operational posture">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li><strong>Cooling measures:</strong> Derived from open heat and wellness interventions.</li>
-              <li><strong>Health screenings:</strong> Triggered when live dormitory-linked risk signals stay elevated.</li>
-              <li><strong>Ventilation audits:</strong> Prioritized where repeated heat or disease alerts cluster.</li>
-              <li><strong>Coverage updates:</strong> Refreshed through intervention outcome logging.</li>
+              {postureNotes.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
         </DashboardSection>
@@ -152,10 +163,7 @@ export default function MaintenancePage() {
         <DashboardSection eyebrow="SLA compliance" title="Response benchmarks from live interventions">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li><strong>Critical:</strong> Areas above 80/100 should have an intervention opened immediately.</li>
-              <li><strong>High:</strong> Health or cooling intervention should be active in the same shift.</li>
-              <li><strong>Moderate:</strong> Monitor next cycle and escalate if signals persist.</li>
-              <li><strong>Completed:</strong> Outcomes should feed back into the audit and forecasting loop.</li>
+              {slaNotes.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
         </DashboardSection>

@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import {
   createRiskAlert,
   getCurrentUserIdentity,
+  getInterventions,
   getRiskAlerts,
   subscribeToRiskAlerts,
 } from "@/lib/supabase";
@@ -24,8 +25,6 @@ interface Hotspot {
   score: number;
   driver: string;
 }
-
-const HOTSPOT_AREAS = ["Bukit Merah", "Jurong East", "Bedok", "Woodlands"];
 
 interface AlertModalState {
   isOpen: boolean;
@@ -54,11 +53,12 @@ export default function HotspotsPage() {
   useEffect(() => {
     async function loadHotspots() {
       try {
-        const [weather, airQuality, dengue, existingAlerts] = await Promise.all([
+        const [weather, airQuality, dengue, existingAlerts, interventions] = await Promise.all([
           fetchNEAWeather(),
           fetchNEAAirQuality(),
           fetchNEADengueClusters(),
           getRiskAlerts({ component: "C1" }),
+          getInterventions(),
         ]);
 
         const weatherRecord = (weather?.records?.[0] || {}) as Record<string, number | string | undefined>;
@@ -79,7 +79,16 @@ export default function HotspotsPage() {
         const baselineHumidity = Number(weatherRecord.relative_humidity || 78);
         const baselinePm25 = Number(airRecord.pm25_one_hourly || airRecord.value || 18);
 
-        const dynamicHotspots = HOTSPOT_AREAS.map((area, index) => {
+        const hotspotAreas = Array.from(
+          new Set(
+            [
+              ...existingAlerts.map((alert: any) => alert.location),
+              ...interventions.map((item: any) => item.location),
+            ].filter(Boolean),
+          ),
+        );
+
+        const dynamicHotspots = (hotspotAreas.length > 0 ? hotspotAreas.slice(0, 8) : ["Bukit Merah", "Jurong East", "Bedok", "Woodlands"]).map((area, index) => {
           const score = Math.min(
             100,
             Math.round(
@@ -89,14 +98,15 @@ export default function HotspotsPage() {
                 baselinePm25 * 0.5 +
                 dengueCount * 0.4 +
                 index * 6 +
-                (activeAlertsByLocation.has(area) ? 12 : 0),
+                (activeAlertsByLocation.has(area) ? 12 : 0) +
+                (interventions.some((item: any) => item.location === area && item.outcome !== "Completed") ? 8 : 0),
             ),
           );
 
           return {
             area,
             score,
-            driver: `${baselineTemperature.toFixed(1)}C temp, ${baselinePm25.toFixed(0)} PM2.5, ${dengueCount} dengue clusters, ${activeAlertsByLocation.has(area) ? "existing active alert" : "no open alert"}`,
+            driver: `${baselineTemperature.toFixed(1)}C temp, ${baselinePm25.toFixed(0)} PM2.5, ${dengueCount} dengue clusters, ${activeAlertsByLocation.has(area) ? "existing active alert" : "no open alert"}${interventions.some((item: any) => item.location === area && item.outcome !== "Completed") ? ", active field intervention" : ""}`,
           };
         }).sort((a, b) => b.score - a.score);
 

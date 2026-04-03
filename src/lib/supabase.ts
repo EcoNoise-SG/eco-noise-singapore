@@ -47,8 +47,8 @@ async function safeAudit(action: string, resourceType?: string, resourceId?: str
   try {
     const identity = await getCurrentUserIdentity();
     await logAudit(identity.id, action, resourceType, resourceId, details);
-  } catch (error) {
-    console.error('Error writing audit log:', error);
+  } catch {
+    // Audit writes should never surface to the UI; the app remains usable without them.
   }
 }
 
@@ -62,6 +62,28 @@ function subscribeToTable(
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table },
+      () => onChange(),
+    )
+    .subscribe();
+
+  return {
+    unsubscribe: () => {
+      void supabase.removeChannel(channel);
+    },
+  };
+}
+
+function subscribeToScopedTable(
+  channelName: string,
+  table: string,
+  userId: string,
+  onChange: () => void,
+): Unsubscribe {
+  const channel = supabase
+    .channel(channelName)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table, filter: `user_id=eq.${userId}` },
       () => onChange(),
     )
     .subscribe();
@@ -97,47 +119,12 @@ export function subscribeToUserPreferences(onChange: () => void): Unsubscribe {
   return subscribeToTable('user-preferences-live', 'user_preferences', onChange);
 }
 
-export async function getOperationalPollState(pollId: string) {
-  const { data, error } = await supabase
-    .from('audit_logs')
-    .select('*')
-    .eq('resource_type', 'poll')
-    .eq('resource_id', pollId)
-    .eq('action', 'operational_poll_vote')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching operational poll state:', error);
-    return { votes: { option1: 0, option2: 0 }, total: 0 };
-  }
-
-  const votes = (data || []).reduce(
-    (acc, entry: any) => {
-      const choice = entry.details?.choice;
-      if (choice === 'option_1') acc.option1 += 1;
-      if (choice === 'option_2') acc.option2 += 1;
-      return acc;
-    },
-    { option1: 0, option2: 0 },
-  );
-
-  return {
-    votes,
-    total: votes.option1 + votes.option2,
-  };
+export function subscribeToWorkspaceMessages(userId: string, onChange: () => void): Unsubscribe {
+  return subscribeToScopedTable(`workspace-messages-${userId}`, 'workspace_messages', userId, onChange);
 }
 
-export async function submitOperationalPollVote(
-  pollId: string,
-  choice: 'option_1' | 'option_2',
-  metadata?: Record<string, unknown>,
-) {
-  const identity = await getCurrentUserIdentity();
-  await logAudit(identity.id, 'operational_poll_vote', 'poll', pollId, {
-    choice,
-    ...metadata,
-  });
-  return true;
+export function subscribeToWorkspaceTasks(userId: string, onChange: () => void): Unsubscribe {
+  return subscribeToScopedTable(`workspace-tasks-${userId}`, 'workspace_tasks', userId, onChange);
 }
 
 // ==================== ALERTS ====================
@@ -296,7 +283,33 @@ export async function logAudit(userId: string, action: string, resourceType?: st
       details
     }]);
 
-  if (error) console.error('Error logging audit:', error);
+  const errorCode =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code?: string }).code)
+      : '';
+
+  const errorMessage =
+    typeof error === 'object' && error !== null && 'message' in error
+      ? String((error as { message?: string }).message)
+      : '';
+
+  const errorName =
+    typeof error === 'object' && error !== null && 'name' in error
+      ? String((error as { name?: string }).name)
+      : '';
+
+  const hasUsefulAuditError =
+    Boolean(errorCode) ||
+    Boolean(errorMessage) ||
+    Boolean(errorName);
+
+  const isBenignAuditError =
+    !hasUsefulAuditError ||
+    errorCode === 'PGRST116' ||
+    errorMessage.toLowerCase().includes('0 rows') ||
+    errorMessage.toLowerCase().includes('no rows');
+
+  if (error && !isBenignAuditError) console.error('Error logging audit:', error);
   return !!data;
 }
 
@@ -547,6 +560,156 @@ export async function updateUserPreferences(userId: string, preferences: any) {
   return !error;
 }
 
+// ==================== PERSONAL WORKSPACE CHAT + TASKS ====================
+
+export async function getOrCreateWorkspaceThread(userId: string) {
+  const { data: existing, error: fetchError } = await supabase
+    .from('workspace_threads')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_archived', false)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error('Error fetching workspace thread:', fetchError);
+  }
+
+  if (existing) {
+    return existing;
+  }
+
+  const { data, error } = await supabase
+    .from('workspace_threads')
+    .insert([{
+      user_id: userId,
+      title: 'My workspace thread',
+      is_archived: false,
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating workspace thread:', error);
+    return null;
+  }
+
+  await safeAudit('created_workspace_thread', 'workspace_thread', String(data.id));
+  return data;
+}
+
+export async function getWorkspaceMessages(userId: string, threadId?: string) {
+  let activeThreadId = threadId;
+
+  if (!activeThreadId) {
+    const thread = await getOrCreateWorkspaceThread(userId);
+    activeThreadId = thread?.id;
+  }
+
+  if (!activeThreadId) return [];
+
+  const { data, error } = await supabase
+    .from('workspace_messages')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('thread_id', activeThreadId)
+    .order('created_at', { ascending: true });
+
+  if (error) console.error('Error fetching workspace messages:', error);
+  return data || [];
+}
+
+export async function createWorkspaceMessage(userId: string, content: string, role: 'user' | 'assistant' | 'system' = 'user', threadId?: string) {
+  const thread = threadId ? { id: threadId } : await getOrCreateWorkspaceThread(userId);
+  if (!thread?.id) return null;
+
+  const { data, error } = await supabase
+    .from('workspace_messages')
+    .insert([{
+      user_id: userId,
+      thread_id: thread.id,
+      role,
+      content,
+    }])
+    .select()
+    .single();
+
+  if (error) console.error('Error creating workspace message:', error);
+
+  if (!error) {
+    await supabase
+      .from('workspace_threads')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', thread.id);
+    await safeAudit('created_workspace_message', 'workspace_message', String(data.id), { role });
+  }
+
+  return data || null;
+}
+
+export async function getWorkspaceTasks(userId: string) {
+  const { data, error } = await supabase
+    .from('workspace_tasks')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) console.error('Error fetching workspace tasks:', error);
+  return data || [];
+}
+
+export async function createWorkspaceTask(userId: string, task: {
+  title: string;
+  details?: string;
+  priority?: 'low' | 'medium' | 'high';
+  status?: 'todo' | 'in_progress' | 'done';
+}) {
+  const { data, error } = await supabase
+    .from('workspace_tasks')
+    .insert([{
+      user_id: userId,
+      title: task.title,
+      details: task.details,
+      priority: task.priority || 'medium',
+      status: task.status || 'todo',
+    }])
+    .select()
+    .single();
+
+  if (error) console.error('Error creating workspace task:', error);
+  if (!error) {
+    await safeAudit('created_workspace_task', 'workspace_task', String(data.id), {
+      priority: task.priority || 'medium',
+      status: task.status || 'todo',
+    });
+  }
+  return data || null;
+}
+
+export async function updateWorkspaceTask(taskId: string, updates: {
+  title?: string;
+  details?: string;
+  priority?: 'low' | 'medium' | 'high';
+  status?: 'todo' | 'in_progress' | 'done';
+}) {
+  const { data, error } = await supabase
+    .from('workspace_tasks')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', taskId)
+    .select()
+    .single();
+
+  if (error) console.error('Error updating workspace task:', error);
+  if (!error) {
+    await safeAudit('updated_workspace_task', 'workspace_task', String(taskId), updates);
+  }
+  return data || null;
+}
+
 // ==================== REPORTS ====================
 
 export async function createReport(reportData: {
@@ -610,4 +773,3 @@ export async function publishReport(reportId: string) {
 }
 
 export default supabase;
-

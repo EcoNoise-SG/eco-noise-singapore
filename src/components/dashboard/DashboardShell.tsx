@@ -7,16 +7,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { Toaster, toast } from 'react-hot-toast';
 import { useAuth } from "@/components/auth/AuthProvider";
 import styles from "./dashboard-shell.module.css";
+import WorkspaceDock from "./WorkspaceDock";
 import {
   getCurrentUserIdentity,
   getInterventions,
-  getOperationalPollState,
   getReports,
   getRiskAlerts,
   getUserPreferences,
   getUserNotifications,
   markNotificationAsRead,
-  submitOperationalPollVote,
   subscribeToAuditLogs,
   subscribeToInterventions,
   subscribeToNotifications,
@@ -141,14 +140,61 @@ const navigation = [
   },
 ];
 
-type ActivePoll = {
-  is_active: boolean;
-  question: string;
-  option_1: string;
-  option_2: string;
-  votes_1: number;
-  votes_2: number;
-  poll_id: string;
+const navigationTranslations: Record<string, Record<string, string>> = {
+  ml: {
+    "Overview": "Gambaran Keseluruhan",
+    "Construction Risk Hotspots": "Titik Panas Risiko Pembinaan",
+    "Injury Risk Forecasts": "Ramalan Risiko Kecederaan",
+    "Fall from Height Alerts": "Amaran Jatuh Dari Tempat Tinggi",
+    "Machinery Incidents": "Insiden Jentera",
+    "Contractor Safety Track": "Jejak Keselamatan Kontraktor",
+    "Dormitory Wellness": "Kesejahteraan Asrama",
+    "Heat Stress Index": "Indeks Tekanan Haba",
+    "Disease Outbreak Warnings": "Amaran Wabak Penyakit",
+    "DTS Prioritization": "Keutamaan DTS",
+    "Salary Non-Payment Alerts": "Amaran Gaji Tidak Dibayar",
+    "Mental Health Risk Index": "Indeks Risiko Kesihatan Mental",
+    "Activity Logs": "Log Aktiviti",
+    "Data Sources": "Sumber Data",
+    "Feedback Loop": "Gelung Maklum Balas",
+    "Settings": "Tetapan",
+  },
+  zh: {
+    "Overview": "概览",
+    "Construction Risk Hotspots": "施工风险热点",
+    "Injury Risk Forecasts": "伤害风险预测",
+    "Fall from Height Alerts": "高处坠落警报",
+    "Machinery Incidents": "机械事故",
+    "Contractor Safety Track": "承包商安全追踪",
+    "Dormitory Wellness": "宿舍健康",
+    "Heat Stress Index": "热应激指数",
+    "Disease Outbreak Warnings": "疾病暴发预警",
+    "DTS Prioritization": "DTS 优先级",
+    "Salary Non-Payment Alerts": "欠薪预警",
+    "Mental Health Risk Index": "心理健康风险指数",
+    "Activity Logs": "活动日志",
+    "Data Sources": "数据源",
+    "Feedback Loop": "反馈回路",
+    "Settings": "设置",
+  },
+  ta: {
+    "Overview": "மேலோட்டம்",
+    "Construction Risk Hotspots": "கட்டுமான ஆபத்து மையங்கள்",
+    "Injury Risk Forecasts": "காய அபாய முன்கணிப்புகள்",
+    "Fall from Height Alerts": "உயரத்தில் இருந்து விழும் எச்சரிக்கைகள்",
+    "Machinery Incidents": "இயந்திர சம்பவங்கள்",
+    "Contractor Safety Track": "ஒப்பந்ததாரர் பாதுகாப்பு கண்காணிப்பு",
+    "Dormitory Wellness": "விடுதி நலன்",
+    "Heat Stress Index": "வெப்ப அழுத்த குறியீடு",
+    "Disease Outbreak Warnings": "நோய் பரவல் எச்சரிக்கைகள்",
+    "DTS Prioritization": "DTS முன்னுரிமை",
+    "Salary Non-Payment Alerts": "சம்பள செலுத்தாமை எச்சரிக்கைகள்",
+    "Mental Health Risk Index": "மனநல ஆபத்து குறியீடு",
+    "Activity Logs": "செயல் பதிவுகள்",
+    "Data Sources": "தரவு மூலங்கள்",
+    "Feedback Loop": "பின்னூட்ட வட்டு",
+    "Settings": "அமைப்புகள்",
+  },
 };
 
 const translations: Record<string, Record<string, string>> = {
@@ -161,9 +207,7 @@ const translations: Record<string, Record<string, string>> = {
     liveZones: "Live Zones Online",
     highPriorityAlerts: "High-Priority Alerts",
     detWin: "Deterrence Wins:",
-    operationalPoll: "Operational Poll",
     preferenceRecorded: "Preference recorded",
-    noPoll: "Realtime poll is syncing with the latest alert posture.",
     skip: "Skip to content",
     activeResolution: "National Active Resolution",
     activeStaging: "Active Staging Units",
@@ -178,9 +222,7 @@ const translations: Record<string, Record<string, string>> = {
     liveZones: "Zon Langsung Online",
     highPriorityAlerts: "Amaran Keutamaan Tinggi",
     detWin: "Kemenangan Tindakan:",
-    operationalPoll: "Undian Operasi",
     preferenceRecorded: "Pilihan direkodkan",
-    noPoll: "Undian masa nyata sedang diselaraskan dengan amaran semasa.",
     skip: "Langkau ke kandungan",
     activeResolution: "Resolusi Aktif Nasional",
     activeStaging: "Unit Pementasan Aktif",
@@ -195,9 +237,7 @@ const translations: Record<string, Record<string, string>> = {
     liveZones: "在线实时区域",
     highPriorityAlerts: "高优先级警报",
     detWin: "处置成果：",
-    operationalPoll: "行动投票",
     preferenceRecorded: "已记录选择",
-    noPoll: "实时投票正在与最新警报态势同步。",
     skip: "跳到内容",
     activeResolution: "全国活跃处置",
     activeStaging: "活跃部署单元",
@@ -212,9 +252,7 @@ const translations: Record<string, Record<string, string>> = {
     liveZones: "நேரடி மண்டலங்கள் ஆன்லைனில்",
     highPriorityAlerts: "உயர் முன்னுரிமை எச்சரிக்கைகள்",
     detWin: "தடுப்பு வெற்றிகள்:",
-    operationalPoll: "செயற்பாட்டு வாக்கெடுப்பு",
     preferenceRecorded: "தேர்வு பதிவு செய்யப்பட்டது",
-    noPoll: "நேரடி வாக்கெடுப்பு சமீபத்திய எச்சரிக்கை நிலைக்குத் தழுவப்படுகிறது.",
     skip: "உள்ளடக்கத்திற்குச் செல்லவும்",
     activeResolution: "தேசிய செயலில் தீர்வு",
     activeStaging: "செயலில் உள்ள தளப்படுத்தல் அணிகள்",
@@ -240,16 +278,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     { id: '1', text: 'Loading live operational wins...' }
   ]);
 
-  const [activePoll, setActivePoll] = useState<ActivePoll>({
-    is_active: false,
-    question: "What should be our next worker safety priority?",
-    option_1: "Enhanced Fall Prevention Training",
-    option_2: "Heat Stress Monitoring Expansion",
-    votes_1: 0,
-    votes_2: 0,
-    poll_id: "live-operational-priority",
-  });
-
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -268,6 +296,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     confidence: "0 reports",
   });
   const t = (key: keyof typeof translations.en) => translations[language]?.[key] || translations.en[key];
+  const navLabel = (label: string) => navigationTranslations[language]?.[label] || label;
 
   useEffect(() => {
     // Mock loading delay
@@ -306,11 +335,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         ...liveAlerts.map((alert: any) => String(alert.location || 'Unknown')),
         ...activeInterventions.map((item: any) => String(item.location || 'Unknown')),
       ]);
-      const leadingAlert = highPriorityAlerts[0] || liveAlerts[0];
-      const derivedPollId = leadingAlert
-        ? `priority-${String(leadingAlert.component).toLowerCase()}-${String(leadingAlert.location).toLowerCase().replace(/\s+/g, "-")}`
-        : "live-operational-priority";
-      const pollState = await getOperationalPollState(derivedPollId);
 
       setNotifications(userNotifications);
       if (preferences?.language) {
@@ -336,21 +360,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           text: `${alert.component} monitoring active in ${alert.location} with score ${alert.risk_score}/100.`,
         })),
       );
-      setActivePoll({
-        is_active: Boolean(leadingAlert),
-        question: leadingAlert
-          ? `Next priority for ${leadingAlert.location} ${leadingAlert.component} risk?`
-          : "What should be our next worker safety priority?",
-        option_1: leadingAlert
-          ? `Deploy field team to ${leadingAlert.location}`
-          : "Enhanced Fall Prevention Training",
-        option_2: leadingAlert
-          ? `Push preventive advisory first`
-          : "Heat Stress Monitoring Expansion",
-        votes_1: pollState.votes.option1,
-        votes_2: pollState.votes.option2,
-        poll_id: derivedPollId,
-      });
     }
 
     void loadLiveHeaderData();
@@ -481,7 +490,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               className={`${styles.navItem} ${pathname === link.href ? styles.navItemActive : ''}`}
             >
               <span>{link.icon}</span>
-              {link.label}
+              {navLabel(link.label)}
             </Link>
           ))}
         </nav>
@@ -551,7 +560,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               )}
             </button>
             <div className={styles.headerTitle}>
-              {navigation.find(n => n.href === pathname)?.label || 'Intelligence Hub'}
+              {navLabel(navigation.find(n => n.href === pathname)?.label || 'Intelligence Hub')}
             </div>
           </div>
 
@@ -593,7 +602,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                             style={{ width: "100%", textAlign: "left", background: "transparent", border: "none" }}
                           >
                             <div className={styles.notifText}>
-                              <h5>{item.label}</h5>
+                              <h5>{navLabel(item.label)}</h5>
                               <p>{item.href}</p>
                             </div>
                           </button>
@@ -733,46 +742,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </main>
       </div>
 
-      {/* Active Strategy Poll */}
-      {activePoll.is_active && (
-        <div className={styles.pollPopup}>
-          <div className={styles.pollHeader}>
-            <h4>{t('operationalPoll')}</h4>
-            <button className={styles.closeBtn} onClick={() => setActivePoll({ ...activePoll, is_active: false })} aria-label="Close poll">✕</button>
-          </div>
-          <p className={styles.pollQuestion}>{activePoll.question}</p>
-          <div className={styles.pollOptions}>
-            <button
-              className={styles.pollOptionBtn}
-              onClick={async () => {
-                await submitOperationalPollVote(activePoll.poll_id, 'option_1', {
-                  question: activePoll.question,
-                  label: activePoll.option_1,
-                });
-                setActivePoll((current) => ({ ...current, votes_1: current.votes_1 + 1 }));
-                toast.success(t('preferenceRecorded'));
-              }}
-            >
-              <span>{activePoll.option_1}</span>
-              <strong>{activePoll.votes_1}</strong>
-            </button>
-            <button
-              className={styles.pollOptionBtn}
-              onClick={async () => {
-                await submitOperationalPollVote(activePoll.poll_id, 'option_2', {
-                  question: activePoll.question,
-                  label: activePoll.option_2,
-                });
-                setActivePoll((current) => ({ ...current, votes_2: current.votes_2 + 1 }));
-                toast.success(t('preferenceRecorded'));
-              }}
-            >
-              <span>{activePoll.option_2}</span>
-              <strong>{activePoll.votes_2}</strong>
-            </button>
-          </div>
-        </div>
-      )}
+      <WorkspaceDock />
     </div>
   );
 }
