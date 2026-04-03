@@ -42,12 +42,12 @@ export default function AnalyticsPage() {
       ]);
       const predictions = predictionResponse && predictionResponse.ok ? ((await predictionResponse.json()).predictions || []) : [];
       const groupedScopes = alerts.reduce((map: Map<string, { location: string; component: string; count: number }>, alert: any) => {
-          const key = `${alert.location}::${alert.component}`;
-          const existing = map.get(key) || { location: alert.location, component: alert.component, count: 0 };
-          existing.count += 1;
-          map.set(key, existing);
-          return map;
-        }, new Map<string, { location: string; component: string; count: number }>());
+        const key = `${alert.location}::${alert.component}`;
+        const existing = map.get(key) || { location: alert.location, component: alert.component, count: 0 };
+        existing.count += 1;
+        map.set(key, existing);
+        return map;
+      }, new Map<string, { location: string; component: string; count: number }>());
 
       const topScopes = Array.from(groupedScopes.values())
         .sort((a, b) => b.count - a.count)
@@ -81,8 +81,8 @@ export default function AnalyticsPage() {
       const averageScore =
         alerts.length > 0
           ? Math.round(
-              alerts.reduce((sum: number, alert: any) => sum + Number(alert.risk_score || 0), 0) / alerts.length,
-            )
+            alerts.reduce((sum: number, alert: any) => sum + Number(alert.risk_score || 0), 0) / alerts.length,
+          )
           : 0;
       const byLocation = alerts.reduce((acc: Record<string, any>, alert: any) => {
         const current = acc[alert.location] || { total: 0, max: 0, high: 0, open: 0 };
@@ -122,23 +122,23 @@ export default function AnalyticsPage() {
 
       const historyScores = mergedHistory.length > 0
         ? mergedHistory.slice(-10).map((entry: any) => ({
-            day: new Date(entry.score_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-            actual: Number(entry.score),
-            predicted: Math.min(100, Math.round(Number(entry.score) * 1.04)),
-            confidence: [
-              Math.max(0, Number(entry.score) - 4),
-              Math.min(100, Number(entry.score) + 4),
-            ],
-          }))
+          day: new Date(entry.score_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          actual: Number(entry.score),
+          predicted: Math.min(100, Math.round(Number(entry.score) * 1.04)),
+          confidence: [
+            Math.max(0, Number(entry.score) - 4),
+            Math.min(100, Number(entry.score) + 4),
+          ],
+        }))
         : predictions.slice(0, 6).map((prediction: any, index: number) => ({
-            day: prediction.area || `Zone ${index + 1}`,
-            actual: Math.max(0, Math.round(Number(prediction.predicted_score || 0) * 0.92)),
-            predicted: Math.round(Number(prediction.predicted_score || 0)),
-            confidence: [
-              Math.max(0, Math.round(Number(prediction.predicted_score || 0) - 5)),
-              Math.min(100, Math.round(Number(prediction.predicted_score || 0) + 5)),
-            ],
-          }));
+          day: prediction.area || `Zone ${index + 1}`,
+          actual: Math.max(0, Math.round(Number(prediction.predicted_score || 0) * 0.92)),
+          predicted: Math.round(Number(prediction.predicted_score || 0)),
+          confidence: [
+            Math.max(0, Math.round(Number(prediction.predicted_score || 0) - 5)),
+            Math.min(100, Math.round(Number(prediction.predicted_score || 0) + 5)),
+          ],
+        }));
 
       setForecastData(historyScores);
       setAttentionData(
@@ -279,7 +279,7 @@ export default function AnalyticsPage() {
           <div className={styles.chartCard}>
             <AnomalyDetectionChart height={280} data={anomalyData} />
             <div className={styles.anomalyBadge}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
               <span>{anomalyText}</span>
             </div>
           </div>
@@ -299,8 +299,8 @@ export default function AnalyticsPage() {
         </div>
       </DashboardSection>
 
-        <DashboardSection
-          eyebrow="Weekly live audit"
+      <DashboardSection
+        eyebrow="Weekly live audit"
         title="Weekly live alert mix"
       >
         <div className={styles.tableCard}>

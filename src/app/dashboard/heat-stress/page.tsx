@@ -160,7 +160,6 @@ export default function HeatStressPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className={styles.simToggleHint}>Real-time Sensor Syncing</div>
           </div>
 
           <div className={localStyles.dormListGrid}>
