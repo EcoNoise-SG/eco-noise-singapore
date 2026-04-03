@@ -1,7 +1,7 @@
 .mapWrapper {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size:17px;
+  font-size: 17px;
   font-weight: 500;
   color: #5925dc;
   text-transform: capitalize;
@@ -34,18 +34,22 @@
 .statusPulse::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: #5925dc;
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 0.5; }
-  100% { transform: scale(3); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
 }
 
 .mapHeader h3 {
@@ -55,35 +59,71 @@
 }
 
 .mapSurface {
-  height: 400px;
+  height: 520px;
   position: relative;
-  background: #f8fafc;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.02) 0%, rgba(15, 23, 42, 0.1) 100%),
+    #f8fafc;
 }
 
-.mapFrame {
+.leafletMap {
   width: 100%;
   height: 100%;
-  border: 0;
+}
+
+.leafletMap :global(.leaflet-control-zoom) {
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 18px 32px -26px rgba(15, 23, 42, 0.48);
+}
+
+.leafletMap :global(.leaflet-control-zoom a) {
+  color: #0f172a;
+}
+
+.leafletMap :global(.leaflet-pane) {
+  z-index: 400;
+}
+
+.leafletMap :global(.leaflet-control-attribution) {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 4px 0 0 0;
+}
+
+.mapLoading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(241, 245, 249, 0.96)),
+    #f8fafc;
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .mapOverlay {
   position: absolute;
-  bottom: 24px;
+  top: 20px;
   right: 24px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 12px;
+  z-index: 800;
+  max-width: 52%;
 }
 
 .overlayCard {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.94);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   padding: 12px 16px;
   border-radius: 4px;
-  border: none;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  min-width: 160px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 24px -18px rgba(15, 23, 42, 0.28);
+  min-width: 148px;
 }
 
 .overlayCard span {
@@ -96,9 +136,228 @@
 }
 
 .overlayCard strong {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   color: #0f172a;
+  font-weight: 800;
+}
+
+.intelPanel {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  bottom: 24px;
+  width: 320px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.93) 100%);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 20px 35px -26px rgba(15, 23, 42, 0.45);
+  z-index: 800;
+}
+
+.intelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.intelHeader span {
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.intelHeader strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.intelLegend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.intelLegend button,
+.layerReset {
+  font: inherit;
+  cursor: pointer;
+}
+
+.intelLegend button {
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.legendActive {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #0f172a !important;
+}
+
+.layerReset {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: #5925dc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0;
+}
+
+.intelWeather {
+  margin: 0;
+  padding: 10px 12px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
+.intelList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+}
+
+.intelItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  width: 100%;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.intelItemActive {
+  border-color: #5925dc;
+  box-shadow: 0 16px 28px -24px rgba(89, 37, 220, 0.55);
+  transform: translateY(-1px);
+}
+
+.intelItem strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.intelItem p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.intelMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.intelMeta span,
+.intelMeta strong {
+  min-width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.intelMeta strong {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.mapTooltip {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.mapTooltip :global(.leaflet-tooltip-content) {
+  margin: 0;
+}
+
+.mapTooltip :global(.leaflet-tooltip-tip) {
+  display: none;
+}
+
+.tooltipInner {
+  min-width: 150px;
+  max-width: 220px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(226, 232, 240, 0.96);
+  box-shadow: 0 18px 32px -26px rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.mapTooltipActive .tooltipInner {
+  border-color: rgba(89, 37, 220, 0.5);
+  box-shadow: 0 22px 38px -28px rgba(89, 37, 220, 0.58);
+}
+
+.tooltipInner strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.tooltipInner span {
+  display: block;
+  color: #b91c1c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
+.tooltipInner p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.tooltipInner small {
+  display: block;
+  color: #334155;
+  font-size: 0.66rem;
+  font-weight: 700;
+  margin-top: 7px;
 }
 
 .mapFooter {
@@ -111,4 +370,61 @@
   font-size: 0.75rem;
   color: #64748b;
   font-style: italic;
+}
+
+@media (max-width: 1024px) {
+  .mapSurface {
+    height: 620px;
+  }
+
+  .mapOverlay {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
+
+  .intelPanel {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mapSurface {
+    height: 760px;
+  }
+
+  .mapOverlay {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: none;
+  }
+
+  .overlayCard {
+    min-width: 0;
+    flex: 1 1 140px;
+  }
+
+  .intelPanel {
+    top: auto;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+    max-height: 250px;
+  }
+
+  .tooltipInner {
+    min-width: 128px;
+    max-width: 170px;
+    padding: 8px 10px;
+  }
+
+  .tooltipInner p {
+    display: none;
+  }
 }

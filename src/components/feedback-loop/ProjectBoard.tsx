@@ -9,6 +9,7 @@ export type Task = {
   id: string
   title: string
   color: string
+  status?: string
 }
 
 const TASKS: Task[] = [
@@ -20,7 +21,7 @@ const TASKS: Task[] = [
 const GUIDE_X = [160, 280, 400]
 const TASK_TOPS = [40, 160, 280]
 
-export default function ProjectBoard() {
+export default function ProjectBoard({ tasks = TASKS }: { tasks?: Task[] }) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
@@ -30,12 +31,12 @@ export default function ProjectBoard() {
             <div key={x} className={styles.guide} style={{ left: x }} />
           ))}
 
-          {TASKS.map((task, i) => (
+          {tasks.map((task, i) => (
             <div
               key={task.id}
               className={styles.taskRow}
               style={{
-                top: TASK_TOPS[i],
+                top: TASK_TOPS[i] ?? 40 + i * 120,
                 animation: `slideIn 0.5s ease ${i * 0.1}s both`,
               }}
             >
@@ -43,12 +44,12 @@ export default function ProjectBoard() {
             </div>
           ))}
 
-          <ConnectorLines panelOpen={true} />
+          <ConnectorLines panelOpen={true} count={tasks.length} />
         </div>
 
         {/* Panel */}
         <div className={styles.panelWrap}>
-          <ProjectPanel />
+          <ProjectPanel tasks={tasks} />
         </div>
       </div>
     </div>

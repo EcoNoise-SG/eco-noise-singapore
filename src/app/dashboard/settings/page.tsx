@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import styles from "../dashboard.module.css";
 import settingsStyles from "./settings.module.css";
+import {
+  getCurrentUserIdentity,
+  getUserPreferences,
+  updateUserPreferences,
+} from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 export default function SettingsPage() {
   const [notifEmail, setNotifEmail] = useState(true);
@@ -13,6 +19,79 @@ export default function SettingsPage() {
   const [alertThreshold, setAlertThreshold] = useState("high");
   const [forecastZone, setForecastZone] = useState("all");
   const [dataDays, setDataDays] = useState("14");
+  const [language, setLanguage] = useState("en");
+  const notificationItems = [
+    {
+      label: "Email Notifications",
+      value: notifEmail,
+      setValue: setNotifEmail,
+      description: "Receive operational alerts and reports by email",
+      key: "notifEmail",
+    },
+    {
+      label: "SMS Alerts (Critical Only)",
+      value: notifSms,
+      setValue: setNotifSms,
+      description: "Receive SMS for critical sensor or anomaly alerts",
+      key: "notifSms",
+    },
+    {
+      label: "Critical System Alerts",
+      value: notifCritical,
+      setValue: setNotifCritical,
+      description: "Sensor outages, model failures, and data pipeline errors",
+      key: "notifCritical",
+    },
+    {
+      label: "Weekly Intelligence Brief",
+      value: notifWeekly,
+      setValue: setNotifWeekly,
+      description: "Auto-email weekly report every Sunday at 08:00",
+      key: "notifWeekly",
+    },
+  ];
+
+  useEffect(() => {
+    async function loadPreferences() {
+      const identity = await getCurrentUserIdentity();
+      const preferences = await getUserPreferences(identity.id);
+      if (!preferences) return;
+
+      setNotifEmail(preferences.notification_settings?.email ?? true);
+      setNotifSms(preferences.notification_settings?.sms ?? false);
+      setNotifCritical(preferences.notification_settings?.critical ?? true);
+      setNotifWeekly(preferences.notification_settings?.weekly ?? true);
+      setAlertThreshold(preferences.notification_settings?.alertThreshold || "high");
+      setForecastZone(preferences.notification_settings?.forecastZone || "all");
+      setDataDays(preferences.notification_settings?.dataDays || "14");
+      setLanguage(preferences.language || "en");
+    }
+
+    void loadPreferences();
+  }, []);
+
+  const persistPreferences = async (overrides: Record<string, unknown> = {}) => {
+    try {
+      const identity = await getCurrentUserIdentity();
+      await updateUserPreferences(identity.id, {
+        dashboard_theme: "light",
+        notification_settings: {
+          email: overrides.notifEmail ?? notifEmail,
+          sms: overrides.notifSms ?? notifSms,
+          critical: overrides.notifCritical ?? notifCritical,
+          weekly: overrides.notifWeekly ?? notifWeekly,
+          alertThreshold: overrides.alertThreshold ?? alertThreshold,
+          forecastZone: overrides.forecastZone ?? forecastZone,
+          dataDays: overrides.dataDays ?? dataDays,
+        },
+        language: String(overrides.language ?? language),
+      });
+      toast.success("Preferences saved");
+    } catch (error) {
+      console.error("Error saving preferences:", error);
+      toast.error("Failed to save preferences");
+    }
+  };
 
   return (
     <div className={styles.stack}>
@@ -20,7 +99,7 @@ export default function SettingsPage() {
         <div className={styles.metricCard}>
           <p>System Version</p>
           <strong>v2.4.1</strong>
-          <span className={styles.metaLabel}>Last updated: 15 Mar 2024</span>
+          <span className={styles.metaLabel}>Realtime preference sync enabled</span>
         </div>
         <div className={styles.metricCard}>
           <p>Data Retention</p>
@@ -30,65 +109,32 @@ export default function SettingsPage() {
         <div className={styles.metricCard}>
           <p>Model Retraining</p>
           <strong>Monthly</strong>
-          <span className={styles.metaLabel}>Next: 1 Apr 2024</span>
+          <span className={styles.metaLabel}>Preference-aware filters active</span>
         </div>
       </div>
 
       <div className={styles.gridTwo}>
         <DashboardSection eyebrow="Notifications" title="Alert and report notification preferences">
           <div className={styles.listCard}>
-            <div className={settingsStyles.settingRow}>
-              <div>
-                <strong>Email Notifications</strong>
-                <p>Receive operational alerts and reports by email</p>
+            {notificationItems.map((item) => (
+              <div className={settingsStyles.settingRow} key={item.label}>
+                <div>
+                  <strong>{item.label}</strong>
+                  <p>{item.description}</p>
+                </div>
+                <button
+                  className={`${settingsStyles.toggle} ${item.value ? settingsStyles.toggleOn : ""}`}
+                  onClick={() => {
+                    const nextValue = !item.value;
+                    item.setValue(nextValue);
+                    void persistPreferences({ [item.key]: nextValue });
+                  }}
+                  aria-label={`Toggle ${item.label}`}
+                >
+                  <span className={settingsStyles.toggleKnob} />
+                </button>
               </div>
-              <button
-                className={`${settingsStyles.toggle} ${notifEmail ? settingsStyles.toggleOn : ""}`}
-                onClick={() => setNotifEmail(!notifEmail)}
-                aria-label="Toggle email notifications"
-              >
-                <span className={settingsStyles.toggleKnob} />
-              </button>
-            </div>
-            <div className={settingsStyles.settingRow}>
-              <div>
-                <strong>SMS Alerts (Critical Only)</strong>
-                <p>Receive SMS for critical sensor or anomaly alerts</p>
-              </div>
-              <button
-                className={`${settingsStyles.toggle} ${notifSms ? settingsStyles.toggleOn : ""}`}
-                onClick={() => setNotifSms(!notifSms)}
-                aria-label="Toggle SMS alerts"
-              >
-                <span className={settingsStyles.toggleKnob} />
-              </button>
-            </div>
-            <div className={settingsStyles.settingRow}>
-              <div>
-                <strong>Critical System Alerts</strong>
-                <p>Sensor outages, model failures, and data pipeline errors</p>
-              </div>
-              <button
-                className={`${settingsStyles.toggle} ${notifCritical ? settingsStyles.toggleOn : ""}`}
-                onClick={() => setNotifCritical(!notifCritical)}
-                aria-label="Toggle critical alerts"
-              >
-                <span className={settingsStyles.toggleKnob} />
-              </button>
-            </div>
-            <div className={settingsStyles.settingRow}>
-              <div>
-                <strong>Weekly Intelligence Brief</strong>
-                <p>Auto-email weekly report every Sunday at 08:00</p>
-              </div>
-              <button
-                className={`${settingsStyles.toggle} ${notifWeekly ? settingsStyles.toggleOn : ""}`}
-                onClick={() => setNotifWeekly(!notifWeekly)}
-                aria-label="Toggle weekly brief"
-              >
-                <span className={settingsStyles.toggleKnob} />
-              </button>
-            </div>
+            ))}
           </div>
         </DashboardSection>
 
@@ -98,7 +144,10 @@ export default function SettingsPage() {
               <label>Minimum alert severity to display</label>
               <select
                 value={alertThreshold}
-                onChange={(e) => setAlertThreshold(e.target.value)}
+                onChange={(e) => {
+                  setAlertThreshold(e.target.value);
+                  void persistPreferences({ alertThreshold: e.target.value });
+                }}
                 className={settingsStyles.select}
               >
                 <option value="critical">Critical only</option>
@@ -112,7 +161,10 @@ export default function SettingsPage() {
               <label>Default forecast zone</label>
               <select
                 value={forecastZone}
-                onChange={(e) => setForecastZone(e.target.value)}
+                onChange={(e) => {
+                  setForecastZone(e.target.value);
+                  void persistPreferences({ forecastZone: e.target.value });
+                }}
                 className={settingsStyles.select}
               >
                 <option value="all">All planning areas</option>
@@ -127,7 +179,10 @@ export default function SettingsPage() {
               <label>Historical data window (days)</label>
               <select
                 value={dataDays}
-                onChange={(e) => setDataDays(e.target.value)}
+                onChange={(e) => {
+                  setDataDays(e.target.value);
+                  void persistPreferences({ dataDays: e.target.value });
+                }}
                 className={settingsStyles.select}
               >
                 <option value="7">7 days</option>
@@ -139,30 +194,6 @@ export default function SettingsPage() {
           </div>
         </DashboardSection>
       </div>
-
-      <DashboardSection eyebrow="System information" title="Platform and data governance details">
-        <div className={styles.tableCard}>
-          <table className={styles.table}>
-            <tbody>
-              {[
-                ["Platform", "EcoNoise Intelligence Hub v2.4.1"],
-                ["ML Framework", "PyTorch 2.2 + Temporal Fusion Transformer (TFT)"],
-                ["Data Pipeline", "Apache Kafka + Spark Streaming (GovTech Cloud)"],
-                ["Deployment Environment", "GovTech Singapore Cloud (GCC) — Restricted zone"],
-                ["Data Classification", "OFFICIAL (CLOSED) — Protected under PDPA"],
-                ["Audit Logging", "Enabled — 365 day retention"],
-                ["Last Model Retrain", "1 Mar 2024 — 88.2% ensemble accuracy achieved"],
-                ["IoT Protocol", "MQTT over TLS 1.3 — 142/152 nodes active"],
-              ].map(([key, val]) => (
-                <tr key={key}>
-                  <td style={{ fontWeight: 600, color: "#0f172a", width: "220px" }}>{key}</td>
-                  <td style={{ color: "#475569" }}>{val}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </DashboardSection>
     </div>
   );
 }

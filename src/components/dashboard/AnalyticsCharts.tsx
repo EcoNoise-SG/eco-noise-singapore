@@ -1,6 +1,7 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   LineChart,
   Line,
@@ -77,32 +78,44 @@ const multiOutputData = [
   { subject: 'Response Coverage', noise: 90, dumping: 65, pest: 82 },
 ];
 
+function hasChartData(data: unknown) {
+  return Array.isArray(data) && data.length > 0;
+}
+
 function ChartFrame({
   height,
   minHeight,
   children,
+  hasData = true,
 }: {
   height: number | string;
   minHeight: number;
   children: React.ReactNode;
+  hasData?: boolean;
 }) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const [isMounted] = useState(typeof window !== 'undefined');
 
   return (
     <div style={{ width: '100%', height, minWidth: 0, minHeight, flex: 1 }}>
-      {isMounted ? children : null}
+      {isMounted ? (
+        hasData ? children : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: 14 }}>No live data available for this chart yet.</div>
+      ) : null}
     </div>
   );
 }
 
-export const TFTForecastChart = ({ height = 300 }: { height?: number | string }) => (
-  <ChartFrame height={height} minHeight={280}>
+export const TFTForecastChart = ({
+  height = 300,
+  data,
+}: {
+  height?: number | string;
+  data?: typeof tftData | any[];
+}) => {
+  const safeData = (hasChartData(data) ? data : []) as any[];
+  return (
+  <ChartFrame height={height} minHeight={280} hasData={hasChartData(data)}>
     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
-      <AreaChart data={tftData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+      <AreaChart data={safeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1} />
@@ -120,12 +133,21 @@ export const TFTForecastChart = ({ height = 300 }: { height?: number | string })
       </AreaChart>
     </ResponsiveContainer>
   </ChartFrame>
-);
+  );
+};
 
-export const AttentionWeightsChart = ({ height = 200 }: { height?: number | string }) => (
-  <ChartFrame height={height} minHeight={200}>
+export const AttentionWeightsChart = ({
+  height = 200,
+  data,
+}: {
+  height?: number | string;
+  data?: typeof attentionData | any[];
+}) => {
+  const safeData = (hasChartData(data) ? data : []) as any[];
+  return (
+  <ChartFrame height={height} minHeight={200} hasData={hasChartData(data)}>
     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={200}>
-      <BarChart data={attentionData} layout="vertical" margin={{ left: 40 }}>
+      <BarChart data={safeData} layout="vertical" margin={{ left: 40 }}>
         <XAxis type="number" hide />
         <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={100} />
         <Tooltip cursor={{ fill: 'transparent' }} />
@@ -133,10 +155,19 @@ export const AttentionWeightsChart = ({ height = 200 }: { height?: number | stri
       </BarChart>
     </ResponsiveContainer>
   </ChartFrame>
-);
+  );
+};
 
-export const SpatialPersistenceChart = ({ height = 300 }: { height?: number | string }) => (
-  <ChartFrame height={height} minHeight={280}>
+export const SpatialPersistenceChart = ({
+  height = 300,
+  data,
+}: {
+  height?: number | string;
+  data?: typeof clusterData | any[];
+}) => {
+  const safeData = (hasChartData(data) ? data : []) as any[];
+  return (
+  <ChartFrame height={height} minHeight={280} hasData={hasChartData(data)}>
     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
       <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
@@ -145,20 +176,29 @@ export const SpatialPersistenceChart = ({ height = 300 }: { height?: number | st
         <ZAxis type="number" dataKey="count" range={[100, 1000]} name="Complaint Volume" />
         <Tooltip cursor={{ strokeDasharray: '3 3' }} />
         <Legend />
-        <Scatter name="Planning Areas" data={clusterData} fill="#3b82f6">
-          {clusterData.map((entry, index) => (
+        <Scatter name="Planning Areas" data={safeData} fill="#3b82f6">
+          {safeData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.persistence > 60 ? '#2563eb' : '#60a5fa'} />
           ))}
         </Scatter>
       </ScatterChart>
     </ResponsiveContainer>
   </ChartFrame>
-);
+  );
+};
 
-export const AnomalyDetectionChart = ({ height = 300 }: { height?: number | string }) => (
-  <ChartFrame height={height} minHeight={280}>
+export const AnomalyDetectionChart = ({
+  height = 300,
+  data,
+}: {
+  height?: number | string;
+  data?: typeof anomalyData | any[];
+}) => {
+  const safeData = (hasChartData(data) ? data : []) as any[];
+  return (
+  <ChartFrame height={height} minHeight={280} hasData={hasChartData(data)}>
     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
-      <LineChart data={anomalyData}>
+      <LineChart data={safeData}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#cbd5e1" />
         <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
@@ -181,12 +221,21 @@ export const AnomalyDetectionChart = ({ height = 300 }: { height?: number | stri
       </LineChart>
     </ResponsiveContainer>
   </ChartFrame>
-);
+  );
+};
 
-export const MultiOutputRadarChart = ({ height = 350 }: { height?: number | string }) => (
-  <ChartFrame height={height} minHeight={320}>
+export const MultiOutputRadarChart = ({
+  height = 350,
+  data,
+}: {
+  height?: number | string;
+  data?: typeof multiOutputData | any[];
+}) => {
+  const safeData = (hasChartData(data) ? data : []) as any[];
+  return (
+  <ChartFrame height={height} minHeight={320} hasData={hasChartData(data)}>
     <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
-      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={multiOutputData}>
+      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={safeData}>
         <PolarGrid stroke="#94a3b8" />
         <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: '#64748b' }} />
         <PolarRadiusAxis angle={30} domain={[0, 100]} axisLine={false} tick={false} />
@@ -198,4 +247,5 @@ export const MultiOutputRadarChart = ({ height = 350 }: { height?: number | stri
       </RadarChart>
     </ResponsiveContainer>
   </ChartFrame>
-);
+  );
+};

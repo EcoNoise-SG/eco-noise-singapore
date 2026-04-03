@@ -1,72 +1,33 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import styles from "../dashboard.module.css";
 import alertStyles from "./alerts.module.css";
+import toast from "react-hot-toast";
+import {
+  createNotification,
+  getCurrentUserIdentity,
+  getRiskAlerts,
+  subscribeToRiskAlerts,
+  updateAlertStatus,
+} from "@/lib/supabase";
 
-const alerts = [
-  {
-    id: "ALT-0091",
-    severity: "critical",
-    title: "Noise Surge — Jurong West Blk 442",
-    time: "Today · 22:14",
-    description: "Acoustic sensor recorded 94dB over 12-minute window. Exceeds residential threshold by 29dB. Immediate response recommended.",
-    area: "Jurong West",
-    category: "Noise",
-    status: "open",
-  },
-  {
-    id: "ALT-0090",
-    severity: "high",
-    title: "Anomaly Detected — Choa Chu Kang Industrial",
-    time: "Today · 18:07",
-    description: "TFT model flagged an unexpected evening surge in complaint volume (+3.2σ above baseline). Likely linked to unregistered construction activity.",
-    area: "Choa Chu Kang",
-    category: "Anomaly",
-    status: "open",
-  },
-  {
-    id: "ALT-0088",
-    severity: "high",
-    title: "Illegal Dumping Risk — Tampines Ave 9",
-    time: "Today · 15:30",
-    description: "Remote sensing signal identified new debris accumulation near LTA road works corridor. Pre-treatment team dispatched.",
-    area: "Tampines",
-    category: "Dumping",
-    status: "actioned",
-  },
-  {
-    id: "ALT-0085",
-    severity: "medium",
-    title: "Pest Activity Spike — Woodlands North",
-    time: "Yesterday · 09:00",
-    description: "Drainage sensor pressure drop combined with overnight rain forecast triggered elevated pest risk score (0.82). Inspection team scheduled.",
-    area: "Woodlands",
-    category: "Pest",
-    status: "actioned",
-  },
-  {
-    id: "ALT-0081",
-    severity: "medium",
-    title: "Weekend Event Noise Risk — Bukit Merah",
-    time: "Yesterday · 07:30",
-    description: "Festive calendar signal detected: 3 events within 500m of residential cluster this weekend. Patrol pre-staging recommended Friday night.",
-    area: "Bukit Merah",
-    category: "Noise",
-    status: "scheduled",
-  },
-  {
-    id: "ALT-0079",
-    severity: "low",
-    title: "Sensor Connectivity — Sengkang Node 7",
-    time: "2 days ago",
-    description: "IoT sensor offline for >4h. Data gap recorded. Last reading: 68dB at 10:00. Maintenance team notified.",
-    area: "Sengkang",
-    category: "System",
-    status: "resolved",
-  },
-];
+interface Alert {
+  id: string;
+  alert_id: string;
+  severity: "critical" | "high" | "medium" | "low";
+  title: string;
+  time: string;
+  description: string;
+  area: string;
+  category: string;
+  status: "open" | "actioned" | "acknowledged" | "resolved";
+  risk_level: string;
+  component: string;
+  risk_score: number;
+}
 
 const severityStyle: Record<string, string> = {
   critical: alertStyles.badgeCritical,
@@ -76,14 +37,82 @@ const severityStyle: Record<string, string> = {
 };
 
 const statusStyle: Record<string, string> = {
+  active: alertStyles.statusOpen,
   open: alertStyles.statusOpen,
   actioned: alertStyles.statusActioned,
-  scheduled: alertStyles.statusScheduled,
+  acknowledged: alertStyles.statusActioned,
   resolved: alertStyles.statusResolved,
 };
 
 export default function AlertsPage() {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+
+  useEffect(() => {
+    void loadAlerts();
+    const interval = setInterval(loadAlerts, 30000); // Refresh every 30 seconds
+    const subscription = subscribeToRiskAlerts(() => {
+      void loadAlerts();
+    });
+
+    return () => {
+      clearInterval(interval);
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const loadAlerts = async () => {
+    try {
+      const dbAlerts = await getRiskAlerts();
+      
+      // Map database alerts to UI format
+      const mappedAlerts = dbAlerts.map((alert: any) => {
+        const riskLevel = alert.risk_level || "Medium";
+        return {
+          id: alert.id,
+          alert_id: alert.alert_id,
+          severity: riskLevel.toLowerCase() as any,
+          title: `${alert.component} Risk Alert — ${alert.location}`,
+          time: new Date(alert.created_at).toLocaleDateString() + " · " + new Date(alert.created_at).toLocaleTimeString(),
+          description: alert.description || "No description",
+          area: alert.location,
+          category: alert.component,
+          status: ((alert.status || "open") === "active" ? "open" : (alert.status || "open")) as any,
+          risk_level: riskLevel,
+          component: alert.component,
+          risk_score: alert.risk_score,
+        };
+      });
+
+      setAlerts(mappedAlerts);
+    } catch (error) {
+      console.error("Error loading alerts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (alertId: string, newStatus: string) => {
+    try {
+      await updateAlertStatus(alertId, newStatus);
+      const identity = await getCurrentUserIdentity();
+      if (!identity.isDemo) {
+        await createNotification(
+          identity.id,
+          `Alert ${newStatus}`,
+          `Alert ${alertId} is now ${newStatus}.`,
+          "alert_status_changed",
+          alertId,
+        );
+      }
+      toast.success(`Alert ${newStatus}`);
+      void loadAlerts();
+    } catch (error) {
+      console.error("Error updating alert:", error);
+      toast.error("Failed to update alert");
+    }
+  };
 
   const filtered = filter === "all" ? alerts : alerts.filter((a) => a.status === filter);
 
@@ -118,7 +147,7 @@ export default function AlertsPage() {
         title="All system and field alerts — ranked by severity"
       >
         <div className={alertStyles.filterRow}>
-          {["all", "open", "actioned", "scheduled", "resolved"].map((f) => (
+          {["all", "open", "acknowledged", "resolved"].map((f) => (
             <button
               key={f}
               className={`${alertStyles.filterBtn} ${filter === f ? alertStyles.filterActive : ""}`}
@@ -129,29 +158,72 @@ export default function AlertsPage() {
           ))}
         </div>
 
-        <div className={styles.timeline}>
-          {filtered.map((alert) => (
-            <div className={styles.timelineItem} key={alert.id}>
-              <div className={styles.timelineHeader}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <strong>{alert.title}</strong>
-                  <span className={severityStyle[alert.severity]}>
-                    {alert.severity.toUpperCase()}
+        {loading ? (
+          <p style={{ textAlign: "center", padding: "20px" }}>Loading alerts...</p>
+        ) : alerts.length === 0 ? (
+          <p style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>No alerts found</p>
+        ) : (
+          <div className={styles.timeline}>
+            {filtered.map((alert) => (
+              <div className={styles.timelineItem} key={alert.alert_id}>
+                <div className={styles.timelineHeader}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <strong>{alert.title}</strong>
+                    <span className={severityStyle[alert.severity]}>
+                      {alert.risk_level.toUpperCase()}
+                    </span>
+                  </div>
+                  <span className={statusStyle[alert.status]}>
+                    {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
                   </span>
                 </div>
-                <span className={statusStyle[alert.status]}>
-                  {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
-                </span>
+                <span className={styles.timeLabel}>{alert.time} · {alert.area} · {alert.category}</span>
+                <p className={styles.actionDetail}>{alert.description}</p>
+                <p style={{ marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
+                  Risk Score: {alert.risk_score}/100
+                </p>
+                <div className={styles.logicNode}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12h6"/><path d="M12 9v6"/><circle cx="12" cy="12" r="10"/></svg>
+                  <span>Alert ID: {alert.alert_id}</span>
+                </div>
+                <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                  {alert.status === "open" && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(alert.alert_id, "acknowledged")}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#3b82f6",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                        }}
+                      >
+                        Acknowledge
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(alert.alert_id, "resolved")}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#10b981",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                        }}
+                      >
+                        Resolve
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <span className={styles.timeLabel}>{alert.time} · {alert.area} · {alert.category}</span>
-              <p className={styles.actionDetail}>{alert.description}</p>
-              <div className={styles.logicNode}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12h6"/><path d="M12 9v6"/><circle cx="12" cy="12" r="10"/></svg>
-                <span>Alert ID: {alert.id}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </DashboardSection>
     </div>
   );

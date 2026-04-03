@@ -1,41 +1,83 @@
+'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { useEffect, useState } from "react";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import styles from "../dashboard.module.css";
+import { getContractors, getRiskAlerts, subscribeToRiskAlerts } from "@/lib/supabase";
 
-const complianceRecords = [
-  { id: "ENF-2024-0441", area: "Jurong West", type: "Renovation Noise", outcome: "Warning Issued", officer: "Cpt. Ravi Kumar", date: "22 Mar 2024", followUp: "Yes — 7 day re-inspection" },
-  { id: "ENF-2024-0439", area: "Woodlands", type: "Illegal Dumping", outcome: "Summons Issued", officer: "Marcus Chia", date: "21 Mar 2024", followUp: "No" },
-  { id: "ENF-2024-0437", area: "Tampines", type: "Renovation Noise", outcome: "Advisory Issued", officer: "Priya Nair", date: "20 Mar 2024", followUp: "No" },
-  { id: "ENF-2024-0435", area: "Bukit Merah", type: "Nightlife Noise", outcome: "Verbal Warning", officer: "Cpt. Ravi Kumar", date: "19 Mar 2024", followUp: "Yes — CCTV review" },
-  { id: "ENF-2024-0430", area: "Sengkang", type: "Pest Infestation", outcome: "Treatment Administered", officer: "Marcus Chia", date: "17 Mar 2024", followUp: "Yes — 14 day check" },
-  { id: "ENF-2024-0428", area: "Choa Chu Kang", type: "Illegal Dumping", outcome: "Summons Issued", officer: "Priya Nair", date: "16 Mar 2024", followUp: "No" },
-];
-
-const monthlyStats = [
-  { metric: "Warnings Issued", value: "24", change: "+8 vs Feb", up: true },
-  { metric: "Summons Filed", value: "7", change: "-2 vs Feb", up: false },
-  { metric: "Compliance Rate", value: "91.4%", change: "+1.2% vs Feb", up: true },
-  { metric: "Cases Resolved", value: "38", change: "+5 vs Feb", up: true },
-  { metric: "Repeat Offenders", value: "3", change: "-1 vs Feb", up: false },
-  { metric: "Active Case Files", value: "12", change: "Stable", up: null },
-];
-
-const outcomeColor: Record<string, string> = {
-  "Warning Issued": "#d97706",
-  "Summons Issued": "#dc2626",
-  "Advisory Issued": "#2563eb",
-  "Verbal Warning": "#64748b",
-  "Treatment Administered": "#22c55e",
+type ContractorRecord = {
+  uen: string;
+  company_name: string;
+  crs_status?: string;
+  safety_score?: number;
+  stop_work_orders?: number;
+  incident_count?: number;
+  last_synced?: string;
 };
 
 export default function CompliancePage() {
+  const [contractors, setContractors] = useState<ContractorRecord[]>([]);
+  const [stats, setStats] = useState([
+    { metric: "High-Risk Contractors", value: "0", change: "Live sync pending", up: null as boolean | null },
+    { metric: "CRS Certified", value: "0", change: "From contractor registry", up: true },
+    { metric: "Contractor Compliance", value: "0%", change: "Derived from safety scores", up: true },
+    { metric: "Active C4 Alerts", value: "0", change: "Open contractor-related alerts", up: null as boolean | null },
+    { metric: "Stop Work Orders", value: "0", change: "From contractor sync records", up: false },
+    { metric: "Outreach Actions", value: "0", change: "Contractors below threshold", up: null as boolean | null },
+  ]);
+
+  useEffect(() => {
+    async function loadCompliance() {
+      const [contractorRows, alerts] = await Promise.all([
+        getContractors(),
+        getRiskAlerts({ component: "C4" }),
+      ]);
+
+      const sorted = contractorRows
+        .slice()
+        .sort((a: any, b: any) => Number(a.safety_score || 0) - Number(b.safety_score || 0));
+
+      const highRisk = sorted.filter((row: any) => Number(row.safety_score || 0) < 50).length;
+      const certified = sorted.filter((row: any) => row.crs_status === "Certified").length;
+      const avgScore = sorted.length
+        ? Math.round(sorted.reduce((sum: number, row: any) => sum + Number(row.safety_score || 0), 0) / sorted.length)
+        : 0;
+      const stopWorkOrders = sorted.reduce((sum: number, row: any) => sum + Number(row.stop_work_orders || 0), 0);
+      const outreach = sorted.filter((row: any) => Number(row.incident_count || 0) > 1 || Number(row.safety_score || 0) < 60).length;
+      const activeC4Alerts = alerts.filter((alert: any) => ["open", "active", "acknowledged"].includes(alert.status)).length;
+
+      setContractors(sorted.slice(0, 8));
+      setStats([
+        { metric: "High-Risk Contractors", value: String(highRisk), change: "Safety score below 50", up: false },
+        { metric: "CRS Certified", value: String(certified), change: `${sorted.length} synced contractors`, up: true },
+        { metric: "Contractor Compliance", value: `${avgScore}%`, change: "Average live contractor safety score", up: true },
+        { metric: "Active C4 Alerts", value: String(activeC4Alerts), change: "Open contractor risk thresholds", up: null },
+        { metric: "Stop Work Orders", value: String(stopWorkOrders), change: "Captured in contractor registry", up: false },
+        { metric: "Outreach Actions", value: String(outreach), change: "Contractors requiring review", up: null },
+      ]);
+    }
+
+    void loadCompliance();
+    const subscription = subscribeToRiskAlerts(() => {
+      void loadCompliance();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const repeatOffenders = contractors
+    .filter((row) => Number(row.incident_count || 0) > 0 || Number(row.stop_work_orders || 0) > 0)
+    .slice(0, 3);
+
   return (
     <div className={styles.stack}>
       <div className={styles.gridThree}>
-        {monthlyStats.slice(0, 3).map((s) => (
+        {stats.slice(0, 3).map((s) => (
           <div className={styles.metricCard} key={s.metric}>
             <p>{s.metric}</p>
-            <strong className={s.up === true ? styles.positive : s.up === false ? "" : ""}>{s.value}</strong>
-            <span className={styles.metaLabel} style={{ color: s.up === true ? "#22c55e" : s.up === false ? "#ef4444" : "#64748b" }}>
+            <strong className={s.up === true ? styles.positive : ""}>{s.value}</strong>
+            <span className={styles.metaLabel} style={{ color: s.up === false ? "#ef4444" : "#64748b" }}>
               {s.change}
             </span>
           </div>
@@ -43,45 +85,47 @@ export default function CompliancePage() {
       </div>
 
       <div className={styles.gridThree}>
-        {monthlyStats.slice(3).map((s) => (
+        {stats.slice(3).map((s) => (
           <div className={styles.metricCard} key={s.metric}>
             <p>{s.metric}</p>
             <strong>{s.value}</strong>
-            <span className={styles.metaLabel} style={{ color: s.up === true ? "#22c55e" : s.up === false ? "#ef4444" : "#64748b" }}>
+            <span className={styles.metaLabel} style={{ color: s.up === false ? "#ef4444" : "#64748b" }}>
               {s.change}
             </span>
           </div>
         ))}
       </div>
 
-      <DashboardSection eyebrow="Enforcement log" title="Recent compliance actions and case outcomes">
+      <DashboardSection eyebrow="Module C4" title="Contractor safety track record and synced compliance view">
         <div className={styles.tableCard}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Case ID</th>
-                <th>Area</th>
-                <th>Issue Type</th>
-                <th>Outcome</th>
-                <th>Officer</th>
-                <th>Date</th>
-                <th>Follow-up</th>
+                <th>UEN</th>
+                <th>Company Name</th>
+                <th>Safety Score</th>
+                <th>CRS Status</th>
+                <th>Stop Work Orders</th>
+                <th>Incident Count</th>
+                <th>Last Sync</th>
               </tr>
             </thead>
             <tbody>
-              {complianceRecords.map((r) => (
-                <tr key={r.id}>
-                  <td><code style={{ fontSize: "0.8125rem" }}>{r.id}</code></td>
-                  <td style={{ fontSize: "0.875rem" }}>{r.area}</td>
-                  <td style={{ fontSize: "0.875rem" }}>{r.type}</td>
+              {contractors.map((record) => (
+                <tr key={record.uen}>
+                  <td><code style={{ fontSize: "0.8125rem" }}>{record.uen}</code></td>
+                  <td style={{ fontSize: "0.875rem" }}>{record.company_name}</td>
+                  <td style={{ fontSize: "0.875rem", fontWeight: 700 }}>{record.safety_score || 0} / 100</td>
                   <td>
-                    <span style={{ color: outcomeColor[r.outcome] ?? "#475569", fontWeight: 700, fontSize: "0.8125rem" }}>
-                      {r.outcome}
+                    <span style={{ color: record.crs_status === "Certified" ? "#22c55e" : record.crs_status === "Conditional" ? "#d97706" : "#2563eb", fontWeight: 700, fontSize: "0.8125rem" }}>
+                      {record.crs_status || "Unknown"}
                     </span>
                   </td>
-                  <td style={{ fontSize: "0.875rem" }}>{r.officer}</td>
-                  <td style={{ fontSize: "0.875rem", color: "#64748b" }}>{r.date}</td>
-                  <td style={{ fontSize: "0.8125rem", color: r.followUp !== "No" ? "#2563eb" : "#94a3b8" }}>{r.followUp}</td>
+                  <td style={{ fontSize: "0.875rem" }}>{record.stop_work_orders || 0}</td>
+                  <td style={{ fontSize: "0.875rem" }}>{record.incident_count || 0}</td>
+                  <td style={{ fontSize: "0.875rem", color: "#64748b" }}>
+                    {record.last_synced ? new Date(record.last_synced).toLocaleString() : "Pending sync"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -90,23 +134,25 @@ export default function CompliancePage() {
       </DashboardSection>
 
       <div className={styles.gridTwo}>
-        <DashboardSection eyebrow="Regulatory framework" title="Key compliance thresholds">
+        <DashboardSection eyebrow="Regulatory framework" title="Current compliance thresholds">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li><strong>Residential Noise Limit:</strong> ≤65 dBA (7am–10pm) / ≤55 dBA (10pm–7am)</li>
-              <li><strong>Renovation Hours:</strong> Mon–Sat, 9am–6pm only. No Sunday/public holiday work.</li>
-              <li><strong>Industrial Zone Limit:</strong> ≤75 dBA at site boundary.</li>
-              <li><strong>Penalty Framework:</strong> First offence advisory, second warning, repeat summons up to S$100,000.</li>
+              <li><strong>High-risk contractor threshold:</strong> Safety score below 50 or repeated stop-work orders.</li>
+              <li><strong>Enhanced monitoring:</strong> Incident count above 1 with unresolved C4 alerts.</li>
+              <li><strong>Outreach priority:</strong> Conditional or provisional CRS with low live safety score.</li>
+              <li><strong>Review cadence:</strong> Registry sync plus active alert follow-up.</li>
             </ul>
           </div>
         </DashboardSection>
 
-        <DashboardSection eyebrow="Repeat offender watch" title="High-priority monitored premises">
+        <DashboardSection eyebrow="Repeat offender watch" title="Live contractors requiring follow-up">
           <div className={styles.listCard}>
             <ul className={styles.list}>
-              <li><strong>Jurong West Ave 5 — Blk 442:</strong> 3rd noise violation in 60 days. Legal review in progress.</li>
-              <li><strong>Woodlands Ind. Pk E — Unit 14:</strong> 2 dumping summons. Area placed under CCTV watch.</li>
-              <li><strong>Bukit Merah — Clarke Quay Adj.:</strong> Repeat nightlife noise. Letter to premises owner issued.</li>
+              {repeatOffenders.map((record) => (
+                <li key={record.uen}>
+                  <strong>{record.company_name}:</strong> {record.incident_count || 0} incidents and {record.stop_work_orders || 0} stop-work orders on record.
+                </li>
+              ))}
             </ul>
           </div>
         </DashboardSection>

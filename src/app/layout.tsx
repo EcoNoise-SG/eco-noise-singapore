@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 
 const poppins = Poppins({

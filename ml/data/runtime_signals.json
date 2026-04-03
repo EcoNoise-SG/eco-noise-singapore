@@ -1,0 +1,42 @@
+[
+  {
+    "area": "Bukit Merah",
+    "temperature": 32.4,
+    "pm25": 18,
+    "humidity": 79,
+    "active_alerts": 3,
+    "active_interventions": 1,
+    "primary_driver": "Construction volume + rainfall sensitivity",
+    "recommended_action": "Dispatch fall-prevention inspection team"
+  },
+  {
+    "area": "Jurong East",
+    "temperature": 31.6,
+    "pm25": 23,
+    "humidity": 74,
+    "active_alerts": 2,
+    "active_interventions": 2,
+    "primary_driver": "Machinery density + contractor risk history",
+    "recommended_action": "Increase machinery compliance patrol"
+  },
+  {
+    "area": "Bedok",
+    "temperature": 33.0,
+    "pm25": 21,
+    "humidity": 81,
+    "active_alerts": 2,
+    "active_interventions": 1,
+    "primary_driver": "Heat stress + worksite proximity",
+    "recommended_action": "Stand up hydration and screening point"
+  },
+  {
+    "area": "Woodlands",
+    "temperature": 30.7,
+    "pm25": 27,
+    "humidity": 75,
+    "active_alerts": 1,
+    "active_interventions": 2,
+    "primary_driver": "Night-shift operations + industrial exposure",
+    "recommended_action": "Run targeted machinery safety briefing"
+  }
+]

@@ -7,14 +7,23 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
 import toast from "react-hot-toast";
+import { supabase } from "@/lib/supabase";
+
+type MockUser = {
+  id: string;
+  email: string;
+  last_sign_in_at?: string;
+  user_metadata?: {
+    full_name?: string;
+    agency?: string;
+  };
+};
 
 type AuthContextValue = {
   isAuthenticated: boolean;
   isReady: boolean;
-  user: User | null;
+  user: MockUser | null;
   login: (email: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -25,64 +34,194 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Authentication request failed.";
 }
 
+function isInvalidCredentialsError(error: unknown) {
+  const message = getErrorMessage(error).toLowerCase();
+  return (
+    message.includes("invalid login credentials") ||
+    message.includes("invalid credentials") ||
+    message.includes("email not confirmed") ||
+    message.includes("user not found")
+  );
+}
+
+function isExistingUserError(error: unknown) {
+  const message = getErrorMessage(error).toLowerCase();
+  return (
+    message.includes("already registered") ||
+    message.includes("user already registered") ||
+    message.includes("already been registered")
+  );
+}
+
+function canUseDemoFallback() {
+  if (typeof window === "undefined") return false;
+  return process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<MockUser | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setIsReady(true);
-    });
+    let isMounted = true;
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setIsReady(true);
+    async function bootstrapAuth() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user && isMounted) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          last_sign_in_at: session.user.last_sign_in_at,
+          user_metadata: session.user.user_metadata,
+        });
+      } else if (typeof window !== "undefined" && canUseDemoFallback()) {
+        const storedUser = localStorage.getItem("mockAuthUser");
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch {
+            localStorage.removeItem("mockAuthUser");
+          }
+        }
+      }
+
+      if (isMounted) {
+        setIsReady(true);
+      }
+    }
+
+    void bootstrapAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          last_sign_in_at: session.user.last_sign_in_at,
+          user_metadata: session.user.user_metadata,
+        });
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("mockAuthUser");
+        }
+      }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  async function login(email: string, password?: string) {
+  async function login(email: string, _password?: string) {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Validate inputs
+      if (!email) {
+        throw new Error("Email is required.");
+      }
+
+      const password = _password || "";
+      if (!password) {
+        throw new Error("Password is required.");
+      }
+
+      const signInResult = await supabase.auth.signInWithPassword({
         email,
-        password: password || 'password', // Defaulting for the demo if user doesn't provide it
+        password,
       });
 
-      if (error) {
-        // Fallback for new users (auto-registration)
-        if (error.message.includes("Invalid login credentials") || error.status === 400) {
-          const { error: signUpError } = await supabase.auth.signUp({
+      if (!signInResult.error && signInResult.data.user) {
+        setUser({
+          id: signInResult.data.user.id,
+          email: signInResult.data.user.email || email,
+          last_sign_in_at: signInResult.data.user.last_sign_in_at,
+          user_metadata: signInResult.data.user.user_metadata,
+        });
+        toast.success(`Welcome ${signInResult.data.user.user_metadata?.full_name || email.split('@')[0]}!`);
+        return;
+      }
+
+      if (signInResult.error && isInvalidCredentialsError(signInResult.error)) {
+        const signUpResult = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: email.split("@")[0],
+              agency:
+                email.includes('gov') || email.includes('mom') || email.includes('bca') || email.includes('nea')
+                  ? "Government Agency"
+                  : "Authorized Partner",
+            },
+          },
+        });
+
+        if (!signUpResult.error && signUpResult.data.user) {
+          if (signUpResult.data.session) {
+            setUser({
+              id: signUpResult.data.user.id,
+              email: signUpResult.data.user.email || email,
+              last_sign_in_at: signUpResult.data.user.last_sign_in_at,
+              user_metadata: signUpResult.data.user.user_metadata,
+            });
+            toast.success(`Account created and signed in as ${signUpResult.data.user.user_metadata?.full_name || email.split('@')[0]}!`);
+            return;
+          }
+
+          const retrySignIn = await supabase.auth.signInWithPassword({
             email,
-            password: password || 'password',
-            options: {
-              data: {
-                full_name: email.split('@')[0],
-                agency: email.includes('gov') ? "NEA · Enforcement" : "EcoNoise SG Pilot"
-              }
-            }
+            password,
           });
 
-          if (signUpError) {
-             if (signUpError.message.includes("User already registered")) {
-                throw new Error("Incorrect password for this email.");
-             }
-             if (signUpError.message.includes("Database error saving new user")) {
-                throw new Error("Supabase internal error. Please ensure 'Confirm Email' is disabled in Supabase > Authentication > Settings.");
-             }
-             throw signUpError;
+          if (!retrySignIn.error && retrySignIn.data.user) {
+            setUser({
+              id: retrySignIn.data.user.id,
+              email: retrySignIn.data.user.email || email,
+              last_sign_in_at: retrySignIn.data.user.last_sign_in_at,
+              user_metadata: retrySignIn.data.user.user_metadata,
+            });
+            toast.success(`Account created and signed in as ${retrySignIn.data.user.user_metadata?.full_name || email.split('@')[0]}!`);
+            return;
           }
-          toast.success("New account provisioned!");
+
+          toast.success("Account created. Check your email if confirmation is required before sign-in.");
           return;
         }
-        throw error;
+
+        if (signUpResult.error && isExistingUserError(signUpResult.error)) {
+          throw new Error("This account already exists. Double-check the password and try again.");
+        }
+
+        if (signUpResult.error) {
+          throw signUpResult.error;
+        }
       }
-      toast.success("Logged in successfully!");
+
+      if (!canUseDemoFallback()) {
+        throw signInResult.error || new Error("Pilot account required for this environment.");
+      }
+
+      // Fallback local session for environments without a provisioned pilot account
+      const mockUser: MockUser = {
+        id: "00000000-0000-0000-0000-000000000001",
+        email,
+        last_sign_in_at: new Date().toISOString(),
+        user_metadata: {
+          full_name: email.split('@')[0],
+          agency: email.includes('gov') || email.includes('mom') || email.includes('bca') || email.includes('nea') 
+            ? "Government Agency" 
+            : "Authorized Partner"
+        }
+      };
+
+      // Store in localStorage
+      localStorage.setItem("mockAuthUser", JSON.stringify(mockUser));
+      setUser(mockUser);
+      toast.success(`Welcome ${mockUser.user_metadata?.full_name}!`);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
       throw error;
@@ -91,8 +230,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function logout() {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await supabase.auth.signOut();
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("mockAuthUser");
+      }
+      setUser(null);
       toast.success("Logged out successfully");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));

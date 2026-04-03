@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-04-03T13:12:13.727030+00:00",
+  "model_version": "starter-linear-v1",
+  "predictions": [
+    {
+      "area": "Bukit Merah",
+      "predicted_score": 84.42,
+      "confidence": 0.96,
+      "primary_driver": "Construction volume + rainfall sensitivity",
+      "recommended_action": "Dispatch fall-prevention inspection team"
+    },
+    {
+      "area": "Jurong East",
+      "predicted_score": 76.17,
+      "confidence": 0.96,
+      "primary_driver": "Machinery density + contractor risk history",
+      "recommended_action": "Increase machinery compliance patrol"
+    },
+    {
+      "area": "Bedok",
+      "predicted_score": 75.6,
+      "confidence": 0.96,
+      "primary_driver": "Heat stress + worksite proximity",
+      "recommended_action": "Stand up hydration and screening point"
+    },
+    {
+      "area": "Woodlands",
+      "predicted_score": 69.93,
+      "confidence": 0.96,
+      "primary_driver": "Night-shift operations + industrial exposure",
+      "recommended_action": "Run targeted machinery safety briefing"
+    }
+  ]
+}

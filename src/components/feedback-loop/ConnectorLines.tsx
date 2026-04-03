@@ -1,13 +1,13 @@
 'use client'
 
-export default function ConnectorLines({ panelOpen }: { panelOpen: boolean }) {
+export default function ConnectorLines({ panelOpen, count = 3 }: { panelOpen: boolean; count?: number }) {
   if (!panelOpen) return null
 
   const dotX   = 452
   const arrowX = 514
   const arrowY = 180
 
-  const origins = [66, 186, 306]
+  const origins = Array.from({ length: count }, (_, index) => 66 + index * 120)
 
   return (
     <svg

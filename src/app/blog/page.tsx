@@ -1,50 +1,66 @@
+'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
-
-const posts = [
-  {
-    id: "chinese-new-year-preparation",
-    title: "Chinese New Year Preparation",
-    tag: "Festive Season",
-    date: "March 12, 2026",
-    image: "/blog-assets/blog-1.jpg",
-    excerpt:
-      "Predict renovation noise surges 3 weeks ahead during CNY prep season. Pre-position officers in high-density HDB areas with historical renovation patterns.",
-    impact: "Impact: 18% reduction in noise complaints through earlier staging and resident outreach."
-  },
-  {
-    id: "monsoon-season-response",
-    title: "Monsoon Season Response",
-    tag: "Weather-Driven",
-    date: "March 08, 2026",
-    image: "/blog-assets/blog-4.jpg",
-    excerpt:
-      "Correlate NEA weather forecasts with flooding complaint hotspots and dispatch inspection teams to drainage-prone areas before heavy rainfall events.",
-    impact: "Impact: 22% faster response times when alerts align with weather-linked risk windows."
-  },
-  {
-    id: "construction-zone-coordination",
-    title: "Construction Zone Coordination",
-    tag: "Construction",
-    date: "March 05, 2026",
-    image: "/blog-assets/blog-5.jpg",
-    excerpt:
-      "Sync with BCA permit start dates and LTA road works schedules to coordinate proactive site inspections during high-activity construction phases.",
-    impact: "Impact: Officer utilization up 22% through better inspection sequencing."
-  }
-];
+import { getInterventions, getReports, getRiskAlerts } from "@/lib/supabase";
 
 export default function BlogPage() {
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadStories() {
+      const [alerts, interventions, reports] = await Promise.all([
+        getRiskAlerts(),
+        getInterventions(),
+        getReports(),
+      ]);
+
+      setPosts([
+        {
+          id: "live-alert-brief",
+          title: "Live Alert Brief",
+          tag: "Operational Feed",
+          date: new Date().toLocaleDateString(),
+          image: "/blog-assets/blog-1.jpg",
+          excerpt: `${alerts.filter((alert: any) => ["open", "active", "acknowledged"].includes(alert.status)).length} active alerts are currently feeding the operational dashboard.`,
+          impact: `Top current area: ${alerts[0]?.location || "No active alert location yet"}.`,
+        },
+        {
+          id: "intervention-cycle",
+          title: "Intervention Cycle Snapshot",
+          tag: "Field Ops",
+          date: new Date().toLocaleDateString(),
+          image: "/blog-assets/blog-4.jpg",
+          excerpt: `${interventions.length} interventions are in the system, with ${interventions.filter((item: any) => item.outcome === "Completed").length} completed outcomes already logged.`,
+          impact: `Most recent workflow: ${interventions[0]?.intervention_type?.replace(/_/g, " ") || "Pending new intervention"}.`,
+        },
+        {
+          id: "reporting-archive",
+          title: "Reporting Archive Health",
+          tag: "Reporting",
+          date: new Date().toLocaleDateString(),
+          image: "/blog-assets/blog-5.jpg",
+          excerpt: `${reports.length} reports are available in the live archive, providing the current operational review trail.`,
+          impact: `Latest report: ${reports[0]?.title || "No report generated yet"}.`,
+        },
+      ]);
+    }
+
+    void loadStories();
+  }, []);
+
   return (
     <main className={styles.page}>
       <div className={styles.shell}>
         <Link href="/" className={styles.backLink}>
           Back to Home
         </Link>
-        <h1 className={styles.title}>Real-World Scenario Library</h1>
+        <h1 className={styles.title}>Live Scenario Library</h1>
         <p className={styles.description}>
-          A deeper look at the operational stories behind the landing page cards.
+          This page now surfaces live operational summaries instead of fixed example stories.
         </p>
 
         <div className={styles.grid}>

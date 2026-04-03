@@ -1,0 +1,41 @@
+{
+  "features": [
+    "temperature",
+    "pm25",
+    "humidity",
+    "active_alerts",
+    "active_interventions"
+  ],
+  "bias": 73.49999999909991,
+  "weights": {
+    "temperature": -2.357370405299561,
+    "pm25": -0.9361315371253541,
+    "humidity": 3.2235602194938924,
+    "active_alerts": 8.642316706036716,
+    "active_interventions": 4.051979632710442
+  },
+  "feature_stats": {
+    "temperature": {
+      "mean": 31.858333333333334,
+      "std": 0.8854926437990448
+    },
+    "pm25": {
+      "mean": 20.666666666666668,
+      "std": 4.749268949591669
+    },
+    "humidity": {
+      "mean": 77.33333333333333,
+      "std": 2.656229575084871
+    },
+    "active_alerts": {
+      "mean": 1.9166666666666667,
+      "std": 0.9537935951882998
+    },
+    "active_interventions": {
+      "mean": 1.0,
+      "std": 0.7071067811865476
+    }
+  },
+  "train_mae": 1.3488639526762516,
+  "samples": 12
+}

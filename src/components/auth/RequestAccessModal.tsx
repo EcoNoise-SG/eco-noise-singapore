@@ -15,6 +15,7 @@ function getErrorMessage(error: unknown) {
 
 const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     department: "",
@@ -45,8 +46,8 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
       if (error) throw error;
 
       toast.success("Request submitted successfully!");
+      setSubmittedId(`REQ-${Date.now().toString().slice(-6)}`);
       setFormData({ name: "", department: "", email: "" });
-      onClose();
     } catch (error: unknown) {
       console.error("Submission error:", error);
       toast.error(getErrorMessage(error));
@@ -57,6 +58,27 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Request Agency Access">
+      {submittedId ? (
+        <div className={styles.form}>
+          <div className={styles.description}>
+            Your request has been recorded successfully.
+          </div>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Request Reference</label>
+            <div className={styles.input}>{submittedId}</div>
+          </div>
+          <button
+            type="button"
+            className={styles.submitBtn}
+            onClick={() => {
+              setSubmittedId(null);
+              onClose();
+            }}
+          >
+            Close
+          </button>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.description}>
           Please provide your details to request sandbox access for your agency.
@@ -111,6 +133,7 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({ isOpen, onClose
           {isSubmitting ? "Submitting..." : "Submit Request"}
         </button>
       </form>
+      )}
     </Modal>
   );
 };

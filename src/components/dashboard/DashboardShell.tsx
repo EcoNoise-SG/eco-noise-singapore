@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -6,6 +7,24 @@ import { usePathname, useRouter } from "next/navigation";
 import { Toaster, toast } from 'react-hot-toast';
 import { useAuth } from "@/components/auth/AuthProvider";
 import styles from "./dashboard-shell.module.css";
+import {
+  getCurrentUserIdentity,
+  getInterventions,
+  getOperationalPollState,
+  getReports,
+  getRiskAlerts,
+  getUserPreferences,
+  getUserNotifications,
+  markNotificationAsRead,
+  submitOperationalPollVote,
+  subscribeToAuditLogs,
+  subscribeToInterventions,
+  subscribeToNotifications,
+  subscribeToReports,
+  subscribeToRiskAlerts,
+  subscribeToUserPreferences,
+  updateUserPreferences,
+} from "@/lib/supabase";
 
 const navigation = [
   {
@@ -17,30 +36,86 @@ const navigation = [
   },
   {
     href: "/dashboard/hotspots",
-    label: "Hotspots",
+    label: "Construction Risk Hotspots",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
     )
   },
   {
     href: "/dashboard/forecasts",
-    label: "Forecasts",
+    label: "Injury Risk Forecasts",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
     )
   },
   {
     href: "/dashboard/complaints",
-    label: "Complaints",
+    label: "Fall from Height Alerts",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
     )
   },
   {
     href: "/dashboard/operations",
-    label: "Operations",
+    label: "Machinery Incidents",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/compliance",
+    label: "Contractor Safety Track",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/analytics",
+    label: "Dormitory Wellness",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/maintenance",
+    label: "Heat Stress Index",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/alerts",
+    label: "Disease Outbreak Warnings",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /><path d="M4 2C2.8 3.7 2 5.7 2 8" /><path d="M22 8c0-2.3-.8-4.3-2-6" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/patrols",
+    label: "DTS Prioritization",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/reports",
+    label: "Salary Non-Payment Alerts",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="16" y2="17" /><line x1="12" y1="11" x2="12" y2="17" /><line x1="8" y1="15" x2="8" y2="17" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/users",
+    label: "Mental Health Risk Index",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></svg>
+    )
+  },
+  {
+    href: "/dashboard/logs",
+    label: "Activity Logs",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
     )
   },
   {
@@ -51,24 +126,10 @@ const navigation = [
     )
   },
   {
-    href: "/dashboard/analytics",
-    label: "Analytics",
+    href: "/dashboard/feedback-loop",
+    label: "Feedback Loop",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/reports",
-    label: "Reports",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="16" y2="17" /><line x1="12" y1="11" x2="12" y2="17" /><line x1="8" y1="15" x2="8" y2="17" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/alerts",
-    label: "Alerts",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /><path d="M4 2C2.8 3.7 2 5.7 2 8" /><path d="M22 8c0-2.3-.8-4.3-2-6" /></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
     )
   },
   {
@@ -76,48 +137,6 @@ const navigation = [
     label: "Settings",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/users",
-    label: "Users",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/maintenance",
-    label: "Maintenance",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/compliance",
-    label: "Compliance",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/logs",
-    label: "Logs",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/patrols",
-    label: "Patrols",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg>
-    )
-  },
-  {
-    href: "/dashboard/feedback-loop",
-    label: "Feedback Loop",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
     )
   },
 ];
@@ -129,6 +148,78 @@ type ActivePoll = {
   option_2: string;
   votes_1: number;
   votes_2: number;
+  poll_id: string;
+};
+
+const translations: Record<string, Record<string, string>> = {
+  en: {
+    noNotifications: "No notifications yet",
+    newAlerts: "New alerts and workflow updates will appear here.",
+    notifications: "Notifications",
+    quickNavigate: "Quick Navigate",
+    searchPlaceholder: "Query sensor, site, or planning area...",
+    liveZones: "Live Zones Online",
+    highPriorityAlerts: "High-Priority Alerts",
+    detWin: "Deterrence Wins:",
+    operationalPoll: "Operational Poll",
+    preferenceRecorded: "Preference recorded",
+    noPoll: "Realtime poll is syncing with the latest alert posture.",
+    skip: "Skip to content",
+    activeResolution: "National Active Resolution",
+    activeStaging: "Active Staging Units",
+    reports: "Operational Reports",
+  },
+  ml: {
+    noNotifications: "Tiada notifikasi lagi",
+    newAlerts: "Amaran baharu dan kemas kini aliran kerja akan muncul di sini.",
+    notifications: "Notifikasi",
+    quickNavigate: "Navigasi Pantas",
+    searchPlaceholder: "Cari sensor, tapak, atau kawasan perancangan...",
+    liveZones: "Zon Langsung Online",
+    highPriorityAlerts: "Amaran Keutamaan Tinggi",
+    detWin: "Kemenangan Tindakan:",
+    operationalPoll: "Undian Operasi",
+    preferenceRecorded: "Pilihan direkodkan",
+    noPoll: "Undian masa nyata sedang diselaraskan dengan amaran semasa.",
+    skip: "Langkau ke kandungan",
+    activeResolution: "Resolusi Aktif Nasional",
+    activeStaging: "Unit Pementasan Aktif",
+    reports: "Laporan Operasi",
+  },
+  zh: {
+    noNotifications: "暂无通知",
+    newAlerts: "新的警报和流程更新会显示在这里。",
+    notifications: "通知",
+    quickNavigate: "快速导航",
+    searchPlaceholder: "搜索传感器、站点或规划区域...",
+    liveZones: "在线实时区域",
+    highPriorityAlerts: "高优先级警报",
+    detWin: "处置成果：",
+    operationalPoll: "行动投票",
+    preferenceRecorded: "已记录选择",
+    noPoll: "实时投票正在与最新警报态势同步。",
+    skip: "跳到内容",
+    activeResolution: "全国活跃处置",
+    activeStaging: "活跃部署单元",
+    reports: "运行报告",
+  },
+  ta: {
+    noNotifications: "அறிவிப்புகள் இல்லை",
+    newAlerts: "புதிய எச்சரிக்கைகள் மற்றும் பணிச்சுற்று புதுப்பிப்புகள் இங்கே தோன்றும்.",
+    notifications: "அறிவிப்புகள்",
+    quickNavigate: "விரைவு வழிசெலுத்தல்",
+    searchPlaceholder: "சென்சார், தளம், அல்லது திட்டப்பகுதியை தேடுங்கள்...",
+    liveZones: "நேரடி மண்டலங்கள் ஆன்லைனில்",
+    highPriorityAlerts: "உயர் முன்னுரிமை எச்சரிக்கைகள்",
+    detWin: "தடுப்பு வெற்றிகள்:",
+    operationalPoll: "செயற்பாட்டு வாக்கெடுப்பு",
+    preferenceRecorded: "தேர்வு பதிவு செய்யப்பட்டது",
+    noPoll: "நேரடி வாக்கெடுப்பு சமீபத்திய எச்சரிக்கை நிலைக்குத் தழுவப்படுகிறது.",
+    skip: "உள்ளடக்கத்திற்குச் செல்லவும்",
+    activeResolution: "தேசிய செயலில் தீர்வு",
+    activeStaging: "செயலில் உள்ள தளப்படுத்தல் அணிகள்",
+    reports: "செயற்பாட்டு அறிக்கைகள்",
+  },
 };
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -139,38 +230,44 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Rotating Advisories
-  const [advisories] = useState([
-    "📊 Weekly Report: 15% reduction in renovation noise complaints in Jurong.",
-    "🎯 Goal Tracking: Resource pre-positioning coverage at 92% for Tampines Hub.",
-    "⚡ Action Required: 2 upcoming construction permit starts in Woodlands tomorrow!"
+  const [advisories, setAdvisories] = useState([
+    "Realtime advisory feed initializing...",
   ]);
   const [currentAdvisory, setCurrentAdvisory] = useState(0);
 
-  // Live Deterrence Wins (Ticker)
-  const [wins] = useState([
-    { id: '1', text: 'Staging unit in Sengkang deterred 3 noise violations! 🚀' },
-    { id: '2', text: 'Targeted sweep in Bukit Merah resolved 5 long-standing complaints! 🎉' },
-    { id: '3', text: 'Proactive patrol in Hougang prevented illegal dumping at site #34! ⚡' }
+  // Live Safety Wins (Ticker)
+  const [wins, setWins] = useState([
+    { id: '1', text: 'Loading live operational wins...' }
   ]);
 
   const [activePoll, setActivePoll] = useState<ActivePoll>({
-    is_active: true,
-    question: "What should be our next policy focus?",
-    option_1: "Stricter Night Renovation",
-    option_2: "Dumping Surcharge Review",
-    votes_1: 142,
-    votes_2: 89
+    is_active: false,
+    question: "What should be our next worker safety priority?",
+    option_1: "Enhanced Fall Prevention Training",
+    option_2: "Heat Stress Monitoring Expansion",
+    votes_1: 0,
+    votes_2: 0,
+    poll_id: "live-operational-priority",
   });
 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [language, setLanguage] = useState('en');
+  const [fontScale, setFontScale] = useState(1);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const [stats] = useState({
-    activeSensors: 142,
+  const [stats, setStats] = useState({
+    activeSensors: 0,
     pendingAlerts: 3
   });
+  const [ribbonStats, setRibbonStats] = useState({
+    compliance: "0 live alerts",
+    staging: "0 active units",
+    confidence: "0 reports",
+  });
+  const t = (key: keyof typeof translations.en) => translations[language]?.[key] || translations.en[key];
 
   useEffect(() => {
     // Mock loading delay
@@ -179,11 +276,124 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   }, []);
 
   useEffect(() => {
+    document.documentElement.style.fontSize = `${16 * fontScale}px`;
+    return () => {
+      document.documentElement.style.fontSize = "";
+    };
+  }, [fontScale]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentAdvisory(prev => (prev + 1) % advisories.length);
     }, 4000);
     return () => clearInterval(timer);
   }, [advisories.length]);
+
+  useEffect(() => {
+    async function loadLiveHeaderData() {
+      const [identity, alerts, interventions, reports] = await Promise.all([
+        getCurrentUserIdentity(),
+        getRiskAlerts(),
+        getInterventions(),
+        getReports(),
+      ]);
+      const userNotifications = identity.isDemo ? [] : await getUserNotifications(identity.id);
+      const preferences = await getUserPreferences(identity.id);
+      const liveAlerts = alerts.filter((alert: any) => ['open', 'active', 'acknowledged'].includes(alert.status));
+      const activeInterventions = interventions.filter((item: any) => item.outcome !== 'Completed');
+      const highPriorityAlerts = liveAlerts.filter((alert: any) => ['High', 'Critical'].includes(alert.risk_level));
+      const activeZones = new Set([
+        ...liveAlerts.map((alert: any) => String(alert.location || 'Unknown')),
+        ...activeInterventions.map((item: any) => String(item.location || 'Unknown')),
+      ]);
+      const leadingAlert = highPriorityAlerts[0] || liveAlerts[0];
+      const derivedPollId = leadingAlert
+        ? `priority-${String(leadingAlert.component).toLowerCase()}-${String(leadingAlert.location).toLowerCase().replace(/\s+/g, "-")}`
+        : "live-operational-priority";
+      const pollState = await getOperationalPollState(derivedPollId);
+
+      setNotifications(userNotifications);
+      if (preferences?.language) {
+        setLanguage(preferences.language);
+      }
+      setStats({
+        activeSensors: activeZones.size,
+        pendingAlerts: highPriorityAlerts.length,
+      });
+      setRibbonStats({
+        compliance: `${alerts.filter((alert: any) => alert.status === 'resolved').length} resolved signals`,
+        staging: `${activeInterventions.length}/${Math.max(interventions.length, 1)} active units`,
+        confidence: `${reports.length} reports in archive`,
+      });
+      setAdvisories(
+        liveAlerts.slice(0, 3).map((alert: any) =>
+          `${alert.component} ${alert.risk_level} alert in ${alert.location} (${alert.risk_score}/100)`,
+        ).concat("Realtime advisory feed healthy."),
+      );
+      setWins(
+        liveAlerts.slice(0, 3).map((alert: any) => ({
+          id: alert.alert_id,
+          text: `${alert.component} monitoring active in ${alert.location} with score ${alert.risk_score}/100.`,
+        })),
+      );
+      setActivePoll({
+        is_active: Boolean(leadingAlert),
+        question: leadingAlert
+          ? `Next priority for ${leadingAlert.location} ${leadingAlert.component} risk?`
+          : "What should be our next worker safety priority?",
+        option_1: leadingAlert
+          ? `Deploy field team to ${leadingAlert.location}`
+          : "Enhanced Fall Prevention Training",
+        option_2: leadingAlert
+          ? `Push preventive advisory first`
+          : "Heat Stress Monitoring Expansion",
+        votes_1: pollState.votes.option1,
+        votes_2: pollState.votes.option2,
+        poll_id: derivedPollId,
+      });
+    }
+
+    void loadLiveHeaderData();
+
+    const alertsSubscription = subscribeToRiskAlerts(() => {
+      void loadLiveHeaderData();
+    });
+    const interventionsSubscription = subscribeToInterventions(() => {
+      void loadLiveHeaderData();
+    });
+    const notificationsSubscription = subscribeToNotifications(() => {
+      void loadLiveHeaderData();
+    });
+    const reportsSubscription = subscribeToReports(() => {
+      void loadLiveHeaderData();
+    });
+    const auditSubscription = subscribeToAuditLogs(() => {
+      void loadLiveHeaderData();
+    });
+    const preferencesSubscription = subscribeToUserPreferences(() => {
+      void loadLiveHeaderData();
+    });
+
+    return () => {
+      alertsSubscription.unsubscribe();
+      interventionsSubscription.unsubscribe();
+      notificationsSubscription.unsubscribe();
+      reportsSubscription.unsubscribe();
+      auditSubscription.unsubscribe();
+      preferencesSubscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    async function persistLanguagePreference() {
+      const identity = await getCurrentUserIdentity();
+      await updateUserPreferences(identity.id, { language });
+    }
+
+    if (isReady && isAuthenticated) {
+      void persistLanguagePreference();
+    }
+  }, [isAuthenticated, isReady, language]);
 
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -229,13 +439,21 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     .map((part: string) => part[0]?.toUpperCase() ?? "")
     .join("");
 
+  const filteredNavigation = navigation.filter((item) =>
+    item.label.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  // Page title metadata - Available for future use in breadcrumb or header context
+
+
   if (loading || !isReady || !isAuthenticated) {
     return (
       <div className={styles.loadingScreen}>
         <div className={styles.loadingCard}>
           <p>{isReady ? "Initializing operational workspace..." : "Restoring secure session..."}</p>
           <div className={styles.loadingLogoContainer}>
-            <img src="/LOGO.svg" alt="EcoNoise SG Logo" style={{ height: '64px' }} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/LOGO.svg" alt="EcoNoise SG Logo" className={styles.logoImage} />
           </div>
         </div>
       </div>
@@ -250,6 +468,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       <aside className={`${styles.sidebar} ${isSidebarOpen ? '' : styles.sidebarCollapsed}`}>
         <div className={styles.brandBlock}>
           <Link href="/" className={styles.logoContainer}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/LOGO.svg" alt="EcoNoise SG Logo" className={styles.logoImage} />
           </Link>
         </div>
@@ -279,15 +498,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             </span>
           </div>
           <div className={styles.bannerRight}>
-            <a href="#main" className={styles.accessLink}>Skip to content</a>
+            <a href="#main" className={styles.accessLink}>{t('skip')}</a>
             <div className={styles.divider}></div>
             <div className={styles.fontControls}>
-              <button className={styles.fontBtn} title="Smaller Font" aria-label="Decrease font size">A-</button>
-              <button className={styles.fontBtn} title="Reset Font" aria-label="Reset font size">A</button>
-              <button className={styles.fontBtn} title="Larger Font" aria-label="Increase font size">A+</button>
+              <button className={styles.fontBtn} title="Smaller Font" aria-label="Decrease font size" onClick={() => setFontScale((value) => Math.max(0.9, Number((value - 0.05).toFixed(2))))}>A-</button>
+              <button className={styles.fontBtn} title="Reset Font" aria-label="Reset font size" onClick={() => setFontScale(1)}>A</button>
+              <button className={styles.fontBtn} title="Larger Font" aria-label="Increase font size" onClick={() => setFontScale((value) => Math.min(1.15, Number((value + 0.05).toFixed(2))))}>A+</button>
             </div>
             <div className={styles.divider}></div>
-            <select className={styles.langSelect} aria-label="Language">
+            <select className={styles.langSelect} aria-label="Language" value={language} onChange={(event) => setLanguage(event.target.value)}>
               <option value="en">English</option>
               <option value="ml">Malay</option>
               <option value="zh">中文</option>
@@ -298,7 +517,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
         {/* Dynamic Deterrence Ticker */}
         <div className={styles.topTicker}>
-          <div className={styles.tickerScrollTitle}>⚡ Deterrence Wins:</div>
+          <div className={styles.tickerScrollTitle}>⚡ {t('detWin')}</div>
           <div className={styles.tickerMarquee}>
             <div className={styles.tickerContent}>
               {wins.map((w, i) => (
@@ -339,22 +558,50 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <div className={styles.headerContent}>
             {/* Real-time Status Stats */}
             <div className={styles.statsBadge} title="Network Stats">
-              <span>{stats.activeSensors} Sensors Online</span>
+              <span>{stats.activeSensors} {t('liveZones')}</span>
               <div className={styles.statsSeparator}></div>
-              <span>{stats.pendingAlerts} High-Priority Alerts</span>
+              <span>{stats.pendingAlerts} {t('highPriorityAlerts')}</span>
             </div>
 
             {/* Smart Search */}
             <div className={styles.searchContainer}>
               {isSearchOpen && (
-                <input
-                  type="text"
-                  className={styles.searchInput}
-                  placeholder="Query sensor, site, or planning area..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  autoFocus
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type="text"
+                    className={styles.searchInput}
+                    placeholder={t('searchPlaceholder')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <div className={styles.notificationDropdown} style={{ right: 0, top: "calc(100% + 8px)", width: "280px" }}>
+                      <div className={styles.notifHeader}>
+                        <h4>{t('quickNavigate')}</h4>
+                      </div>
+                      <div className={styles.notifList}>
+                        {filteredNavigation.slice(0, 5).map((item) => (
+                          <button
+                            key={item.href}
+                            className={styles.notifItem}
+                            onClick={() => {
+                              router.push(item.href);
+                              setSearchQuery('');
+                              setIsSearchOpen(false);
+                            }}
+                            style={{ width: "100%", textAlign: "left", background: "transparent", border: "none" }}
+                          >
+                            <div className={styles.notifText}>
+                              <h5>{item.label}</h5>
+                              <p>{item.href}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -373,33 +620,40 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 aria-label="Toggle notifications"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-                <span className={styles.notificationBadge}>3</span>
+                <span className={styles.notificationBadge}>{notifications.filter((notification) => !notification.is_read).length}</span>
               </button>
 
               {isNotificationOpen && (
                 <div className={styles.notificationDropdown}>
                   <div className={styles.notifHeader}>
-                    <h4>Notifications</h4>
+                    <h4>{t('notifications')}</h4>
                   </div>
                   <div className={styles.notifList}>
-                    <div className={styles.notifItem}>
-                      <div className={styles.notifIcon} style={{ background: '#f0fdf4', color: '#166534' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                    {notifications.length === 0 && (
+                      <div className={styles.notifItem}>
+                        <div className={styles.notifText}>
+                          <h5>{t('noNotifications')}</h5>
+                          <p>{t('newAlerts')}</p>
+                        </div>
                       </div>
-                      <div className={styles.notifText}>
-                        <h5>Successful Deterrence</h5>
-                        <p>Acoustic threshold maintained in Sengkang after staging unit 12 arrival.</p>
+                    )}
+                    {notifications.map((notification) => (
+                      <div
+                        className={styles.notifItem}
+                        key={notification.id}
+                        onClick={() => {
+                          void markNotificationAsRead(String(notification.id));
+                        }}
+                      >
+                        <div className={styles.notifIcon} style={{ background: notification.is_read ? '#eff6ff' : '#fef2f2', color: notification.is_read ? '#1d4ed8' : '#991b1b' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                        </div>
+                        <div className={styles.notifText}>
+                          <h5>{notification.title}</h5>
+                          <p>{notification.message || notification.notification_type}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className={styles.notifItem}>
-                      <div className={styles.notifIcon} style={{ background: '#fef2f2', color: '#991b1b' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-                      </div>
-                      <div className={styles.notifText}>
-                        <h5>Alert Escalation</h5>
-                        <p>Noise trend in Woodlands exceeds weekend threshold by 25dB.</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -456,19 +710,19 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </header>
 
         {/* Global Key Metrics Ribbon */}
-        {pathname !== '/dashboard/profile' && (
+        {pathname !== '/dashboard/profile' && pathname !== '/dashboard/data-sources' && (
           <div className={styles.ribbon}>
             <div className={styles.ribbonCard}>
-              <p>National Compliant Index</p>
-              <strong>82.4% Optimal</strong>
+              <p>{t('activeResolution')}</p>
+              <strong>{ribbonStats.compliance}</strong>
             </div>
             <div className={styles.ribbonCard}>
-              <p>Active Staging Units</p>
-              <strong>12/15 Deployed</strong>
+              <p>{t('activeStaging')}</p>
+              <strong>{ribbonStats.staging}</strong>
             </div>
             <div className={styles.ribbonCard}>
-              <p>Avg. Forecast Confidence</p>
-              <strong>88.2% Accurate</strong>
+              <p>{t('reports')}</p>
+              <strong>{ribbonStats.confidence}</strong>
             </div>
           </div>
         )}
@@ -483,16 +737,36 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       {activePoll.is_active && (
         <div className={styles.pollPopup}>
           <div className={styles.pollHeader}>
-            <h4>Operational Poll</h4>
+            <h4>{t('operationalPoll')}</h4>
             <button className={styles.closeBtn} onClick={() => setActivePoll({ ...activePoll, is_active: false })} aria-label="Close poll">✕</button>
           </div>
           <p className={styles.pollQuestion}>{activePoll.question}</p>
           <div className={styles.pollOptions}>
-            <button className={styles.pollOptionBtn} onClick={() => toast.success('Preference Recorded')}>
+            <button
+              className={styles.pollOptionBtn}
+              onClick={async () => {
+                await submitOperationalPollVote(activePoll.poll_id, 'option_1', {
+                  question: activePoll.question,
+                  label: activePoll.option_1,
+                });
+                setActivePoll((current) => ({ ...current, votes_1: current.votes_1 + 1 }));
+                toast.success(t('preferenceRecorded'));
+              }}
+            >
               <span>{activePoll.option_1}</span>
               <strong>{activePoll.votes_1}</strong>
             </button>
-            <button className={styles.pollOptionBtn} onClick={() => toast.success('Preference Recorded')}>
+            <button
+              className={styles.pollOptionBtn}
+              onClick={async () => {
+                await submitOperationalPollVote(activePoll.poll_id, 'option_2', {
+                  question: activePoll.question,
+                  label: activePoll.option_2,
+                });
+                setActivePoll((current) => ({ ...current, votes_2: current.votes_2 + 1 }));
+                toast.success(t('preferenceRecorded'));
+              }}
+            >
               <span>{activePoll.option_2}</span>
               <strong>{activePoll.votes_2}</strong>
             </button>

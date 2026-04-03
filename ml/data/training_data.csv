@@ -1,0 +1,13 @@
+area,temperature,pm25,humidity,active_alerts,active_interventions,risk_score
+Bukit Merah,32.1,18,78,3,1,86
+Jurong East,31.2,22,74,2,2,79
+Bedok,33.4,20,82,2,1,77
+Woodlands,30.4,28,76,1,2,72
+Choa Chu Kang,31.6,24,79,3,0,81
+Pasir Ris,32.8,19,81,1,1,69
+Tampines,31.1,17,75,1,1,65
+Jurong Industrial,33.1,31,77,4,2,91
+Sengkang,30.9,16,73,1,0,58
+Bukit Panjang,31.8,21,80,2,1,74
+Toa Payoh,32.4,14,77,1,1,63
+Hougang,31.5,18,76,2,0,67
