@@ -268,12 +268,17 @@ export default function DataSourcesPage() {
                   </td>
                   <td style={{ fontSize: "0.875rem", color: "#475569" }}>{ds.signal}</td>
                   <td>
-                    <span className={ds.status === "realtime" ? styles.statusRealtime : ds.status === "error" ? styles.statusSynced : styles.statusSynced}
-                    title={ds.status === "realtime" ? "Updates every 5-10 minutes" : "Daily or weekly batch sync"}>
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className={styles.statusIcon}>
-                        <circle cx="12" cy="12" r="10"/>
-                      </svg>
-                      {ds.status === "realtime" ? "🔴 Realtime" : ds.status === "error" ? "⚠️ Error" : "✅ Synced"}
+                    <span
+                      className={`${styles.statusPill} ${
+                        ds.status === "realtime"
+                          ? styles.statusRealtime
+                          : ds.status === "error"
+                            ? styles.statusError
+                            : styles.statusSynced
+                      }`}
+                      title={ds.status === "realtime" ? "Updates every 5-10 minutes" : "Daily or weekly batch sync"}
+                    >
+                      {ds.status === "realtime" ? "Realtime" : ds.status === "error" ? "Unavailable" : "Synced"}
                     </span>
                   </td>
                   <td style={{ fontSize: "0.875rem" }}>{ds.latency}</td>
@@ -284,8 +289,8 @@ export default function DataSourcesPage() {
             </tbody>
           </table>
         </div>
-        <div style={{ marginTop: "16px", padding: "12px 16px", background: "#f0fdf4", borderRadius: "8px", fontSize: "0.875rem", color: "#166534", borderLeft: "4px solid #22c55e" }}>
-          ✅ Live source validation complete. <strong>{realtimeSources} real-time feeds active.</strong> Last validation: {new Date().toLocaleString()}
+        <div className={styles.statusInlineNote}>
+          Live source validation complete. <strong>{realtimeSources} real-time feeds active.</strong> Last validation: {new Date().toLocaleString()}
         </div>
       </DashboardSection>
 
@@ -293,21 +298,15 @@ export default function DataSourcesPage() {
         eyebrow="Contractor Management"
         title="ACRA Company Registry Sync - Module C4"
       >
-        <button
-          onClick={handleSyncContractors}
-          disabled={syncing}
-          style={{
-            marginBottom: "16px",
-            padding: "10px 20px",
-            background: syncing ? "#cbd5e1" : "#3b82f6",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: syncing ? "not-allowed" : "pointer",
-          }}
-        >
-          {syncing ? "Syncing..." : "Sync Contractors from ACRA"}
-        </button>
+        <div className={styles.pageActionBar}>
+          <button
+            onClick={handleSyncContractors}
+            disabled={syncing}
+            className={styles.primaryActionBtn}
+          >
+            {syncing ? "Syncing..." : "Sync Contractors from ACRA"}
+          </button>
+        </div>
 
         {contractors.length > 0 && (
           <div className={styles.tableCard}>
@@ -327,12 +326,15 @@ export default function DataSourcesPage() {
                     <td><strong>{c.company_name}</strong></td>
                     <td>{c.uen}</td>
                     <td>
-                      <span style={{
-                        padding: "4px 8px",
-                        background: c.crs_status === "Certified" ? "#d1fae5" : c.crs_status === "Provisional" ? "#fef3c7" : "#fee2e2",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                      }}>
+                      <span
+                        className={`${styles.contractorStatusBadge} ${
+                          c.crs_status === "Certified"
+                            ? styles.contractorStatusCertified
+                            : c.crs_status === "Provisional"
+                              ? styles.contractorStatusProvisional
+                              : styles.contractorStatusConditional
+                        }`}
+                      >
                         {c.crs_status}
                       </span>
                     </td>
