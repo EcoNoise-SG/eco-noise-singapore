@@ -64,6 +64,101 @@
   background:
     linear-gradient(180deg, rgba(15, 23, 42, 0.02) 0%, rgba(15, 23, 42, 0.1) 100%),
     #f8fafc;
+  display: flex; /* Split view */
+}
+
+.mapContainerMain {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.detailsSidebar {
+  width: 320px;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 810;
+}
+
+.sidebarHeader {
+  padding: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.sidebarHeader h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sidebarHeader p {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.sidebarContent {
+  padding: 20px;
+}
+
+.attributeGroup {
+  margin-bottom: 24px;
+}
+
+.attributeGroup h5 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0 0 12px;
+  letter-spacing: 0.05em;
+}
+
+.attributeGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.attributeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.attributeLabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.attributeValue {
+  font-size: 0.85rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.noDetailState {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.noDetailState svg {
+  margin-bottom: 16px;
+  opacity: 0.3;
 }
 
 .leafletMap {
@@ -358,6 +453,27 @@
   font-size: 0.66rem;
   font-weight: 700;
   margin-top: 7px;
+}
+
+.metadataGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(226, 232, 240, 0.8);
+}
+
+.metadataGrid span {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  color: #475569 !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  margin-top: 0 !important;
 }
 
 .mapFooter {

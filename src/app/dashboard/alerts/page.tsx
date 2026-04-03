@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
+import { MockMap } from "@/components/dashboard/MockMap";
 import styles from "../dashboard.module.css";
 import alertStyles from "./alerts.module.css";
 import toast from "react-hot-toast";
@@ -124,6 +125,7 @@ export default function AlertsPage() {
 
   return (
     <div className={styles.stack}>
+      <MockMap title="Live Dengue Clusters & Disease Outbreak Hotspots Map (Module C7)" mapContext="disease" />
       <div className={styles.gridThree}>
         <div className={styles.metricCard}>
           <p>Critical Alerts</p>

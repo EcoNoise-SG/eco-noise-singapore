@@ -245,7 +245,7 @@ let cachedDengueClusters: any = null;
 export async function fetchNEADengueClusters() {
   if (cachedDengueClusters) return cachedDengueClusters;
 
-  const downloaded = await fetchDatasetDownload("d_f2d4a22e47e4387f4571433c92ba4e8e");
+  const downloaded = await fetchDatasetDownload("d_dbfabf16158d1b0e1c420627c0819168");
   if (!downloaded) return null;
 
   const features = Array.isArray(downloaded?.features)

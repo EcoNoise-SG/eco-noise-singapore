@@ -24,6 +24,7 @@ type ZoneOverlay = {
     ops: string[];
     model: string[];
   };
+  metadata?: Record<string, any>;
 };
 
 function layerColors(layer: OverlayLayer, status: string) {
@@ -144,6 +145,13 @@ export default function RealtimeMapCanvas({
                     <strong>{zone.area}</strong>
                     <span>{zone.status}</span>
                     <p>{zone.detail}</p>
+                    {zone.metadata && (zone.metadata.HOMES || zone.metadata.PUBLIC_PLACES || zone.metadata.CONSTRUCTION_SITES) && (
+                      <div className={styles.metadataGrid}>
+                        {zone.metadata.HOMES !== undefined && <span>🏠 {zone.metadata.HOMES} Homes</span>}
+                        {zone.metadata.PUBLIC_PLACES !== undefined && <span>🏢 {zone.metadata.PUBLIC_PLACES} Public</span>}
+                        {zone.metadata.CONSTRUCTION_SITES !== undefined && <span>🏗️ {zone.metadata.CONSTRUCTION_SITES} Const.</span>}
+                      </div>
+                    )}
                     <small>
                       {zone.alerts} alerts · {zone.interventions} ops
                       {zone.predictionScore ? ` · ML ${zone.predictionScore}` : ""}
@@ -177,6 +185,13 @@ export default function RealtimeMapCanvas({
                     <strong>{zone.area}</strong>
                     <span>{zone.status}</span>
                     <p>{zone.detail}</p>
+                    {zone.metadata && (zone.metadata.HOMES || zone.metadata.PUBLIC_PLACES || zone.metadata.CONSTRUCTION_SITES) && (
+                      <div className={styles.metadataGrid}>
+                        {zone.metadata.HOMES !== undefined && <span>🏠 {zone.metadata.HOMES} Homes</span>}
+                        {zone.metadata.PUBLIC_PLACES !== undefined && <span>🏢 {zone.metadata.PUBLIC_PLACES} Public</span>}
+                        {zone.metadata.CONSTRUCTION_SITES !== undefined && <span>🏗️ {zone.metadata.CONSTRUCTION_SITES} Const.</span>}
+                      </div>
+                    )}
                     <small>
                       {zone.alerts} alerts · {zone.interventions} ops
                       {zone.predictionScore ? ` · ML ${zone.predictionScore}` : ""}

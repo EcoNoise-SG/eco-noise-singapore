@@ -7,6 +7,7 @@ import styles from "./map.module.css";
 import {
   fetchNEAAirQuality,
   fetchNEAWeather,
+  fetchNEADengueClusters,
   fetchOneMapLocation,
   fetchPlanningAreaBoundaries,
 } from "@/lib/datagovsg";
@@ -17,7 +18,7 @@ import {
   subscribeToRiskAlerts,
 } from "@/lib/supabase";
 
-type MapContext = "overview" | "forecast" | "hotspot" | "patrol";
+type MapContext = "overview" | "forecast" | "hotspot" | "patrol" | "disease";
 type OverlayLayer = "all" | "alerts" | "ops" | "ml-nea";
 
 type MapPrediction = {
@@ -44,6 +45,7 @@ type ZoneOverlay = {
     ops: string[];
     model: string[];
   };
+  metadata?: Record<string, any>;
 };
 
 type AreaAggregate = {
@@ -60,6 +62,7 @@ type AreaAggregate = {
     ops: string[];
     model: string[];
   };
+  metadata?: Record<string, any>;
 };
 
 type PlanningBoundaryFeature = {
@@ -181,6 +184,7 @@ function toZoneOverlay(zone: AreaAggregate, layer: OverlayLayer): ZoneOverlay {
     predictionScore: zone.predictionScore,
     weatherDetail: zone.weatherDetail,
     sources: zone.sources,
+    metadata: zone.metadata,
   };
 }
 
@@ -204,13 +208,14 @@ export function MockMap({
   useEffect(() => {
     async function loadSpatialData() {
       try {
-        const [alerts, interventions, weather, airQuality, planningBoundaries, predictionResponse] = await Promise.all([
+        const [alerts, interventions, weather, airQuality, planningBoundaries, predictionResponse, dengueResponse] = await Promise.all([
           getRiskAlerts(),
           getInterventions(),
           fetchNEAWeather(),
           fetchNEAAirQuality(),
           fetchPlanningAreaBoundaries(),
           fetch("/api/model/predictions").catch(() => null),
+          fetchNEADengueClusters().catch(() => null),
         ]);
 
         let predictions: MapPrediction[] = [];
@@ -242,6 +247,12 @@ export function MockMap({
           areas.add(prediction.area || "Singapore");
         });
 
+        const dengueRecords = dengueResponse?.records || [];
+        dengueRecords.forEach((cluster: any) => {
+          const locality = cluster.properties?.LOCALITY || cluster.properties?.locality || cluster.locality || "Unknown Dengue Cluster";
+          areas.add(locality);
+        });
+
         if (!areas.size) {
           areas.add("Singapore");
         }
@@ -261,9 +272,17 @@ export function MockMap({
           }),
         );
 
-        const ensureAreaAggregate = (area: string, score = 0) => {
+        const ensureAreaAggregate = (area: string, score = 0, exactGeometry?: any, metadata?: any) => {
           const existing = mergedByArea.get(area);
           if (existing) {
+            if (exactGeometry) {
+              existing.geometry = exactGeometry;
+              const centroid = getBoundaryCentroid(exactGeometry);
+              if (centroid) existing.coordinates = centroid;
+            }
+            if (metadata) {
+              existing.metadata = { ...(existing.metadata || {}), ...metadata };
+            }
             return existing;
           }
 
@@ -274,12 +293,13 @@ export function MockMap({
           const aggregate: AreaAggregate = {
             area,
             coordinates: spatial.coordinates,
-            geometry: spatial.geometry,
+            geometry: exactGeometry || spatial.geometry,
             score,
             alerts: 0,
             interventions: 0,
             weatherDetail,
             sources: { alerts: [], ops: [], model: [] },
+            metadata: metadata || {},
           };
 
           mergedByArea.set(area, aggregate);
@@ -317,8 +337,22 @@ export function MockMap({
           mergedByArea.set(key, existing);
         });
 
+        dengueRecords.forEach((cluster: any) => {
+          const locality = cluster.properties?.LOCALITY || cluster.properties?.locality || cluster.locality || "Unknown Dengue Cluster";
+          if (locality === "Unknown Dengue Cluster") return;
+          const caseCount = parseInt(cluster.properties?.CASE_SIZE || cluster.properties?.case_size || cluster.case_size) || 12;
+          const key = locality;
+          const existing = ensureAreaAggregate(key, 60, cluster.geometry, cluster.properties || cluster);
+
+          existing.score = Math.max(existing.score, caseCount > 25 ? 85 : 65);
+          existing.alerts += 1;
+          existing.sources.alerts.push(`Dengue Cluster (${caseCount} cases)`);
+          mergedByArea.set(key, existing);
+        });
+
         const contextFilteredZones = Array.from(mergedByArea.values())
           .filter((zone) => {
+            if (mapContext === "disease") return zone.sources.alerts.some(a => a.includes("Dengue Cluster"));
             if (mapContext === "hotspot") return zone.score >= 55;
             if (mapContext === "forecast") return zone.sources.model.length > 0;
             if (mapContext === "patrol") return zone.interventions > 0;
@@ -375,6 +409,7 @@ export function MockMap({
             predictionScore: zone.predictionScore,
             weatherDetail: zone.weatherDetail,
             sources: zone.sources,
+            metadata: zone.metadata,
           },
           activeLayer,
         ),
@@ -402,84 +437,212 @@ export function MockMap({
       </div>
 
       <div className={styles.mapSurface}>
-        <RealtimeMapCanvas
-          zones={visibleZones}
-          activeLayer={activeLayer}
-          selectedArea={selectedZone?.area || null}
-          onZoneSelect={setSelectedArea}
-        />
+        <div className={styles.mapContainerMain}>
+          <RealtimeMapCanvas
+            zones={visibleZones}
+            activeLayer={activeLayer}
+            selectedArea={selectedZone?.area || null}
+            onZoneSelect={setSelectedArea}
+          />
 
-        <div className={styles.mapOverlay}>
-          <div className={styles.overlayCard}>
-            <span>Active Zones</span>
-            <strong>{visibleZones.length}</strong>
+          <div className={styles.mapOverlay}>
+            <div className={styles.overlayCard}>
+              <span>Active Zones</span>
+              <strong>{visibleZones.length}</strong>
+            </div>
+            <div className={styles.overlayCard}>
+              <span>Peak Risk</span>
+              <strong>{summary.alertThreshold}</strong>
+            </div>
+            <div className={styles.overlayCard}>
+              <span>Weather Feed</span>
+              <strong>{summary.weatherLabel}</strong>
+            </div>
           </div>
-          <div className={styles.overlayCard}>
-            <span>Peak Risk</span>
-            <strong>{summary.alertThreshold}</strong>
-          </div>
-          <div className={styles.overlayCard}>
-            <span>Weather Feed</span>
-            <strong>{summary.weatherLabel}</strong>
-          </div>
+
+          {mapContext !== "disease" && (
+            <div className={styles.intelPanel}>
+              <div className={styles.intelHeader}>
+                <span>Zone Intelligence</span>
+                <strong>Realtime overlay stack</strong>
+              </div>
+              <div className={styles.intelLegend}>
+                <button
+                  type="button"
+                  className={activeLayer === "alerts" ? styles.legendActive : ""}
+                  onClick={() => setActiveLayer("alerts")}
+                >
+                  Alerts
+                </button>
+                <button
+                  type="button"
+                  className={activeLayer === "ops" ? styles.legendActive : ""}
+                  onClick={() => setActiveLayer("ops")}
+                >
+                  Ops
+                </button>
+                <button
+                  type="button"
+                  className={activeLayer === "ml-nea" ? styles.legendActive : ""}
+                  onClick={() => setActiveLayer("ml-nea")}
+                >
+                  ML + NEA
+                </button>
+              </div>
+              <button type="button" className={styles.layerReset} onClick={() => setActiveLayer("all")}>
+                Show all layers
+              </button>
+              <p className={styles.intelWeather}>
+                {activeLayer === "all"
+                  ? summary.forecastLabel
+                  : `${LAYER_META[activeLayer].description} · ${summary.forecastLabel}`}
+              </p>
+              <div className={styles.intelList}>
+                {visibleZones.slice(0, 5).map((zone) => (
+                  <button
+                    type="button"
+                    key={`panel-${zone.area}`}
+                    className={`${styles.intelItem} ${selectedZone?.area === zone.area ? styles.intelItemActive : ""}`}
+                    onClick={() => setSelectedArea(zone.area)}
+                  >
+                    <div>
+                      <strong>{zone.area}</strong>
+                      <p>{zone.detail}</p>
+                    </div>
+                    <div className={styles.intelMeta}>
+                      <span>{zone.alerts}A</span>
+                      <span>{zone.interventions}O</span>
+                      <strong>{zone.score}</strong>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className={styles.intelPanel}>
-          <div className={styles.intelHeader}>
-            <span>Zone Intelligence</span>
-            <strong>Realtime overlay stack</strong>
-          </div>
-          <div className={styles.intelLegend}>
-            <button
-              type="button"
-              className={activeLayer === "alerts" ? styles.legendActive : ""}
-              onClick={() => setActiveLayer("alerts")}
-            >
-              Alerts
-            </button>
-            <button
-              type="button"
-              className={activeLayer === "ops" ? styles.legendActive : ""}
-              onClick={() => setActiveLayer("ops")}
-            >
-              Ops
-            </button>
-            <button
-              type="button"
-              className={activeLayer === "ml-nea" ? styles.legendActive : ""}
-              onClick={() => setActiveLayer("ml-nea")}
-            >
-              ML + NEA
-            </button>
-          </div>
-          <button type="button" className={styles.layerReset} onClick={() => setActiveLayer("all")}>
-            Show all layers
-          </button>
-          <p className={styles.intelWeather}>
-            {activeLayer === "all"
-              ? summary.forecastLabel
-              : `${LAYER_META[activeLayer].description} · ${summary.forecastLabel}`}
-          </p>
-          <div className={styles.intelList}>
-            {visibleZones.slice(0, 5).map((zone) => (
-              <button
-                type="button"
-                key={`panel-${zone.area}`}
-                className={`${styles.intelItem} ${selectedZone?.area === zone.area ? styles.intelItemActive : ""}`}
-                onClick={() => setSelectedArea(zone.area)}
-              >
-                <div>
-                  <strong>{zone.area}</strong>
-                  <p>{zone.detail}</p>
+        {/* Right Details Panel */}
+        <div className={styles.detailsSidebar}>
+          {selectedZone ? (
+            <>
+              <div className={styles.sidebarHeader}>
+                <h4>{selectedZone.area}</h4>
+                <p>{selectedZone.status} Alert Level</p>
+              </div>
+              <div className={styles.sidebarContent}>
+                <div className={styles.attributeGroup}>
+                  <h5>Risk Context</h5>
+                  <div className={styles.attributeItem}>
+                    <span className={styles.attributeLabel}>Composite Risk Score</span>
+                    <span className={styles.attributeValue}>{selectedZone.score}/100</span>
+                  </div>
+                  <div className={styles.attributeItem}>
+                    <span className={styles.attributeLabel}>Primary Source Signal</span>
+                    <span className={styles.attributeValue}>{selectedZone.detail.split(' • ')[0]}</span>
+                  </div>
                 </div>
-                <div className={styles.intelMeta}>
-                  <span>{zone.alerts}A</span>
-                  <span>{zone.interventions}O</span>
-                  <strong>{zone.score}</strong>
-                </div>
-              </button>
-            ))}
-          </div>
+
+                {selectedZone.metadata && (
+                  <div className={styles.attributeGroup}>
+                    <h5>Site Intelligence (NEA Live)</h5>
+                    <div className={styles.attributeGrid}>
+                      {selectedZone.metadata.CASE_SIZE !== undefined && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>Total Case Size</span>
+                          <span className={styles.attributeValue}>{selectedZone.metadata.CASE_SIZE}</span>
+                        </div>
+                      )}
+                      {selectedZone.metadata.HOMES !== undefined && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>Residential Breeding</span>
+                          <span className={styles.attributeValue}>{selectedZone.metadata.HOMES} Homes</span>
+                        </div>
+                      )}
+                      {selectedZone.metadata.PUBLIC_PLACES !== undefined && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>Public Hotspots</span>
+                          <span className={styles.attributeValue}>{selectedZone.metadata.PUBLIC_PLACES} Places</span>
+                        </div>
+                      )}
+                      {selectedZone.metadata.CONSTRUCTION_SITES !== undefined && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>WSH Construction Risks</span>
+                          <span className={styles.attributeValue}>{selectedZone.metadata.CONSTRUCTION_SITES} Sites</span>
+                        </div>
+                      )}
+                      {selectedZone.metadata.FMEL_UPD_D && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>Last Sync Timestamp</span>
+                          <span className={styles.attributeValue}>
+                            {String(selectedZone.metadata.FMEL_UPD_D).slice(0, 8)}
+                          </span>
+                        </div>
+                      )}
+                      {selectedZone.metadata.HYPERLINK && (
+                        <div className={styles.attributeItem}>
+                          <a
+                            href={selectedZone.metadata.HYPERLINK}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#5925dc', fontSize: '0.75rem', fontWeight: 700 }}
+                          >
+                            View Active NEA Advisory →
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedZone.metadata && (
+                  <div className={styles.attributeGroup}>
+                    <h5>System Registry & Geometry</h5>
+                    <div className={styles.attributeGrid}>
+                      {selectedZone.metadata.OBJECTID && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>System ObjectID</span>
+                          <span className={styles.attributeValue}>{selectedZone.metadata.OBJECTID}</span>
+                        </div>
+                      )}
+                      {selectedZone.metadata.NAME && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>Dataset Name</span>
+                          <span className={styles.attributeValue}>{selectedZone.metadata.NAME}</span>
+                        </div>
+                      )}
+                      {selectedZone.metadata.INC_CRC && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>CRC Identifier</span>
+                          <span className={styles.attributeValue}>{selectedZone.metadata.INC_CRC}</span>
+                        </div>
+                      )}
+                      {selectedZone.metadata["SHAPE.AREA"] && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>Spatial Area (SqM)</span>
+                          <span className={styles.attributeValue}>
+                            {Number(selectedZone.metadata["SHAPE.AREA"]).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      )}
+                      {selectedZone.metadata["SHAPE.LEN"] && (
+                        <div className={styles.attributeItem}>
+                          <span className={styles.attributeLabel}>Spatial Perimeter (M)</span>
+                          <span className={styles.attributeValue}>
+                            {Number(selectedZone.metadata["SHAPE.LEN"]).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className={styles.noDetailState}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+              <p>Select a zone on the map to view detailed site intelligence signals.</p>
+            </div>
+          )}
         </div>
       </div>
 
