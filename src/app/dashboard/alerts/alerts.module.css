@@ -1,7 +1,7 @@
 .filterRow {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   flex-wrap: wrap;
 }
 
@@ -27,65 +27,67 @@
 .badgeCritical {
   background: #fef2f2;
   color: #dc2626;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.6875rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.625rem;
   font-weight: 700;
   border: 1px solid #fee2e2;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .badgeHigh {
   background: #fffbeb;
   color: #b45309;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.6875rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.625rem;
   font-weight: 700;
   border: 1px solid #fde68a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .badgeMedium {
   background: #eff6ff;
   color: #1d4ed8;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.6875rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.625rem;
   font-weight: 700;
   border: 1px solid #bfdbfe;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .badgeLow {
   background: #f8fafc;
   color: #64748b;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.6875rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.625rem;
   font-weight: 700;
   border: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .statusOpen {
+  background: #fef2f2;
   color: #dc2626;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border: 1px solid #fee2e2;
 }
 
 .statusActioned {
+  background: #fffbeb;
   color: #d97706;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.statusScheduled {
-  color: #2563eb;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border: 1px solid #fde68a;
 }
 
 .statusResolved {
-  color: #22c55e;
-  font-size: 0.75rem;
-  font-weight: 700;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #dcfce7;
 }
 
 /* Tabs System */
@@ -231,6 +233,168 @@
 .mapPlaceholderContent p {
   margin: 0;
   font-size: 0.875rem;
+}
+
+/* Alerts Grid */
+.alertsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 0;
+}
+
+.alertCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.alertCard:hover {
+  border-color: #5925dc44;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.metaInfo {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.description {
+  font-size: 0.8125rem;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.cardFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.acknowledge {
+  background: #334155;
+  color: #ffffff;
+  border: 1px solid #1e293b !important;
+}
+
+.acknowledge:hover {
+  background: #1e293b;
+}
+
+.resolve {
+  background: #5925dc;
+  color: #ffffff;
+  border: 1px solid #4c1d95 !important;
+}
+
+.resolve:hover {
+  background: #4c1d95;
+}
+
+.noteBtn {
+  background: #ffffff;
+  color: #5925dc;
+  border: 1px solid #5925dc !important;
+}
+
+.noteBtn:hover {
+  background: #f5f3ff;
+}
+
+.statusBadge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statusSelectCard {
+  flex: 1;
+}
+
+.statusDropdown {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  background: #334155;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 32px;
+  transition: all 0.2s;
+}
+
+.statusDropdown:hover {
+  background-color: #1e293b;
+  border-color: #0f172a;
+}
+
+.statusDropdown:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(51, 65, 85, 0.2);
+}
+
+.reopenBtn {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2 !important;
+}
+
+.reopenBtn:hover {
+  background: #fee2e2;
 }
 
 .tabRibbon {

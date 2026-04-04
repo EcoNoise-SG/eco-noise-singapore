@@ -209,62 +209,49 @@ export default function AlertsPage() {
             ) : alerts.length === 0 ? (
               <p style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>No alerts found</p>
             ) : (
-              <div className={styles.timeline}>
+              <div className={alertStyles.alertsGrid}>
                 {filtered.map((alert) => (
-                  <div className={styles.timelineItem} key={alert.alert_id}>
-                    <div className={styles.timelineHeader}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <strong>{alert.title}</strong>
+                  <div className={alertStyles.alertCard} key={alert.id}>
+                    <div className={alertStyles.cardHeader}>
+                      <h3 className={alertStyles.cardTitle}>{alert.title}</h3>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
                         <span className={severityStyle[alert.severity]}>
                           {alert.risk_level.toUpperCase()}
                         </span>
+                        <span className={`${statusStyle[alert.status]} ${alertStyles.statusBadge}`}>
+                          {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
+                        </span>
                       </div>
-                      <span className={statusStyle[alert.status]}>
-                        {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
-                      </span>
                     </div>
-                    <span className={styles.timeLabel}>{alert.time} · {alert.area} · {alert.category}</span>
-                    <p className={styles.actionDetail}>{alert.description}</p>
-                    <p style={{ marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
-                      Risk Score: {alert.risk_score}/100
-                    </p>
-                    <div className={styles.logicNode}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12h6"/><path d="M12 9v6"/><circle cx="12" cy="12" r="10"/></svg>
-                      <span>Alert ID: {alert.alert_id}</span>
+
+                    <div className={alertStyles.metaInfo}>
+                      <strong>{alert.time}</strong>
+                      <span>{alert.area} · {alert.category}</span>
                     </div>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                      {alert.status === "open" && alert.alert_id.startsWith('DNG-') === false && (
-                        <>
-                          <button
-                            onClick={() => handleStatusChange(alert.alert_id, "acknowledged")}
-                            style={{
-                              padding: "6px 12px",
-                              background: "#3b82f6",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                            }}
+
+                    <p className={alertStyles.description}>{alert.description}</p>
+
+                    <div className={alertStyles.cardFooter}>
+                      <div className={alertStyles.actions}>
+                        <button
+                          onClick={() => toast.success("Quick note window opening...")}
+                          className={`${alertStyles.actionBtn} ${alertStyles.noteBtn}`}
+                        >
+                          Add Quick Note
+                        </button>
+
+                        <div className={alertStyles.statusSelectCard}>
+                          <select 
+                            value={alert.status}
+                            onChange={(e) => handleStatusChange(alert.alert_id, e.target.value)}
+                            className={alertStyles.statusDropdown}
                           >
-                            Acknowledge
-                          </button>
-                          <button
-                            onClick={() => handleStatusChange(alert.alert_id, "resolved")}
-                            style={{
-                              padding: "6px 12px",
-                              background: "#10b981",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                            }}
-                          >
-                            Resolve
-                          </button>
-                        </>
-                      )}
+                            <option value="open">Set to Open</option>
+                            <option value="acknowledged">Acknowledge</option>
+                            <option value="resolved">Mark Resolved</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
