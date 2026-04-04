@@ -71,7 +71,7 @@ export default function AlertsPage() {
         getRiskAlerts(),
         fetchNEADengueClusters().catch(() => null)
       ]);
-      
+
       const mappedDbAlerts = dbAlerts.map((alert: any) => {
         const riskLevel = alert.risk_level || "Medium";
         return {
@@ -94,7 +94,7 @@ export default function AlertsPage() {
         const locality = cluster.properties?.LOCALITY || cluster.properties?.locality || cluster.locality || "Unknown Cluster";
         const cases = parseInt(cluster.properties?.CASE_SIZE || cluster.properties?.case_size || cluster.case_size) || 0;
         const severity = cases > 25 ? "critical" : "high";
-        
+
         return {
           id: `dengue-${index}`,
           alert_id: `DNG-${index}`,
@@ -152,13 +152,13 @@ export default function AlertsPage() {
     <div className={styles.stack}>
       {/* Page Tabs */}
       <div className={alertStyles.tabsBar}>
-        <button 
+        <button
           className={`${alertStyles.tabItem} ${activeTab === "warnings" ? alertStyles.tabActive : ""}`}
           onClick={() => setActiveTab("warnings")}
         >
           Outbreak Warnings
         </button>
-        <button 
+        <button
           className={`${alertStyles.tabItem} ${activeTab === "intelligence" ? alertStyles.tabActive : ""}`}
           onClick={() => setActiveTab("intelligence")}
         >
@@ -241,7 +241,7 @@ export default function AlertsPage() {
                         </button>
 
                         <div className={alertStyles.statusSelectCard}>
-                          <select 
+                          <select
                             value={alert.status}
                             onChange={(e) => handleStatusChange(alert.alert_id, e.target.value)}
                             className={alertStyles.statusDropdown}
@@ -261,14 +261,14 @@ export default function AlertsPage() {
         </>
       ) : (
         <div className={alertStyles.intelligenceContainer}>
-          <DashboardSection 
+          <DashboardSection
             eyebrow="Advanced forecasting"
             title="Strategic Prediction Intelligence"
           >
             <div className={alertStyles.intelligenceGrid}>
               <div className={alertStyles.intelligenceCard}>
                 <div className={alertStyles.cardIcon}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="16 5 21 5 21 10"/><line x1="9" y1="15" x2="21" y2="3"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" /><polyline points="16 5 21 5 21 10" /><line x1="9" y1="15" x2="21" y2="3" /></svg>
                 </div>
                 <h3>Outbreak Trend Analysis</h3>
                 <p>Analyzing historical data and environmental factors to project disease transmission velocity over the next 14 days.</p>
@@ -280,7 +280,7 @@ export default function AlertsPage() {
 
               <div className={alertStyles.intelligenceCard}>
                 <div className={alertStyles.cardIcon}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4" /><path d="M12 16h.01" /></svg>
                 </div>
                 <h3>Environmental Risk Correlates</h3>
                 <p>Identifying correlations between rainfall patterns, temperatures, and cluster emergence in high-density areas.</p>
@@ -292,7 +292,7 @@ export default function AlertsPage() {
 
               <div className={alertStyles.intelligenceCard}>
                 <div className={alertStyles.cardIcon}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                 </div>
                 <h3>Predictive Containment</h3>
                 <p>Strategic deployment recommendations for preventing outbreak expansion before new clusters are officially reported.</p>
@@ -305,7 +305,7 @@ export default function AlertsPage() {
 
             <div className={alertStyles.mapPlaceholder}>
               <div className={alertStyles.mapPlaceholderContent}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><circle cx="12" cy="12" r="3" /></svg>
                 <h4>Advanced Prediction Map Loading...</h4>
                 <p>Visualizing predictive vectors and containment zones.</p>
               </div>
