@@ -100,19 +100,20 @@
   /* Pull to edges of content area */
   padding: 0 28px;
   position: sticky;
-  top: 65px;
+  top: 53px;
   /* Sticky to bottom of header */
   z-index: 30;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .tabItem {
-  padding: 10px 20px;
+  padding: 8px 20px;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
   font-family: inherit;
   font-size: 15px;
+  letter-spacing: -0.02rem;
   font-weight: 400;
   color: #64748b;
   cursor: pointer;

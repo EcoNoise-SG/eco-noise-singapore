@@ -277,7 +277,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 7px 32px;
+  padding: 4px 32px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -306,7 +306,7 @@
 
 
 .headerTitle {
-  font-size: 1.2rem;
+  font-size: 17px;
   font-weight: 500;
   color: #0f172a;
 }
@@ -405,7 +405,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 6px 14px;
+  padding: 2px 6px;
   border-radius: 9999px;
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
