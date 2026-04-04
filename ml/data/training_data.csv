@@ -1,13 +1,501 @@
-area,temperature,pm25,humidity,active_alerts,active_interventions,risk_score
-Bukit Merah,32.1,18,78,3,1,86
-Jurong East,31.2,22,74,2,2,79
-Bedok,33.4,20,82,2,1,77
-Woodlands,30.4,28,76,1,2,72
-Choa Chu Kang,31.6,24,79,3,0,81
-Pasir Ris,32.8,19,81,1,1,69
-Tampines,31.1,17,75,1,1,65
-Jurong Industrial,33.1,31,77,4,2,91
-Sengkang,30.9,16,73,1,0,58
-Bukit Panjang,31.8,21,80,2,1,74
-Toa Payoh,32.4,14,77,1,1,63
-Hougang,31.5,18,76,2,0,67
+area,wbgt,temperature,humidity,pm25,contractor_tier,work_phase,active_workers,historical_incidents,active_alerts,active_interventions,risk_score
+Toa Payoh,30.3,30.8,60,10,1,Demolition,299,1,0,0,47
+Toa Payoh,35.1,36.3,73,27,3,Structural,323,3,1,0,87
+Bukit Merah,32.3,33.4,87,30,3,Finishing,199,3,4,2,70
+Sengkang,29.3,30.2,73,31,2,Finishing,487,0,0,1,44
+Tampines,32.9,34.7,84,34,1,Structural,104,1,0,0,46
+Pasir Ris,33.0,34.8,61,43,3,MEP (Mechanical/Electrical),376,0,3,2,68
+Jurong Industrial,33.5,34.1,61,21,1,Demolition,468,1,4,4,62
+Tuas,33.1,34.2,87,18,1,MEP (Mechanical/Electrical),237,0,1,1,47
+Yishun,33.4,34.8,61,50,2,Demolition,68,1,1,1,60
+Kallang,29.9,31.9,85,43,2,Structural,449,2,0,0,58
+Sengkang,28.1,29.3,88,46,3,Structural,319,3,3,3,69
+Tuas,29.2,29.8,82,14,2,Demolition,231,0,2,0,54
+Kallang,32.2,32.7,76,24,1,MEP (Mechanical/Electrical),343,0,3,0,38
+Choa Chu Kang,28.1,29.8,69,28,1,MEP (Mechanical/Electrical),194,1,2,2,37
+Tampines,30.7,31.5,77,33,2,Demolition,293,0,2,0,48
+Pasir Ris,32.1,34.0,87,37,1,Demolition,424,1,0,1,47
+Jurong East,28.2,28.7,72,10,2,MEP (Mechanical/Electrical),454,1,3,0,35
+Kallang,28.9,30.9,79,31,2,MEP (Mechanical/Electrical),138,1,0,0,36
+Jurong East,34.0,35.7,64,26,2,Structural,292,1,2,0,57
+Tampines,28.3,29.6,85,44,2,MEP (Mechanical/Electrical),360,1,2,1,49
+Hougang,28.5,29.9,63,31,2,Structural,222,2,0,1,52
+Pasir Ris,29.0,30.1,74,43,2,Demolition,449,2,4,4,60
+Bukit Panjang,35.4,35.9,81,28,3,Foundation,171,3,4,4,100
+Jurong Industrial,33.1,33.9,73,40,1,Structural,53,2,1,0,58
+Hougang,33.1,34.9,90,55,1,Finishing,389,1,1,1,49
+Choa Chu Kang,32.4,33.4,66,37,3,Foundation,420,1,4,0,69
+Woodlands,28.4,29.1,89,25,3,Finishing,195,1,1,0,60
+Kallang,30.4,31.8,71,29,1,Finishing,487,1,3,2,36
+Bukit Merah,30.0,31.4,80,36,2,Finishing,45,0,4,3,36
+Bukit Panjang,31.2,32.5,85,17,1,Finishing,442,2,3,0,50
+Pasir Ris,30.4,31.2,62,28,2,Finishing,495,0,1,0,43
+Kallang,30.0,31.1,61,55,1,Demolition,220,2,1,0,69
+Toa Payoh,31.3,31.8,83,23,2,Foundation,375,2,1,0,63
+Choa Chu Kang,28.5,29.1,63,30,3,Demolition,312,1,4,2,63
+Clementi,29.5,31.0,84,10,1,Finishing,73,0,1,0,36
+Clementi,30.0,31.6,67,25,1,Finishing,327,1,2,0,39
+Woodlands,30.9,31.5,61,46,2,Finishing,66,1,3,2,49
+Hougang,28.8,29.7,71,27,1,Finishing,162,1,1,0,43
+Hougang,29.3,31.2,60,37,1,Demolition,166,0,4,2,54
+Pasir Ris,33.1,34.2,81,29,2,Foundation,211,2,2,0,69
+Jurong East,32.3,34.0,90,39,3,Finishing,303,1,3,1,60
+Sengkang,32.9,33.9,82,40,1,Foundation,317,1,2,2,52
+Punggol,32.3,33.0,71,50,3,Finishing,200,0,2,0,64
+Tampines,32.9,34.8,77,16,3,MEP (Mechanical/Electrical),47,0,0,0,56
+Bukit Panjang,34.1,34.8,81,41,2,Demolition,190,2,0,0,80
+Bukit Panjang,35.2,36.2,62,34,2,Structural,378,1,4,2,65
+Toa Payoh,28.6,30.3,79,29,3,Finishing,248,3,4,3,63
+Bukit Panjang,28.4,29.0,90,38,3,Demolition,137,4,3,2,79
+Jurong East,29.0,29.5,69,25,3,Finishing,84,4,0,0,69
+Bedok,28.5,29.5,87,40,1,Finishing,280,0,4,0,44
+Pasir Ris,28.1,28.6,81,48,2,Structural,161,0,4,4,42
+Choa Chu Kang,33.3,34.1,70,32,2,Finishing,293,0,4,0,49
+Tuas,29.4,30.0,80,17,2,MEP (Mechanical/Electrical),94,0,3,2,39
+Bukit Merah,29.4,31.1,73,54,2,Structural,361,2,0,1,54
+Jurong East,34.0,35.9,80,17,1,MEP (Mechanical/Electrical),311,1,3,0,51
+Clementi,29.8,31.4,60,43,3,Structural,462,4,3,1,68
+Bukit Merah,31.5,33.3,77,54,2,Finishing,170,2,2,0,54
+Punggol,31.9,32.6,90,40,3,Finishing,301,3,0,0,69
+Pasir Ris,34.4,35.6,90,12,1,Foundation,332,2,2,2,78
+Kallang,28.0,29.8,70,35,2,Demolition,312,0,0,1,49
+Jurong East,30.4,32.2,84,19,1,Foundation,101,2,1,1,59
+Kallang,31.9,33.6,71,53,2,Finishing,397,1,1,1,49
+Tuas,34.3,35.4,89,27,3,Foundation,40,3,0,1,88
+Toa Payoh,28.2,29.6,85,12,1,Structural,272,0,0,1,36
+Bukit Merah,33.1,34.9,85,43,1,MEP (Mechanical/Electrical),25,2,4,2,65
+Toa Payoh,28.2,29.8,84,55,2,Foundation,493,0,1,1,55
+Jurong Industrial,35.2,35.8,85,37,1,Finishing,52,2,2,0,77
+Toa Payoh,35.5,36.1,85,10,1,MEP (Mechanical/Electrical),417,0,0,1,71
+Jurong East,29.2,30.1,71,36,1,Finishing,93,0,3,2,38
+Hougang,30.8,32.0,60,44,2,Finishing,405,1,3,0,43
+Punggol,30.6,32.2,85,34,1,Foundation,400,0,1,1,54
+Pasir Ris,33.4,34.2,62,10,2,Demolition,344,0,3,2,58
+Sengkang,29.8,31.4,77,13,2,Foundation,324,0,3,1,49
+Bedok,34.7,36.0,67,51,1,Structural,258,2,0,1,78
+Tuas,28.6,29.2,62,20,1,MEP (Mechanical/Electrical),441,2,3,1,50
+Choa Chu Kang,33.6,35.5,71,25,2,Finishing,144,2,3,3,63
+Tampines,33.5,34.4,80,26,3,Structural,440,3,3,2,77
+Kallang,28.7,30.2,73,54,3,Finishing,167,1,0,0,55
+Tampines,32.5,33.1,76,54,2,Structural,449,0,1,0,48
+Kallang,34.9,36.7,89,43,2,MEP (Mechanical/Electrical),369,0,2,2,73
+Jurong East,30.5,32.4,89,23,1,MEP (Mechanical/Electrical),65,0,4,2,42
+Tuas,31.2,32.7,69,28,1,Foundation,252,2,1,1,61
+Bukit Merah,31.0,32.4,76,17,2,Structural,269,2,1,1,54
+Sengkang,30.4,30.9,63,41,1,Foundation,258,0,4,2,53
+Choa Chu Kang,30.2,31.2,85,10,1,Demolition,177,1,0,0,51
+Jurong Industrial,31.4,33.1,83,45,1,Structural,206,0,2,1,41
+Pasir Ris,33.9,35.1,73,43,1,Structural,434,2,3,1,67
+Tuas,33.6,34.6,66,55,2,MEP (Mechanical/Electrical),179,1,4,2,60
+Bukit Merah,28.1,28.7,85,48,2,Finishing,495,1,0,0,40
+Toa Payoh,34.6,36.1,82,16,1,MEP (Mechanical/Electrical),381,2,4,1,69
+Tuas,29.8,31.5,62,27,2,Finishing,499,1,2,2,40
+Hougang,32.9,33.7,70,50,3,Foundation,39,3,0,0,83
+Choa Chu Kang,32.0,33.3,60,35,2,Structural,301,2,3,3,48
+Hougang,31.4,32.8,66,15,2,Structural,270,0,0,1,35
+Tampines,34.8,36.3,66,55,2,Finishing,415,0,2,2,72
+Punggol,32.3,33.1,73,49,2,Foundation,295,2,2,1,67
+Toa Payoh,34.5,36.4,90,37,1,Structural,28,1,3,3,62
+Toa Payoh,30.2,31.3,60,30,2,Finishing,468,2,0,0,45
+Punggol,35.3,36.7,66,19,2,Finishing,467,1,3,2,64
+Clementi,29.0,29.6,75,33,3,MEP (Mechanical/Electrical),453,1,1,0,56
+Woodlands,30.9,32.4,69,48,3,Demolition,108,3,0,0,83
+Kallang,30.0,31.9,70,17,1,Finishing,281,1,1,1,45
+Bukit Panjang,33.3,35.3,66,11,1,MEP (Mechanical/Electrical),417,2,1,1,62
+Clementi,34.7,36.5,72,30,2,MEP (Mechanical/Electrical),233,0,2,0,62
+Yishun,32.0,32.7,83,46,2,Finishing,308,1,2,2,49
+Jurong Industrial,34.0,35.0,75,23,1,Demolition,42,2,4,3,80
+Pasir Ris,29.3,30.3,88,51,3,Demolition,434,3,2,2,79
+Jurong East,31.0,31.6,85,11,3,Demolition,379,4,2,1,79
+Jurong Industrial,34.0,35.5,81,49,2,Demolition,474,1,4,2,67
+Punggol,32.0,33.2,67,32,3,Structural,424,0,4,3,53
+Bukit Merah,32.3,33.8,72,48,2,Structural,193,0,4,2,43
+Choa Chu Kang,30.6,31.4,81,27,1,Finishing,329,0,2,2,45
+Bukit Merah,32.3,34.1,63,14,1,Finishing,128,2,0,0,54
+Clementi,30.0,31.8,61,17,2,Foundation,34,2,3,3,63
+Woodlands,29.9,31.0,69,55,2,Finishing,74,1,2,2,48
+Yishun,29.5,30.2,86,34,2,MEP (Mechanical/Electrical),180,1,2,1,42
+Bukit Panjang,32.7,33.6,90,11,3,Foundation,192,1,4,1,69
+Choa Chu Kang,30.9,32.0,71,43,3,MEP (Mechanical/Electrical),464,4,0,1,66
+Jurong Industrial,30.0,31.2,82,53,3,Finishing,395,3,4,3,68
+Hougang,30.7,31.4,71,35,1,Foundation,171,1,1,0,47
+Jurong Industrial,28.7,30.2,63,50,1,Finishing,209,0,0,1,46
+Sengkang,34.2,36.0,68,33,1,Foundation,335,2,3,1,79
+Tampines,32.3,33.7,74,54,3,MEP (Mechanical/Electrical),473,3,4,0,67
+Tampines,32.8,34.3,72,52,3,MEP (Mechanical/Electrical),499,1,2,1,66
+Clementi,29.7,31.2,62,18,1,Foundation,92,2,1,1,60
+Bukit Merah,32.6,34.4,74,53,1,Structural,111,2,0,1,60
+Hougang,34.1,35.2,78,51,2,Finishing,467,2,4,3,67
+Yishun,30.1,31.8,65,27,1,MEP (Mechanical/Electrical),362,0,0,0,43
+Jurong East,33.6,34.3,65,53,3,MEP (Mechanical/Electrical),272,4,3,1,78
+Toa Payoh,28.2,28.7,61,28,2,Finishing,247,1,4,4,41
+Jurong East,29.8,31.2,90,50,2,Foundation,403,2,4,2,65
+Bukit Panjang,31.6,32.9,83,34,1,Demolition,412,2,1,0,65
+Bukit Panjang,32.2,33.7,72,24,1,Finishing,194,2,4,0,54
+Toa Payoh,30.8,31.4,80,49,1,Structural,309,0,3,0,41
+Sengkang,32.2,32.7,76,24,1,Structural,55,1,3,1,40
+Jurong East,33.1,34.0,76,22,2,MEP (Mechanical/Electrical),490,1,0,1,42
+Clementi,31.5,32.6,88,19,1,MEP (Mechanical/Electrical),346,1,3,1,43
+Bukit Merah,29.2,29.9,76,54,1,Finishing,342,1,1,1,47
+Bukit Merah,34.1,35.2,86,23,1,Foundation,285,2,4,3,80
+Tampines,28.2,30.1,70,29,3,Structural,447,1,4,1,52
+Jurong East,29.7,30.3,78,11,1,Structural,313,0,4,0,39
+Pasir Ris,29.9,31.4,68,52,1,Structural,293,1,4,0,45
+Clementi,33.2,33.8,73,26,2,MEP (Mechanical/Electrical),53,1,1,0,49
+Punggol,29.7,30.8,79,40,3,Demolition,35,1,0,0,65
+Hougang,32.9,33.6,74,21,1,Foundation,373,1,2,1,54
+Pasir Ris,33.9,34.9,79,35,2,MEP (Mechanical/Electrical),257,1,0,0,52
+Tampines,34.4,35.0,84,14,2,MEP (Mechanical/Electrical),71,1,2,1,56
+Choa Chu Kang,33.8,35.1,81,44,3,Foundation,459,2,3,3,89
+Bukit Merah,32.0,33.7,73,54,2,Finishing,310,0,0,1,44
+Tuas,34.8,35.6,87,52,1,Structural,192,2,4,0,75
+Choa Chu Kang,29.2,30.2,90,22,2,Structural,21,1,2,0,44
+Jurong Industrial,31.0,31.6,78,12,2,Demolition,404,2,2,2,62
+Sengkang,33.3,35.2,83,22,2,Structural,358,2,1,1,55
+Punggol,34.0,35.2,83,20,1,Demolition,237,1,3,2,61
+Jurong Industrial,34.7,35.4,61,14,3,Demolition,390,1,3,2,83
+Yishun,31.1,32.3,84,38,1,MEP (Mechanical/Electrical),314,1,3,0,45
+Sengkang,32.5,34.2,75,41,1,Structural,410,0,1,0,45
+Kallang,28.9,29.8,86,27,3,Demolition,35,3,1,1,77
+Sengkang,32.5,34.0,66,29,1,Finishing,186,1,4,2,36
+Tuas,32.8,34.5,67,30,3,Foundation,315,4,1,0,78
+Bukit Merah,29.5,30.4,64,31,3,Foundation,223,3,2,2,73
+Bukit Merah,32.0,33.3,62,15,1,Demolition,272,2,2,2,60
+Jurong Industrial,33.3,34.8,73,47,1,Structural,127,0,4,2,51
+Jurong Industrial,33.1,34.5,65,41,2,Demolition,229,0,3,1,60
+Kallang,28.4,29.2,65,17,2,Foundation,133,0,2,0,53
+Jurong East,29.6,31.1,88,33,1,MEP (Mechanical/Electrical),496,2,3,0,46
+Jurong Industrial,30.5,31.2,73,38,1,Structural,203,2,3,2,50
+Tampines,31.2,33.1,63,38,3,Finishing,132,1,3,3,60
+Clementi,31.1,33.0,87,55,2,Foundation,162,1,2,1,58
+Choa Chu Kang,34.2,35.7,70,44,2,Structural,35,2,2,1,77
+Jurong East,31.3,32.8,88,23,3,Demolition,131,1,4,3,70
+Tuas,33.4,34.7,65,26,3,MEP (Mechanical/Electrical),40,2,3,2,78
+Woodlands,30.7,31.3,78,39,1,Structural,482,2,3,2,48
+Sengkang,30.2,31.5,68,53,2,Demolition,344,0,0,1,56
+Jurong Industrial,33.9,35.5,78,27,1,Structural,227,0,3,0,58
+Tuas,30.1,31.3,88,13,3,Finishing,356,4,4,2,62
+Pasir Ris,30.6,32.5,62,31,2,Foundation,333,1,4,4,45
+Sengkang,33.8,35.0,85,33,3,Finishing,139,3,1,1,79
+Choa Chu Kang,29.7,31.3,69,29,2,Finishing,236,1,4,3,39
+Kallang,31.2,31.7,70,55,3,Foundation,176,1,4,2,72
+Bukit Merah,33.0,34.1,81,33,3,Structural,225,4,2,1,71
+Punggol,29.1,29.9,74,29,3,MEP (Mechanical/Electrical),325,3,1,0,68
+Bukit Merah,33.2,34.6,65,20,1,Structural,21,2,2,1,52
+Sengkang,28.1,29.2,63,54,2,Foundation,115,0,4,3,59
+Woodlands,35.1,35.8,64,44,1,Demolition,126,1,1,1,83
+Toa Payoh,34.8,36.6,80,44,2,Structural,304,1,4,3,73
+Bukit Panjang,32.5,34.4,87,32,2,Foundation,47,0,4,0,51
+Bukit Merah,35.1,35.8,60,12,1,MEP (Mechanical/Electrical),130,0,0,0,63
+Jurong Industrial,35.3,35.8,74,40,1,Structural,54,0,3,3,65
+Bukit Merah,32.4,33.7,74,41,3,Finishing,402,3,3,1,73
+Sengkang,34.3,35.5,65,19,2,Demolition,375,2,2,1,77
+Choa Chu Kang,30.9,32.3,67,15,3,MEP (Mechanical/Electrical),171,4,0,0,70
+Bukit Panjang,29.8,31.3,84,32,2,Foundation,316,2,4,1,63
+Clementi,32.0,33.8,78,15,2,Demolition,313,2,4,4,63
+Toa Payoh,31.1,31.7,90,46,1,Foundation,282,0,0,0,56
+Bukit Merah,32.0,32.9,75,55,2,Finishing,369,2,2,1,58
+Kallang,31.7,33.6,88,15,1,MEP (Mechanical/Electrical),249,1,3,0,41
+Tampines,29.2,30.8,73,19,1,Demolition,294,1,2,2,52
+Tampines,33.1,35.0,60,18,1,Finishing,155,1,3,2,46
+Woodlands,28.2,30.1,64,29,1,Finishing,79,1,2,1,43
+Punggol,29.4,30.8,81,26,1,Structural,461,2,0,0,50
+Kallang,31.2,32.6,75,31,3,Structural,234,4,0,1,64
+Tampines,30.6,32.5,63,17,1,MEP (Mechanical/Electrical),205,2,3,1,48
+Pasir Ris,28.4,30.0,72,36,2,Foundation,190,1,4,2,45
+Choa Chu Kang,28.4,29.9,90,26,3,Structural,442,4,2,0,65
+Yishun,28.6,29.2,72,44,1,MEP (Mechanical/Electrical),58,0,4,4,45
+Yishun,34.0,35.1,66,27,1,Demolition,81,0,1,1,60
+Pasir Ris,31.1,31.8,86,26,1,Demolition,142,0,0,1,49
+Jurong Industrial,34.1,35.9,81,32,2,Structural,267,0,0,1,60
+Tuas,31.2,32.3,83,15,3,Structural,460,1,4,4,56
+Tuas,32.6,33.7,60,17,2,Finishing,485,0,4,0,44
+Kallang,34.7,35.6,78,25,2,Demolition,90,0,0,0,74
+Kallang,33.8,35.0,65,27,1,Finishing,481,1,1,1,54
+Yishun,32.2,33.5,89,36,2,Foundation,144,1,1,1,49
+Bukit Panjang,34.0,35.7,87,15,1,Finishing,147,2,4,3,64
+Bukit Merah,34.2,36.1,66,19,1,Finishing,195,0,2,1,57
+Jurong East,33.5,34.4,77,51,3,Finishing,440,0,3,2,69
+Clementi,34.3,35.0,66,48,3,Demolition,365,3,4,0,96
+Tuas,30.5,32.5,67,11,2,Foundation,70,0,3,0,46
+Bukit Merah,35.2,36.9,64,54,3,MEP (Mechanical/Electrical),216,2,0,1,97
+Bukit Merah,30.7,32.2,90,13,2,Structural,143,0,3,2,42
+Clementi,29.5,30.7,61,31,3,Foundation,277,4,3,1,72
+Yishun,34.0,35.5,77,46,3,MEP (Mechanical/Electrical),249,0,3,1,72
+Yishun,33.1,34.1,63,21,1,Demolition,481,1,3,2,59
+Choa Chu Kang,31.0,32.8,65,55,3,Structural,308,2,1,0,66
+Pasir Ris,30.0,31.3,86,21,3,Finishing,295,3,2,1,65
+Clementi,28.9,30.7,68,40,1,Structural,362,0,1,0,44
+Woodlands,32.5,34.0,61,12,3,Foundation,292,0,2,0,63
+Tuas,32.7,33.7,83,16,3,Structural,420,3,1,0,69
+Bukit Panjang,32.7,33.4,73,40,2,Structural,121,2,1,1,54
+Bukit Merah,29.3,30.7,70,55,1,Foundation,271,1,2,2,57
+Bedok,28.9,30.2,66,26,2,Demolition,58,0,4,3,46
+Sengkang,33.2,33.9,62,46,2,MEP (Mechanical/Electrical),413,0,0,1,48
+Kallang,34.4,35.6,82,44,3,Demolition,445,4,4,0,100
+Sengkang,32.4,33.4,71,35,2,Structural,212,0,2,0,44
+Tampines,32.1,33.1,78,12,3,Demolition,94,4,4,2,74
+Pasir Ris,32.5,33.9,85,10,3,Demolition,207,3,1,1,80
+Yishun,34.7,35.3,77,23,2,Finishing,397,0,4,0,63
+Kallang,29.6,30.2,77,53,3,MEP (Mechanical/Electrical),484,3,1,1,68
+Sengkang,34.0,35.8,84,45,1,Structural,390,1,4,0,56
+Yishun,31.6,33.6,89,13,2,Finishing,379,2,2,0,52
+Bedok,28.3,29.4,62,12,1,MEP (Mechanical/Electrical),93,0,2,1,41
+Yishun,28.3,29.6,77,38,3,Structural,357,0,2,0,59
+Pasir Ris,32.0,32.7,80,32,3,Structural,100,4,3,1,66
+Hougang,31.5,33.4,62,31,2,MEP (Mechanical/Electrical),461,0,1,0,40
+Jurong Industrial,30.0,31.6,70,48,2,MEP (Mechanical/Electrical),395,1,4,4,48
+Punggol,29.7,31.7,78,40,3,Structural,344,4,0,0,62
+Pasir Ris,28.5,29.3,62,27,3,Finishing,417,2,3,1,65
+Bukit Merah,30.2,31.2,66,15,1,Finishing,389,2,4,1,47
+Choa Chu Kang,29.1,30.2,84,11,3,Demolition,457,0,1,0,64
+Jurong East,30.3,31.9,65,43,3,Demolition,331,2,4,2,81
+Bukit Merah,33.3,34.5,81,37,3,Finishing,292,4,2,1,75
+Bedok,34.4,35.3,72,27,2,MEP (Mechanical/Electrical),369,1,2,2,58
+Jurong East,28.8,29.7,86,46,2,Demolition,137,2,2,2,70
+Jurong East,35.5,37.3,88,12,1,Foundation,45,1,1,0,77
+Yishun,30.1,32.0,70,55,1,Foundation,88,0,1,0,55
+Bukit Merah,33.6,35.2,72,10,2,MEP (Mechanical/Electrical),61,0,3,1,52
+Yishun,33.3,34.2,63,41,3,Demolition,187,4,2,0,83
+Toa Payoh,34.9,36.1,70,31,2,Finishing,197,1,4,0,60
+Kallang,32.0,32.7,89,47,3,Demolition,262,2,4,1,78
+Tuas,33.1,34.9,77,19,3,Finishing,95,4,2,2,74
+Toa Payoh,31.7,33.1,76,19,2,Structural,281,2,3,0,49
+Kallang,34.9,36.1,80,44,2,Foundation,451,0,3,0,84
+Punggol,33.1,33.7,72,34,1,Foundation,125,0,0,0,58
+Choa Chu Kang,33.2,34.5,62,31,1,Structural,203,1,1,0,44
+Hougang,30.4,32.1,89,34,1,Demolition,81,0,1,1,51
+Kallang,32.1,33.1,84,34,3,MEP (Mechanical/Electrical),85,4,2,2,70
+Bukit Panjang,35.1,36.6,87,33,1,Demolition,390,1,3,1,71
+Bukit Merah,35.2,36.6,85,17,3,Demolition,434,1,3,2,96
+Woodlands,31.5,32.1,76,34,3,MEP (Mechanical/Electrical),300,3,3,1,61
+Tampines,33.0,34.6,78,14,2,Demolition,363,0,3,0,58
+Bedok,29.1,29.9,73,22,3,Foundation,54,3,4,3,73
+Toa Payoh,28.9,30.5,86,27,1,Finishing,303,1,1,0,43
+Yishun,32.3,32.9,84,26,2,Structural,26,2,2,2,47
+Choa Chu Kang,28.5,29.4,87,52,2,MEP (Mechanical/Electrical),338,2,4,3,51
+Sengkang,30.2,31.3,69,44,1,MEP (Mechanical/Electrical),181,1,3,2,49
+Bukit Merah,33.4,35.0,72,19,1,Structural,337,2,4,1,62
+Jurong East,30.2,31.7,81,17,2,Structural,224,2,0,1,45
+Bedok,29.1,29.9,64,23,2,Finishing,320,1,0,1,40
+Tuas,35.2,36.4,64,29,3,MEP (Mechanical/Electrical),442,1,2,0,81
+Tampines,32.1,34.0,79,25,1,Demolition,388,1,1,0,46
+Clementi,34.7,36.4,74,19,3,MEP (Mechanical/Electrical),409,1,2,1,80
+Woodlands,30.1,30.7,68,20,1,MEP (Mechanical/Electrical),327,1,0,1,45
+Bukit Merah,33.7,34.2,89,23,3,Foundation,485,2,4,1,86
+Tampines,32.6,34.0,89,41,1,Demolition,158,2,1,0,64
+Tampines,32.3,33.6,82,48,3,Structural,397,0,4,0,64
+Jurong Industrial,34.6,35.8,80,18,3,Demolition,313,3,0,0,94
+Kallang,34.4,35.3,76,11,1,MEP (Mechanical/Electrical),126,0,1,0,59
+Clementi,30.3,31.9,72,40,1,Finishing,34,2,0,0,53
+Bukit Merah,31.9,33.1,74,50,1,Structural,371,2,4,2,55
+Clementi,34.1,35.4,78,48,3,Finishing,132,3,3,2,85
+Sengkang,34.7,36.1,66,41,3,MEP (Mechanical/Electrical),139,3,4,0,87
+Clementi,31.5,32.6,81,43,3,Foundation,307,3,0,0,83
+Kallang,35.0,35.8,65,52,3,Demolition,95,2,2,2,100
+Woodlands,33.8,34.7,70,29,1,Structural,277,1,4,4,51
+Bukit Merah,34.7,35.4,76,43,3,Finishing,104,0,4,3,80
+Bedok,32.4,34.2,76,39,3,Foundation,139,3,0,1,75
+Bedok,31.8,33.8,84,34,2,Finishing,412,0,0,1,37
+Punggol,28.1,29.9,68,14,1,Finishing,203,2,0,1,53
+Choa Chu Kang,31.4,32.6,78,33,3,Finishing,321,3,1,1,66
+Bukit Merah,31.1,32.8,80,14,2,Demolition,318,0,2,2,54
+Toa Payoh,30.8,32.7,65,51,1,Finishing,212,1,0,1,45
+Hougang,35.4,36.8,84,42,1,Structural,344,1,0,0,77
+Punggol,35.3,37.0,63,53,1,MEP (Mechanical/Electrical),22,1,4,4,74
+Sengkang,33.8,35.5,74,17,2,Structural,238,1,1,0,53
+Tuas,29.6,30.7,63,26,2,Demolition,229,0,0,1,54
+Kallang,31.3,32.9,80,31,2,Finishing,29,1,1,0,44
+Yishun,30.9,32.0,76,11,1,Structural,443,0,2,2,35
+Toa Payoh,32.4,33.9,87,36,3,Foundation,338,3,1,1,73
+Woodlands,33.1,33.8,79,10,2,Structural,413,1,2,0,44
+Yishun,30.5,31.4,70,22,1,Finishing,96,2,1,1,49
+Bukit Merah,35.2,36.9,80,10,2,Structural,450,2,1,1,76
+Yishun,28.8,30.3,75,22,2,Demolition,368,1,3,2,48
+Tampines,31.0,32.5,77,14,2,Structural,469,0,1,1,43
+Bukit Merah,28.6,29.2,86,43,2,Finishing,308,2,1,0,50
+Choa Chu Kang,34.7,36.2,73,23,3,Foundation,269,1,2,1,84
+Bedok,30.6,31.4,78,38,1,Finishing,89,2,4,3,54
+Clementi,35.2,36.2,78,21,2,Structural,406,2,2,1,80
+Sengkang,34.2,35.9,62,55,2,Structural,230,1,3,0,60
+Clementi,33.1,34.7,75,10,2,Foundation,471,1,3,2,51
+Bukit Merah,33.0,33.8,79,10,3,Foundation,336,4,3,2,79
+Bukit Merah,28.7,29.6,65,14,2,Demolition,271,2,4,0,62
+Jurong Industrial,34.6,35.5,61,47,3,Demolition,235,4,4,1,100
+Punggol,31.7,33.0,86,29,3,Demolition,221,4,0,0,73
+Hougang,33.5,34.4,78,26,2,Foundation,244,0,3,3,62
+Jurong Industrial,30.2,31.7,71,31,2,Finishing,350,1,3,3,41
+Bukit Merah,29.8,31.5,65,37,3,Demolition,284,4,2,2,79
+Pasir Ris,29.6,31.0,87,44,3,Demolition,309,1,1,1,69
+Toa Payoh,34.4,35.0,86,28,1,Demolition,132,2,3,0,77
+Hougang,34.4,34.9,63,25,1,MEP (Mechanical/Electrical),471,0,0,0,64
+Woodlands,35.0,35.9,73,15,3,MEP (Mechanical/Electrical),236,4,3,1,93
+Jurong Industrial,30.6,31.6,85,23,3,Finishing,248,0,1,0,57
+Kallang,32.2,32.8,82,38,2,Demolition,377,1,1,0,46
+Kallang,34.9,36.0,72,45,1,Finishing,297,1,4,3,67
+Yishun,31.7,33.0,79,38,2,MEP (Mechanical/Electrical),387,2,4,3,53
+Jurong East,29.2,30.3,60,52,2,Finishing,96,0,1,1,46
+Hougang,33.3,34.4,68,11,2,Demolition,263,2,1,0,73
+Bukit Merah,32.7,33.2,74,27,3,Foundation,255,2,3,3,79
+Hougang,32.2,33.9,87,28,3,Finishing,446,2,4,0,64
+Bedok,30.6,31.8,88,28,3,Finishing,150,0,2,2,59
+Bukit Merah,29.3,30.5,78,27,3,Finishing,148,2,2,1,64
+Tuas,29.9,31.0,63,54,2,Finishing,290,1,0,0,40
+Jurong East,30.7,31.8,66,38,3,Structural,330,1,1,0,56
+Kallang,29.0,29.5,71,51,3,Structural,420,4,2,2,71
+Bukit Panjang,30.9,32.2,86,43,1,Demolition,221,2,1,1,63
+Bukit Panjang,33.6,34.8,74,36,1,Structural,250,2,1,0,57
+Yishun,33.5,34.6,62,41,2,MEP (Mechanical/Electrical),336,0,0,1,51
+Kallang,33.8,34.5,85,18,2,Finishing,359,2,1,1,58
+Woodlands,30.7,31.8,76,37,2,Demolition,176,2,0,1,64
+Punggol,35.3,36.4,76,23,3,Structural,188,4,2,2,92
+Bukit Panjang,33.9,34.8,86,28,3,MEP (Mechanical/Electrical),311,1,3,1,74
+Bukit Panjang,30.9,32.8,84,10,1,MEP (Mechanical/Electrical),63,0,0,0,40
+Tampines,31.5,32.9,76,25,3,Demolition,56,0,0,1,63
+Toa Payoh,33.0,34.2,64,34,3,Finishing,384,4,0,0,68
+Tuas,29.8,30.9,75,24,1,Demolition,302,2,1,0,57
+Hougang,33.7,34.9,61,19,2,MEP (Mechanical/Electrical),303,2,0,1,58
+Yishun,32.9,33.6,60,11,2,Finishing,216,2,0,1,59
+Choa Chu Kang,30.2,31.8,66,33,3,Structural,82,0,3,1,53
+Tampines,35.1,35.9,83,35,2,Finishing,89,1,2,1,70
+Kallang,31.0,32.7,85,50,1,Finishing,112,1,0,1,43
+Sengkang,29.3,30.1,81,22,1,Foundation,354,0,0,1,49
+Toa Payoh,32.8,33.8,78,38,2,MEP (Mechanical/Electrical),471,0,3,3,41
+Tuas,31.1,32.7,79,34,1,Finishing,46,0,0,1,38
+Yishun,35.2,36.7,87,18,1,Foundation,60,1,4,3,78
+Bukit Merah,29.0,30.6,74,12,1,Structural,477,0,3,1,36
+Toa Payoh,35.0,36.0,87,49,3,Demolition,230,3,0,0,100
+Jurong Industrial,34.8,36.3,60,47,1,Foundation,304,0,1,1,78
+Tuas,30.7,31.7,86,20,3,Foundation,317,4,3,0,79
+Woodlands,31.4,32.6,79,13,3,Structural,36,4,3,2,70
+Jurong Industrial,34.9,36.2,78,27,1,Finishing,388,2,3,1,73
+Bukit Merah,29.6,30.2,63,55,1,MEP (Mechanical/Electrical),256,2,3,3,52
+Pasir Ris,29.8,31.3,73,37,1,Finishing,477,2,1,1,46
+Clementi,34.3,36.0,73,30,3,MEP (Mechanical/Electrical),412,2,1,1,83
+Kallang,28.3,29.0,62,36,3,Finishing,330,0,1,1,55
+Yishun,33.8,34.6,62,15,2,Demolition,298,1,2,1,65
+Pasir Ris,34.3,35.8,65,40,2,Foundation,271,0,1,0,67
+Yishun,30.1,31.4,88,30,2,Foundation,305,1,4,4,50
+Bukit Merah,30.7,31.8,75,19,3,Structural,499,2,0,1,63
+Sengkang,31.6,32.2,73,21,1,Finishing,385,2,3,0,50
+Toa Payoh,34.9,36.7,70,17,3,Foundation,413,1,0,1,84
+Punggol,30.4,31.5,64,46,2,MEP (Mechanical/Electrical),239,1,2,0,47
+Sengkang,29.0,29.8,77,15,2,Finishing,45,1,4,2,40
+Punggol,35.4,36.1,72,32,1,MEP (Mechanical/Electrical),390,2,1,1,78
+Clementi,28.8,30.6,85,43,2,Finishing,270,0,2,1,46
+Jurong East,34.7,36.2,88,24,3,Structural,368,1,1,0,77
+Sengkang,32.4,34.3,71,46,3,MEP (Mechanical/Electrical),417,4,4,4,67
+Toa Payoh,29.1,30.9,79,52,2,Structural,299,1,2,1,43
+Choa Chu Kang,33.1,33.7,67,15,1,Foundation,343,1,0,1,60
+Kallang,33.1,34.3,71,34,3,MEP (Mechanical/Electrical),56,1,3,0,59
+Jurong Industrial,28.5,29.4,66,25,2,Finishing,143,0,0,0,38
+Jurong East,33.9,35.4,88,10,3,Foundation,269,2,0,0,91
+Tuas,34.1,35.9,69,30,3,Structural,57,4,3,3,86
+Clementi,34.4,36.1,79,27,2,MEP (Mechanical/Electrical),60,1,2,2,60
+Jurong East,32.5,34.4,78,34,2,Foundation,421,2,3,1,56
+Jurong East,33.2,34.4,85,47,2,Foundation,255,2,4,2,70
+Bedok,29.5,30.9,83,10,2,MEP (Mechanical/Electrical),420,2,0,1,51
+Jurong East,30.8,32.3,88,53,2,Foundation,199,0,3,1,57
+Bukit Panjang,29.1,30.7,75,45,1,Finishing,225,0,3,2,43
+Sengkang,31.8,32.9,69,33,3,MEP (Mechanical/Electrical),444,1,0,0,53
+Toa Payoh,34.6,35.3,73,31,3,Demolition,475,4,0,0,94
+Yishun,28.9,30.5,85,51,2,Structural,314,0,0,1,45
+Bukit Merah,34.8,36.6,85,31,2,Finishing,253,1,4,0,62
+Woodlands,29.7,30.7,65,17,3,MEP (Mechanical/Electrical),60,0,1,1,50
+Kallang,30.1,30.7,65,27,2,Structural,388,0,0,1,43
+Clementi,35.4,36.7,74,13,3,Finishing,204,1,0,0,86
+Kallang,28.4,29.6,88,19,3,Finishing,49,0,0,1,51
+Jurong East,29.5,30.7,82,50,1,MEP (Mechanical/Electrical),401,1,2,1,45
+Pasir Ris,30.7,32.4,60,14,2,Foundation,70,1,3,0,53
+Yishun,34.2,35.4,78,54,2,Demolition,420,0,0,0,77
+Bukit Merah,34.1,35.4,71,42,1,Demolition,372,2,1,0,80
+Bukit Panjang,33.2,35.2,61,17,3,Structural,84,3,1,0,73
+Tuas,33.0,34.4,84,31,2,Structural,223,1,4,4,49
+Sengkang,33.5,34.3,89,31,1,Finishing,180,1,2,1,47
+Woodlands,29.8,30.4,80,17,1,Finishing,454,1,0,0,42
+Choa Chu Kang,35.3,36.0,78,48,3,Demolition,46,3,0,0,100
+Punggol,32.7,33.7,73,10,3,Structural,65,1,3,3,59
+Choa Chu Kang,32.7,33.6,85,33,1,MEP (Mechanical/Electrical),454,2,3,3,49
+Woodlands,30.9,32.3,63,22,1,Demolition,153,2,3,1,55
+Sengkang,32.6,34.2,66,19,3,Foundation,420,1,1,1,69
+Jurong Industrial,30.3,31.1,81,31,2,Foundation,125,1,0,1,51
+Jurong Industrial,33.5,34.9,64,49,1,Demolition,453,0,1,0,61
+Pasir Ris,31.9,33.2,90,25,2,Demolition,239,1,3,1,52
+Clementi,28.5,29.3,84,41,3,Structural,126,3,0,1,66
+Clementi,30.9,32.1,65,46,1,MEP (Mechanical/Electrical),478,2,1,1,54
+Woodlands,35.2,36.0,75,53,2,Finishing,153,2,2,1,79
+Bukit Panjang,35.1,36.0,76,39,3,MEP (Mechanical/Electrical),146,4,3,0,86
+Choa Chu Kang,34.2,35.3,66,55,2,Finishing,126,2,0,1,70
+Sengkang,32.9,33.7,85,37,1,Foundation,416,2,2,1,66
+Choa Chu Kang,32.1,33.6,66,55,1,Demolition,90,0,3,1,54
+Pasir Ris,35.2,36.0,71,23,3,MEP (Mechanical/Electrical),227,0,0,0,85
+Yishun,34.1,35.9,64,36,2,Foundation,443,2,4,3,73
+Pasir Ris,32.0,33.6,68,43,2,MEP (Mechanical/Electrical),392,0,2,0,46
+Pasir Ris,29.2,30.6,65,25,3,Demolition,305,2,0,1,75
+Kallang,29.3,30.6,75,29,1,MEP (Mechanical/Electrical),333,1,1,1,40
+Woodlands,34.8,36.2,63,46,2,Demolition,376,1,4,4,76
+Sengkang,32.7,33.3,82,29,3,MEP (Mechanical/Electrical),160,3,4,1,65
+Clementi,28.1,29.9,67,35,1,Foundation,278,2,3,0,62
+Toa Payoh,32.6,33.3,76,22,3,Demolition,91,4,4,4,72
+Kallang,29.1,30.9,87,10,2,Demolition,265,1,4,1,46
+Choa Chu Kang,33.1,34.0,71,29,1,Structural,453,2,4,1,60
+Hougang,32.1,33.0,64,33,3,Finishing,184,1,1,1,56
+Jurong East,32.8,34.1,64,31,1,Demolition,28,0,4,1,53
+Tuas,29.8,30.9,72,36,2,Foundation,34,2,4,1,63
+Sengkang,29.8,31.1,88,36,2,Finishing,443,1,0,0,45
+Tampines,35.3,36.6,67,54,1,Structural,425,2,0,1,79
+Clementi,32.2,33.4,65,17,1,Finishing,292,0,0,1,45
+Tuas,34.1,35.1,88,37,3,MEP (Mechanical/Electrical),269,1,4,3,70
+Jurong Industrial,28.1,28.9,73,45,3,MEP (Mechanical/Electrical),467,4,4,4,74
+Clementi,28.7,29.4,65,14,2,MEP (Mechanical/Electrical),74,0,0,0,35
+Hougang,29.7,31.2,71,53,2,Finishing,403,2,0,1,57
+Punggol,30.3,31.2,69,30,3,Structural,273,1,0,0,52
+Hougang,33.1,33.9,62,12,3,MEP (Mechanical/Electrical),180,0,4,1,60
+Jurong East,30.0,31.7,81,51,3,Foundation,465,1,4,2,65
+Bukit Panjang,28.8,30.4,87,11,3,Structural,414,1,3,2,51
+Woodlands,35.3,36.2,84,50,3,Foundation,35,0,1,1,100
+Hougang,28.2,29.1,71,55,2,Foundation,338,2,3,2,69
+Sengkang,30.7,31.7,78,42,2,Structural,489,1,1,1,49
+Yishun,28.3,30.2,74,22,1,Structural,151,2,0,1,45
+Bedok,29.5,30.8,73,16,1,MEP (Mechanical/Electrical),361,2,0,0,49
+Choa Chu Kang,33.2,34.7,78,20,2,Structural,356,2,0,1,54
+Clementi,34.2,36.0,69,11,1,MEP (Mechanical/Electrical),456,1,0,0,58
+Woodlands,32.0,33.8,77,30,3,Finishing,432,1,2,0,50
+Tampines,34.5,35.9,85,11,2,Demolition,349,0,3,3,69
+Yishun,32.1,33.2,73,55,3,MEP (Mechanical/Electrical),219,4,0,1,65
+Hougang,28.3,29.5,90,24,2,Finishing,319,1,4,0,37
+Pasir Ris,33.6,34.2,82,39,3,Structural,55,3,0,1,81
+Pasir Ris,32.2,33.8,60,27,3,Foundation,414,3,2,2,77
+Choa Chu Kang,33.1,33.9,83,23,3,Foundation,253,0,2,2,73
+Woodlands,32.0,33.6,81,43,2,MEP (Mechanical/Electrical),192,1,3,0,49
+Bedok,28.6,30.3,86,33,2,MEP (Mechanical/Electrical),315,2,0,1,45
+Tuas,29.3,31.0,65,48,2,Structural,167,0,3,2,43
+Bedok,33.1,34.8,65,12,3,Structural,351,4,2,0,71
+Pasir Ris,35.2,36.5,60,28,2,Demolition,354,0,0,1,76
+Jurong East,28.0,29.4,63,15,2,MEP (Mechanical/Electrical),299,1,4,3,40
+Hougang,30.8,31.3,63,35,2,Finishing,328,0,1,0,36
+Tuas,33.6,34.6,69,29,3,Foundation,219,3,4,4,90
+Toa Payoh,33.6,34.7,62,35,2,Demolition,220,0,4,3,59
+Kallang,34.2,36.0,72,28,3,Demolition,476,4,0,0,93
+Choa Chu Kang,33.5,34.1,84,49,2,MEP (Mechanical/Electrical),314,1,3,2,58
+Sengkang,34.3,35.4,65,52,2,Structural,68,1,1,0,61
+Clementi,29.1,29.9,78,42,3,Foundation,427,1,0,0,66
+Woodlands,31.8,33.1,63,19,3,Finishing,431,0,1,0,51
+Hougang,28.5,29.2,74,27,1,Demolition,37,2,4,2,55
+Bukit Panjang,30.8,32.0,60,24,3,Structural,119,0,4,2,53
+Bukit Merah,28.0,29.5,68,10,2,Structural,175,2,0,0,46
+Tampines,29.7,31.3,81,31,3,Structural,235,4,0,0,61
+Hougang,33.7,35.5,84,29,1,Structural,393,1,0,0,53
+Hougang,29.5,31.2,61,46,3,Demolition,264,3,2,2,80
+Woodlands,32.6,34.3,82,39,3,Structural,111,1,4,4,52
+Jurong East,34.8,36.6,85,54,3,Foundation,469,2,2,0,100
+Choa Chu Kang,32.8,33.9,81,40,1,MEP (Mechanical/Electrical),235,1,1,0,43
+Bukit Merah,31.7,32.3,68,20,3,Foundation,163,4,4,3,73
+Bukit Merah,30.4,31.9,87,35,3,MEP (Mechanical/Electrical),275,4,1,1,65
+Kallang,29.8,30.6,62,46,1,Structural,417,0,3,1,50
+Clementi,35.1,36.6,68,20,2,Demolition,405,2,3,1,87
+Sengkang,35.4,36.2,67,41,2,Demolition,410,0,3,3,80
+Clementi,33.7,35.2,78,14,2,Demolition,414,2,4,2,69
+Yishun,33.4,35.3,66,49,3,Finishing,377,4,0,1,82
+Woodlands,35.0,36.4,61,38,3,Structural,88,2,2,2,91
+Punggol,32.7,34.5,76,22,3,Foundation,442,2,2,1,75

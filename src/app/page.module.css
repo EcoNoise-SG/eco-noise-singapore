@@ -408,7 +408,7 @@
   position: relative;
 }
 
-.mapContainer > div {
+.mapContainer>div {
   height: 100%;
 }
 

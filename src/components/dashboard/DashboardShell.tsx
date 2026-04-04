@@ -726,7 +726,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </header>
 
         {/* Global Key Metrics Ribbon */}
-        {pathname !== '/dashboard/profile' && pathname !== '/dashboard/data-sources' && pathname !== '/dashboard/heat-stress' && (
+        {pathname !== '/dashboard/profile' && pathname !== '/dashboard/data-sources' && pathname !== '/dashboard/heat-stress' && pathname !== '/dashboard/alerts' && (
           <div className={styles.ribbon}>
             <div className={styles.ribbonCard}>
               <p>{pathname === '/dashboard/alerts' ? 'Critical Alerts' : t('activeResolution')}</p>

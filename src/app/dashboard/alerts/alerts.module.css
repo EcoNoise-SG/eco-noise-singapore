@@ -87,3 +87,189 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
+
+/* Tabs System */
+.tabsBar {
+  display: flex;
+  gap: 2px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 0 -32px 0 -32px;
+  /* Pull to edges of content area */
+  padding: 0 28px;
+  position: sticky;
+  top: 65px;
+  /* Sticky to bottom of header */
+  z-index: 30;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tabItem {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.tabItem:hover {
+  color: none;
+  background: none;
+}
+
+.tabActive {
+  color: #5925dc;
+  border-bottom-color: #5925dc;
+  background: white;
+}
+
+/* Intelligence Styles */
+.intelligenceContainer {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.intelligenceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.intelligenceCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.intelligenceCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);
+  border-color: #5925dc44;
+}
+
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  background: #f5f3ff;
+  color: #5925dc;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.intelligenceCard h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+}
+
+.intelligenceCard p {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+}
+
+.statSmall {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.75rem;
+}
+
+.statSmall span {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.statSmall strong {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.mapPlaceholder {
+  background: #f8fafc;
+  border: 2px dashed #e2e8f0;
+  border-radius: 16px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.mapPlaceholderContent {
+  color: #94a3b8;
+}
+
+.mapPlaceholderContent svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.mapPlaceholderContent h4 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: #475569;
+}
+
+.mapPlaceholderContent p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.tabRibbon {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 0;
+}
+
+.ribbonCard {
+  padding: 20px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.ribbonCard p {
+  font-size: 17px;
+  font-weight: 400;
+  color: #212121;
+  letter-spacing: -0.05em;
+  margin-bottom: 8px;
+}
+
+.ribbonSubtext {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

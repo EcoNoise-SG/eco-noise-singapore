@@ -50,6 +50,7 @@ export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"warnings" | "intelligence">("warnings");
 
   useEffect(() => {
     void loadAlerts();
@@ -149,91 +150,182 @@ export default function AlertsPage() {
 
   return (
     <div className={styles.stack}>
-      <MockMap title="Live Dengue Clusters & Disease Outbreak Hotspots Map (Module C7)" mapContext="disease" />
+      {/* Page Tabs */}
+      <div className={alertStyles.tabsBar}>
+        <button 
+          className={`${alertStyles.tabItem} ${activeTab === "warnings" ? alertStyles.tabActive : ""}`}
+          onClick={() => setActiveTab("warnings")}
+        >
+          Outbreak Warnings
+        </button>
+        <button 
+          className={`${alertStyles.tabItem} ${activeTab === "intelligence" ? alertStyles.tabActive : ""}`}
+          onClick={() => setActiveTab("intelligence")}
+        >
+          Prediction Intelligence
+        </button>
+      </div>
 
-      <DashboardSection
-        eyebrow="Live alert feed"
-        title="All system and field alerts — ranked by severity"
-      >
-        <div className={alertStyles.filterRow}>
-          {["all", "open", "acknowledged", "resolved"].map((f) => (
-            <button
-              key={f}
-              className={`${alertStyles.filterBtn} ${filter === f ? alertStyles.filterActive : ""}`}
-              onClick={() => setFilter(f)}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
-        </div>
+      {activeTab === "warnings" ? (
+        <>
+          <div className={alertStyles.tabRibbon}>
+            <div className={alertStyles.ribbonCard}>
+              <p>Critical Alerts</p>
+              <strong style={{ color: "#dc2626", fontSize: "24px" }}>{counts.critical}</strong>
+              <span className={alertStyles.ribbonSubtext}>Requiring immediate response</span>
+            </div>
+            <div className={alertStyles.ribbonCard}>
+              <p>High Priority</p>
+              <strong style={{ color: "#f59e0b", fontSize: "24px" }}>{counts.high}</strong>
+              <span className={alertStyles.ribbonSubtext}>Actionable within 2 hours</span>
+            </div>
+            <div className={alertStyles.ribbonCard}>
+              <p>Open Alerts</p>
+              <strong style={{ fontSize: "24px" }}>{counts.open}</strong>
+              <span className={alertStyles.ribbonSubtext}>Pending officer response</span>
+            </div>
+          </div>
 
-        {loading ? (
-          <p style={{ textAlign: "center", padding: "20px" }}>Loading alerts...</p>
-        ) : alerts.length === 0 ? (
-          <p style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>No alerts found</p>
-        ) : (
-          <div className={styles.timeline}>
-            {filtered.map((alert) => (
-              <div className={styles.timelineItem} key={alert.alert_id}>
-                <div className={styles.timelineHeader}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <strong>{alert.title}</strong>
-                    <span className={severityStyle[alert.severity]}>
-                      {alert.risk_level.toUpperCase()}
-                    </span>
+          <MockMap title="Live Dengue Clusters & Disease Outbreak Hotspots Map (Module C7)" mapContext="disease" />
+
+          <DashboardSection
+            eyebrow="Live alert feed"
+            title="All system and field alerts — ranked by severity"
+          >
+            <div className={alertStyles.filterRow}>
+              {["all", "open", "acknowledged", "resolved"].map((f) => (
+                <button
+                  key={f}
+                  className={`${alertStyles.filterBtn} ${filter === f ? alertStyles.filterActive : ""}`}
+                  onClick={() => setFilter(f)}
+                >
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {loading ? (
+              <p style={{ textAlign: "center", padding: "20px" }}>Loading alerts...</p>
+            ) : alerts.length === 0 ? (
+              <p style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>No alerts found</p>
+            ) : (
+              <div className={styles.timeline}>
+                {filtered.map((alert) => (
+                  <div className={styles.timelineItem} key={alert.alert_id}>
+                    <div className={styles.timelineHeader}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <strong>{alert.title}</strong>
+                        <span className={severityStyle[alert.severity]}>
+                          {alert.risk_level.toUpperCase()}
+                        </span>
+                      </div>
+                      <span className={statusStyle[alert.status]}>
+                        {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
+                      </span>
+                    </div>
+                    <span className={styles.timeLabel}>{alert.time} · {alert.area} · {alert.category}</span>
+                    <p className={styles.actionDetail}>{alert.description}</p>
+                    <p style={{ marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
+                      Risk Score: {alert.risk_score}/100
+                    </p>
+                    <div className={styles.logicNode}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12h6"/><path d="M12 9v6"/><circle cx="12" cy="12" r="10"/></svg>
+                      <span>Alert ID: {alert.alert_id}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                      {alert.status === "open" && alert.alert_id.startsWith('DNG-') === false && (
+                        <>
+                          <button
+                            onClick={() => handleStatusChange(alert.alert_id, "acknowledged")}
+                            style={{
+                              padding: "6px 12px",
+                              background: "#3b82f6",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Acknowledge
+                          </button>
+                          <button
+                            onClick={() => handleStatusChange(alert.alert_id, "resolved")}
+                            style={{
+                              padding: "6px 12px",
+                              background: "#10b981",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Resolve
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <span className={statusStyle[alert.status]}>
-                    {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
-                  </span>
+                ))}
+              </div>
+            )}
+          </DashboardSection>
+        </>
+      ) : (
+        <div className={alertStyles.intelligenceContainer}>
+          <DashboardSection 
+            eyebrow="Advanced forecasting"
+            title="Strategic Prediction Intelligence"
+          >
+            <div className={alertStyles.intelligenceGrid}>
+              <div className={alertStyles.intelligenceCard}>
+                <div className={alertStyles.cardIcon}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><polyline points="16 5 21 5 21 10"/><line x1="9" y1="15" x2="21" y2="3"/></svg>
                 </div>
-                <span className={styles.timeLabel}>{alert.time} · {alert.area} · {alert.category}</span>
-                <p className={styles.actionDetail}>{alert.description}</p>
-                <p style={{ marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
-                  Risk Score: {alert.risk_score}/100
-                </p>
-                <div className={styles.logicNode}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12h6"/><path d="M12 9v6"/><circle cx="12" cy="12" r="10"/></svg>
-                  <span>Alert ID: {alert.alert_id}</span>
-                </div>
-                <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                  {alert.status === "open" && alert.alert_id.startsWith('DNG-') === false && (
-                    <>
-                      <button
-                        onClick={() => handleStatusChange(alert.alert_id, "acknowledged")}
-                        style={{
-                          padding: "6px 12px",
-                          background: "#3b82f6",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                        }}
-                      >
-                        Acknowledge
-                      </button>
-                      <button
-                        onClick={() => handleStatusChange(alert.alert_id, "resolved")}
-                        style={{
-                          padding: "6px 12px",
-                          background: "#10b981",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                        }}
-                      >
-                        Resolve
-                      </button>
-                    </>
-                  )}
+                <h3>Outbreak Trend Analysis</h3>
+                <p>Analyzing historical data and environmental factors to project disease transmission velocity over the next 14 days.</p>
+                <div className={alertStyles.statSmall}>
+                  <span>Projected Confidence:</span>
+                  <strong>94.2%</strong>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </DashboardSection>
+
+              <div className={alertStyles.intelligenceCard}>
+                <div className={alertStyles.cardIcon}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                </div>
+                <h3>Environmental Risk Correlates</h3>
+                <p>Identifying correlations between rainfall patterns, temperatures, and cluster emergence in high-density areas.</p>
+                <div className={alertStyles.statSmall}>
+                  <span>Risk Variance:</span>
+                  <strong>Low</strong>
+                </div>
+              </div>
+
+              <div className={alertStyles.intelligenceCard}>
+                <div className={alertStyles.cardIcon}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3>Predictive Containment</h3>
+                <p>Strategic deployment recommendations for preventing outbreak expansion before new clusters are officially reported.</p>
+                <div className={alertStyles.statSmall}>
+                  <span>Resource Efficiency:</span>
+                  <strong>+22%</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className={alertStyles.mapPlaceholder}>
+              <div className={alertStyles.mapPlaceholderContent}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="12" r="3"/></svg>
+                <h4>Advanced Prediction Map Loading...</h4>
+                <p>Visualizing predictive vectors and containment zones.</p>
+              </div>
+            </div>
+          </DashboardSection>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,34 +1,34 @@
 {
-  "generated_at": "2026-04-03T23:41:24.324204+00:00",
-  "model_version": "starter-linear-v1",
+  "generated_at": "2026-04-04T10:56:38.684158+00:00",
+  "model_version": "random-forest-v2",
   "predictions": [
     {
       "area": "Bukit Merah",
-      "predicted_score": 84.42,
-      "confidence": 0.96,
-      "primary_driver": "Construction volume + rainfall sensitivity",
-      "recommended_action": "Dispatch fall-prevention inspection team"
+      "predicted_score": 62.84,
+      "confidence": 0.92,
+      "primary_driver": "Elevated WBGT + High-Risk Foundation Work",
+      "recommended_action": "Enforce mandatory water breaks every 45 mins"
     },
     {
       "area": "Jurong East",
-      "predicted_score": 76.17,
-      "confidence": 0.96,
-      "primary_driver": "Machinery density + contractor risk history",
-      "recommended_action": "Increase machinery compliance patrol"
+      "predicted_score": 43.51,
+      "confidence": 0.92,
+      "primary_driver": "Worker density + mild heat exposure",
+      "recommended_action": "Regular safety patrol"
     },
     {
       "area": "Bedok",
-      "predicted_score": 75.6,
-      "confidence": 0.96,
-      "primary_driver": "Heat stress + worksite proximity",
-      "recommended_action": "Stand up hydration and screening point"
+      "predicted_score": 80.9,
+      "confidence": 0.88,
+      "primary_driver": "Severe Heat Stress (WBGT > 33) + Tier 3 Contractor",
+      "recommended_action": "Halt heavy structural lifting; setup cooling stations immediately"
     },
     {
       "area": "Woodlands",
-      "predicted_score": 69.93,
-      "confidence": 0.96,
-      "primary_driver": "Night-shift operations + industrial exposure",
-      "recommended_action": "Run targeted machinery safety briefing"
+      "predicted_score": 43.62,
+      "confidence": 0.92,
+      "primary_driver": "Controlled risk parameters",
+      "recommended_action": "Standard compliance checks"
     }
   ]
 }

@@ -1,42 +1,62 @@
 [
   {
     "area": "Bukit Merah",
-    "temperature": 32.4,
+    "wbgt": 32.8,
+    "temperature": 33.9,
     "pm25": 18,
     "humidity": 79,
+    "contractor_tier": 2,
+    "work_phase": "Foundation",
+    "active_workers": 140,
+    "historical_incidents": 2,
     "active_alerts": 3,
     "active_interventions": 1,
-    "primary_driver": "Construction volume + rainfall sensitivity",
-    "recommended_action": "Dispatch fall-prevention inspection team"
+    "primary_driver": "Elevated WBGT + High-Risk Foundation Work",
+    "recommended_action": "Enforce mandatory water breaks every 45 mins"
   },
   {
     "area": "Jurong East",
-    "temperature": 31.6,
+    "wbgt": 31.5,
+    "temperature": 32.6,
     "pm25": 23,
     "humidity": 74,
-    "active_alerts": 2,
-    "active_interventions": 2,
-    "primary_driver": "Machinery density + contractor risk history",
-    "recommended_action": "Increase machinery compliance patrol"
+    "contractor_tier": 1,
+    "work_phase": "Finishing",
+    "active_workers": 210,
+    "historical_incidents": 0,
+    "active_alerts": 1,
+    "active_interventions": 1,
+    "primary_driver": "Worker density + mild heat exposure",
+    "recommended_action": "Regular safety patrol"
   },
   {
     "area": "Bedok",
-    "temperature": 33.0,
+    "wbgt": 33.6,
+    "temperature": 35.0,
     "pm25": 21,
     "humidity": 81,
-    "active_alerts": 2,
-    "active_interventions": 1,
-    "primary_driver": "Heat stress + worksite proximity",
-    "recommended_action": "Stand up hydration and screening point"
+    "contractor_tier": 3,
+    "work_phase": "Structural",
+    "active_workers": 300,
+    "historical_incidents": 3,
+    "active_alerts": 3,
+    "active_interventions": 2,
+    "primary_driver": "Severe Heat Stress (WBGT > 33) + Tier 3 Contractor",
+    "recommended_action": "Halt heavy structural lifting; setup cooling stations immediately"
   },
   {
     "area": "Woodlands",
-    "temperature": 30.7,
+    "wbgt": 30.1,
+    "temperature": 31.2,
     "pm25": 27,
     "humidity": 75,
+    "contractor_tier": 1,
+    "work_phase": "Structural",
+    "active_workers": 120,
+    "historical_incidents": 1,
     "active_alerts": 1,
-    "active_interventions": 2,
-    "primary_driver": "Night-shift operations + industrial exposure",
-    "recommended_action": "Run targeted machinery safety briefing"
+    "active_interventions": 0,
+    "primary_driver": "Controlled risk parameters",
+    "recommended_action": "Standard compliance checks"
   }
 ]
